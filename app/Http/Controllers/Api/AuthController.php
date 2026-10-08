@@ -36,6 +36,17 @@ class AuthController extends Controller
         ]);
     }
 
+    public function profile(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile berhasil diambil.',
+            'data' => $user
+        ]);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

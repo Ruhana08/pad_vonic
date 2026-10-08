@@ -142,4 +142,39 @@ class PollingController extends Controller
             'data' => $riwayat
         ]);
     }
+
+    public function hasil($id)
+    {
+        $periode = PeriodePolling::find($id);
+
+        if (!$periode) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Periode polling tidak ditemukan.',
+                'data' => null
+            ], 404);
+        }
+
+        $hasilPaket = \App\Models\Partisipasi::with('paketWisata')
+            ->where('id_periode', $id)
+            ->selectRaw('id_paket, COUNT(*) as jumlah_suara')
+            ->groupBy('id_paket')
+            ->get();
+
+        $hasilKaos = \App\Models\Partisipasi::with('desainKaos')
+            ->where('id_periode', $id)
+            ->selectRaw('id_kaos, COUNT(*) as jumlah_suara')
+            ->groupBy('id_kaos')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Hasil voting berhasil diambil.',
+            'data' => [
+                'periode' => $periode,
+                'hasil_paket_wisata' => $hasilPaket,
+                'hasil_desain_kaos' => $hasilKaos
+            ]
+        ]);
+    }
 }
