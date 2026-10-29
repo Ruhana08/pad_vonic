@@ -96,6 +96,23 @@ class PollingController extends Controller
             ], 422);
         }
 
+        $hariIni = now()->toDateString();
+        if ($hariIni < $periode->tanggal_mulai) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Polling belum dimulai.',
+                'data' => null
+            ], 422);
+        }
+
+        if ($hariIni > $periode->tanggal_selesai) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Polling sudah berakhir.',
+                'data' => null
+            ], 422);
+        }
+
         $sudahVote = \App\Models\Partisipasi::where('id_user', $request->user()->id_user)
             ->where('id_periode', $id)
             ->exists();
