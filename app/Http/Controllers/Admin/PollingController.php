@@ -34,16 +34,22 @@ class PollingController extends Controller
                 'identity.start.date'      => 'required|date',
                 'identity.end.date'        => 'required|date|after_or_equal:identity.start.date',
                 'peserta.question'         => 'required|string',
-                'peserta.options'          => 'required|array|size:2',
+                'peserta.options'          => 'required|array|min:2',
                 'peserta.options.*.label'  => 'required|string|max:150',
                 'wisata.question'          => 'required|string',
                 'wisata.options'           => 'required|array|min:2',
                 'wisata.options.*.name'    => 'required|string|max:150',
+                'wisata.options.*.lokasi'  => 'nullable|string|max:255',
+                'wisata.options.*.jarak'   => 'nullable|numeric',
+                'wisata.options.*.lama'    => 'nullable|string|max:100',
+                'wisata.options.*.biaya'   => 'nullable|numeric',
+                'wisata.options.*.rating'  => 'nullable|numeric|between:0,5',
+                'wisata.options.*.dikunjungi' => 'nullable|integer',
+                'wisata.options.*.benefits'=> 'nullable|array',
                 'wisata.options.*.label'   => 'nullable|string|max:50',
                 'wisata.options.*.tags'    => 'array',
                 'wisata.options.*.tags.*'  => 'string|max:30',
                 'kaos.question'            => 'required|string',
-                'kaos.sizes'               => 'required|array|min:1',
                 'kaos.options'             => 'required|array|min:2',
                 'kaos.options.*.name'      => 'required|string|max:150',
             ]);
@@ -62,12 +68,17 @@ class PollingController extends Controller
             }
         }
 
+        if ($request->hasFile('kaos_chart_image')) {
+            $request->validate(['kaos_chart_image' => 'image|max:3072']);
+            $data['kaos']['chart_image'] = $request->file('kaos_chart_image')->store('polling/kaos_chart', 'public');
+        }
+
         $status = $publish ? 'aktif' : 'draft';
 
         // TODO: simpan $data dengan kolom status = $status.
         // Bersihkan HTML rich text (description, question) di server, mis. mews/purifier.
 
         return redirect()->route('admin.polling.arsip')
-            ->with('status', $publish ? 'Polling berhasil diposting.' : 'Draft polling disimpan.');
+            ->with('success', $publish ? 'Polling berhasil diposting dan kini aktif!' : 'Draft polling berhasil disimpan.');
     }
 }

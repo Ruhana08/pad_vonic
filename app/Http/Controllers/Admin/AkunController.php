@@ -49,4 +49,47 @@ class AkunController extends Controller
             'accounts' => $accounts,
         ]);
     }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'role'   => 'required|in:dosen,tendik',
+            'id'     => 'required|string|max:50',
+            'name'   => 'required|string|max:150',
+            'email'  => 'required|email|max:150',
+            'unit'   => 'required|string|max:100',
+            'phone'  => 'required|string|max:30',
+            'status' => 'required|in:Aktif,Nonaktif',
+        ], [
+            'id.required'    => 'Nomor identitas (NIP/NIU) wajib diisi.',
+            'name.required'  => 'Nama lengkap sivitas wajib diisi.',
+            'email.required' => 'Email resmi wajib diisi.',
+            'email.email'    => 'Format email tidak valid.',
+            'unit.required'  => 'Unit kerja wajib dipilih.',
+            'phone.required' => 'Nomor telepon/WhatsApp wajib diisi.',
+        ]);
+
+        return redirect()->route('admin.akun.index', ['tab' => $request->role])
+            ->with('success', 'Akun ' . ($request->role === 'dosen' ? 'Dosen' : 'Tendik') . ' berhasil ditambahkan.');
+    }
+
+    public function importCsv(Request $request)
+    {
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:5120',
+        ], [
+            'csv_file.required' => 'Silakan pilih file CSV terlebih dahulu.',
+            'csv_file.mimes'    => 'File harus berformat .csv atau .txt.',
+            'csv_file.max'      => 'Ukuran file CSV maksimal 5MB.',
+        ]);
+
+        return redirect()->route('admin.akun.index')
+            ->with('success', 'Berhasil mengimpor data akun sivitas dari file CSV.');
+    }
+
+    public function destroy($id)
+    {
+        return redirect()->route('admin.akun.index')
+            ->with('success', 'Akun sivitas berhasil dihapus dari sistem.');
+    }
 }

@@ -5,94 +5,117 @@
 @section('content')
 <div class="space-y-4">
 
-  {{-- Baris atas --}}
+  {{-- Baris Atas (Top Row) --}}
   <div class="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_320px]">
 
-    <x-card class="p-6">
-      <x-section-header title="Dashboard"
-        subtitle="Pantau dan kelola seluruh proses pemungutan suara DTEDI 2026."
-        :divider="false" />
+    {{-- Ringkasan Pemungutan Suara --}}
+    <x-card class="flex flex-col justify-between p-6 shadow-sm">
+      <div class="space-y-1">
+        <h1 class="text-2xl font-bold text-black">Ringkasan Pemungutan Suara</h1>
+        <p class="text-sm text-primary-1">Pantau partisipasi, suara masuk, dan peserta yang belum memilih dalam satu tampilan.</p>
+      </div>
 
-      <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-        {{-- Waktu tersisa --}}
-        <x-card variant="elevated" class="p-6">
-          <p class="text-xs font-bold uppercase text-primary-1">Waktu Tersisa</p>
-          <x-countdown class="mt-5"
-            :days="$countdown['days']" :hours="$countdown['hours']" :minutes="$countdown['minutes']" />
-          <p class="mt-6 text-xs text-black">
-            Berakhir pada {{ explode(',', $deadline, 2)[0] }}
-            <span class="font-semibold text-primary-1">{{ trim(explode(',', $deadline, 2)[1]) }}</span>
-          </p>
-        </x-card>
-
-        {{-- Total vote --}}
-        <x-card variant="elevated" class="p-6">
-          <p class="text-xs font-bold text-primary-1">Total Vote saat ini</p>
-          <p class="mt-3 text-4xl font-semibold text-black">{{ $totalVote['percent'] }}%</p>
-          <div class="mt-4 h-1 w-full overflow-hidden rounded-full bg-grey-1">
-            <div class="h-full rounded-full bg-primary-1" style="width: {{ $totalVote['percent'] }}%"></div>
-          </div>
-          <p class="mt-5 text-xs text-black">
-            <span class="font-bold">{{ $totalVote['received'] }}</span> votes diterima
-            <span class="ml-3 text-primary-1">{{ $totalVote['pending'] }} peserta belum memilih</span>
-          </p>
-        </x-card>
+      <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <x-stat-card 
+          label="Partisipasi" 
+          :value="$totalVote['percent'] . '%'" 
+          :sub="$totalVote['received'] . ' suara diterima'" 
+        />
+        <x-stat-card 
+          label="Suara Masuk" 
+          :value="$totalVote['received']" 
+          :sub="'Dari ' . ($totalVote['received'] + $totalVote['pending']) . ' peserta'" 
+        />
+        <x-stat-card 
+          label="Belum Memilih" 
+          :value="$totalVote['pending']" 
+          :sub="round(($totalVote['pending'] / max(1, $totalVote['received'] + $totalVote['pending'])) * 100) . '% peserta belum memilih'" 
+          variant="danger" 
+        />
       </div>
     </x-card>
 
-    {{-- Aktivitas terbaru --}}
-    <x-card class="p-4">
-      <x-section-header title="Aktivitas Terbaru" class="!pb-2 [&_h2]:!text-sm" />
-
-      <div class="mt-4 space-y-3">
-        @foreach ($activities as $a)
-          <div class="rounded-sm border border-grey-1 p-3">
-            <div class="flex items-start gap-2">
-              <x-avatar :name="$a['name']" />
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center justify-between gap-2">
-                  <p class="truncate text-xs font-semibold">{{ $a['name'] }}</p>
-                  <span class="shrink-0 text-[10px] text-grey-2">{{ $a['time'] }}</span>
-                </div>
-                <p class="mt-1 flex items-center gap-1.5 text-xs text-grey-2">
-                  <span class="size-1.5 rounded-full bg-success"></span>{{ $a['text'] }}
-                </p>
-              </div>
-            </div>
-          </div>
-        @endforeach
+    {{-- Waktu Tersisa --}}
+    <x-card class="flex flex-col justify-between p-6 shadow-sm">
+      <div class="flex items-center gap-2.5">
+        <svg class="h-5 w-5 text-primary-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke-width="2"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"/>
+        </svg>
+        <h2 class="text-lg font-bold text-primary-1">Waktu Tersisa</h2>
       </div>
 
-      <a href="#"
-         class="mt-4 flex items-center justify-center gap-2 rounded-button border border-primary-1 py-2.5 text-xs font-medium text-primary-1 hover:bg-primary-3">
-        Lihat Semua Aktivitas <span aria-hidden="true">→</span>
-      </a>
+      <div class="my-4">
+        <x-countdown :days="$countdown['days']" :hours="$countdown['hours']" :minutes="$countdown['minutes']" />
+      </div>
+
+      <div class="rounded-xl bg-gray-50/80 p-3">
+        <p class="text-xs font-semibold text-primary-1">Penutupan</p>
+        <p class="mt-1 text-sm font-semibold text-black">{{ $deadline }}</p>
+      </div>
     </x-card>
+
   </div>
 
-  {{-- Ringkasan hasil --}}
-  <x-card class="p-6">
-    <x-section-header title="Ringkasan Hasil Pemungutan"
-      subtitle="Pantau perolehan suara dari setiap kategori pemungutan yang sedang berlangsung." />
+  {{-- Baris Bawah (Bottom Row) --}}
+  <div class="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_320px]">
 
-    <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-      @foreach ($categories as $cat)
-        @php $max = collect($cat['options'])->max('percent'); @endphp
-        <div class="space-y-3 rounded-sm bg-primary-3 p-4">
-          <h3 class="text-sm font-semibold text-secondary-3">{{ $cat['title'] }}</h3>
-          @foreach ($cat['options'] as $opt)
-            <x-option-card :name="$opt['name']" :percent="$opt['percent']"
-                           :leading="$opt['percent'] === $max" />
+    {{-- Hasil Sementara (Leaderboard Grid) --}}
+    <x-card class="p-6 shadow-sm">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-black">Hasil Sementara</h2>
+          <p class="mt-1 text-sm text-primary-1">Prioritas utama untuk memantau pilihan teratas di setiap kategori.</p>
+        </div>
+        <x-button variant="gradient" :href="route('admin.polling.aktif') . '#rekapitulasi-suara'" class="px-6 py-2.5 text-sm">
+          Lihat Semua
+        </x-button>
+      </div>
+
+      {{-- Grid 3 Kategori Menggunakan Komponen Reusable --}}
+      <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        @foreach ($categories as $cat)
+          <x-leaderboard-card :title="$cat['title']" :options="$cat['options']" />
+        @endforeach
+      </div>
+    </x-card>
+
+    {{-- Aktivitas Terbaru --}}
+    <x-card class="flex flex-col justify-between p-6 shadow-sm">
+      <div>
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold text-black">Aktivitas Terbaru</h2>
+          <a href="{{ route('admin.polling.aktif') }}#aktivitas-terbaru" aria-label="Lihat Semua Aktivitas" class="text-primary-1 hover:text-primary-4 transition-colors">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </a>
+        </div>
+
+        <div class="mt-4 space-y-3">
+          @foreach ($activities as $a)
+            <div class="flex items-center gap-3 rounded-xl bg-[#fafafa] p-3 shadow-xs">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-3 text-xs font-bold text-primary-1">
+                <x-avatar :name="$a['name']" size="sm" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between gap-1">
+                  <p class="truncate text-sm font-semibold text-black">{{ $a['name'] }}</p>
+                </div>
+                <p class="text-xs text-grey-2">{{ $a['time'] }}</p>
+                <div class="mt-1 flex items-center gap-1.5 text-xs text-grey-2">
+                  <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                  <span>{{ $a['text'] }}</span>
+                </div>
+              </div>
+            </div>
           @endforeach
         </div>
-      @endforeach
-    </div>
+      </div>
 
-    <a href="#"
-       class="mt-4 flex w-full items-center justify-center rounded-button bg-primary-1 py-3 text-sm font-semibold text-white shadow-type-1 hover:bg-primary-4">
-      Lihat Analisis Lengkap
-    </a>
-  </x-card>
+    </x-card>
+
+  </div>
 
 </div>
 @endsection

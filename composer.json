@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.3",
         "blade-ui-kit/blade-icons": "^1.10",
+        "codeat3/blade-solar-icons": "*",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "owenvoke/blade-fontawesome": "^3.3"

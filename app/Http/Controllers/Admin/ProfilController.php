@@ -36,4 +36,41 @@ class ProfilController extends Controller
 
         return view('admin.profil', compact('profile', 'logs'));
     }
+
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'nama'  => 'required|string|max:150',
+            'email' => 'required|email|max:150',
+            'bio'   => 'nullable|string|max:300',
+        ], [
+            'nama.required'  => 'Nama admin wajib diisi.',
+            'email.required' => 'Email admin wajib diisi.',
+            'email.email'    => 'Format email tidak valid.',
+        ]);
+
+        return redirect()->route('admin.profil')
+            ->with('success', 'Informasi profil admin berhasil diperbarui.');
+    }
+
+    public function storeAdmin(Request $request)
+    {
+        $request->validate([
+            'nama'                  => 'required|string|max:150',
+            'email'                 => 'required|email|ends_with:@ugm.ac.id,@mail.ugm.ac.id|max:150',
+            'role'                  => 'required|string',
+            'password'              => 'required|string|min:8|same:password_confirmation',
+            'password_confirmation' => 'required|string',
+        ], [
+            'nama.required'     => 'Nama lengkap calon admin wajib diisi.',
+            'email.required'    => 'Email institusi UGM wajib diisi.',
+            'email.ends_with'   => 'Email harus menggunakan domain resmi @ugm.ac.id atau @mail.ugm.ac.id.',
+            'password.required' => 'Kata sandi akun baru wajib diisi.',
+            'password.min'      => 'Kata sandi minimal 8 karakter.',
+            'password.same'     => 'Konfirmasi kata sandi tidak cocok.',
+        ]);
+
+        return redirect()->route('admin.profil')
+            ->with('success', 'Akun admin baru berhasil didaftarkan ke sistem.');
+    }
 }

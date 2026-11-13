@@ -1,54 +1,58 @@
 <header id="admin-navbar" data-turbo-permanent
-        class="fixed inset-x-0 top-0 z-30 flex h-[72px] items-center justify-between bg-white px-8">
+        x-data="{ scrolled: false }"
+        x-init="scrolled = (window.scrollY > 16);
+                window.addEventListener('scroll', () => { scrolled = (window.scrollY > 16) }, { passive: true })"
+        :class="scrolled
+          ? 'fixed inset-x-0 top-0 z-30 flex h-[72px] items-center justify-between bg-white/95 backdrop-blur-md px-8 shadow-nav border-b border-gray-100 transition-all duration-300'
+          : 'fixed left-4 right-4 top-4 z-30 flex h-[80px] items-center justify-between rounded-2xl bg-white px-6 shadow-nav transition-all duration-300'">
 
-  <!-- Kiri: logo dan judul -->
-  <div class="flex items-center gap-6">
-    <div class="flex items-center gap-3">
-      <img src="{{ asset('images/logo-ugm.webp') }}" alt="UGM" class="h-9 w-auto" onerror="this.style.display='none'">
+  <!-- Kiri: Logo UGM, Divider Biru, Logo Vonic, dan Judul Admin Area -->
+  <div class="flex items-center gap-4">
+    <div class="flex items-center gap-4">
+      <img src="{{ asset('images/logo-ugm.webp') }}" alt="UGM" class="h-10 w-auto" onerror="this.style.display='none'">
+      <div class="h-9 w-px bg-primary-1"></div>
       <img src="{{ asset('images/logo-vonic-b.webp') }}" alt="Vonic" class="h-8 w-auto" onerror="this.style.display='none'">
     </div>
-    <span class="font-skranji text-2xl font-bold text-primary-1">Admin Area</span>
+
+    <div class="flex flex-col font-sans text-lg font-bold leading-tight text-primary-1">
+      <span>Admin</span>
+      <span>Area</span>
+    </div>
   </div>
 
-  <!-- Kanan: notifikasi dan profil -->
+  <!-- Kanan: Notifikasi dan Dropdown Profil -->
   <div class="flex items-center gap-3">
 
-    <!-- Notifikasi -->
+    <!-- Tombol Notifikasi (Shadow & radius sesuai Figma) -->
     <button type="button" aria-label="Notifikasi"
-            class="flex h-11 w-11 items-center justify-center rounded-button border border-grey-1 bg-white text-primary-1 shadow-type-3 transition-colors hover:border-primary-1 hover:bg-primary-3">
-      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-      </svg>
+            class="flex h-12 w-12 items-center justify-center rounded-sm bg-white text-primary-1 shadow-control transition-all hover:bg-primary-3">
+      <x-solar-bell-linear class="h-5 w-5" />
     </button>
 
-    <!-- Dropdown profil -->
+    <!-- Dropdown Profil (Aktif Saat Hover) -->
     <div x-data="{ open: false }"
-         @click.outside="open = false"
+         @mouseenter="open = true"
+         @mouseleave="open = false"
          @keydown.escape.window="open = false"
          class="relative">
 
-      <!-- Trigger -->
+      <!-- Trigger Profil -->
       <button type="button"
               @click="open = !open"
               :aria-expanded="open"
-              :class="open ? 'border-primary-1' : 'border-grey-1 hover:border-primary-1'"
-              class="flex h-11 items-center gap-2.5 rounded-button border bg-white pl-2 pr-4 shadow-type-3 transition-colors">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-1 text-white">
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-          </svg>
+              class="flex h-12 items-center gap-3 rounded-sm bg-white px-3.5 shadow-control transition-all hover:bg-primary-3/30">
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-1 text-white">
+          <x-solar-user-bold class="h-4 w-4" />
         </span>
-        <span class="whitespace-nowrap text-sm font-semibold text-black">
-          {{ Auth::check() ? Auth::user()->name : 'Melisa Danuar, S.Kom' }}
+        <span class="whitespace-nowrap text-sm font-medium tracking-wide text-black">
+          {{ Auth::check() ? Auth::user()->name : 'Melisa D' }}
         </span>
-        <svg class="h-3.5 w-3.5 shrink-0 text-black transition-transform duration-200"
-             :class="open ? 'rotate-180' : ''"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-        </svg>
+        <x-solar-alt-arrow-down-linear
+          class="h-4 w-4 shrink-0 text-gray-700 transition-transform duration-200"
+          ::class="open ? 'rotate-180' : ''" />
       </button>
 
-      <!-- Menu: selebar trigger -->
+      <!-- Menu Dropdown -->
       <div x-show="open" x-cloak
            x-transition:enter="transition ease-out duration-150"
            x-transition:enter-start="opacity-0 -translate-y-1"
@@ -58,16 +62,16 @@
            x-transition:leave-end="opacity-0 -translate-y-1"
            class="absolute inset-x-0 top-full z-40 pt-2">
 
-        <div class="flex flex-col gap-2">
-          <a href="#"
-             class="flex h-11 items-center rounded-button border border-primary-1 bg-white px-4 text-sm font-medium text-primary-1 transition-colors hover:bg-primary-3">
+        <div class="flex flex-col gap-2 rounded-xl border border-gray-100 bg-white p-2 shadow-lg">
+          <a href="{{ route('admin.profil') }}"
+             class="flex h-10 items-center rounded-lg px-3 text-sm font-medium text-gray-700 transition-colors hover:bg-primary-3 hover:text-primary-1">
             Profile
           </a>
 
-          <form method="POST" action="{{ Route::has('logout') ? route('logout') : '#' }}">
+          <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit"
-                    class="flex h-11 w-full items-center rounded-button border border-danger bg-white px-4 text-sm font-medium text-danger transition-colors hover:bg-danger-soft/40">
+                    class="flex h-10 w-full items-center rounded-lg px-3 text-sm font-medium text-danger transition-colors hover:bg-rose-50 cursor-pointer">
               Log Out
             </button>
           </form>

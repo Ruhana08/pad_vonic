@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Skranji:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -9,24 +9,26 @@
 
 @theme {
   --font-sans: 'Be Vietnam Pro', sans-serif;
-  --font-skranji: 'Skranji', cursive;
+
   /* Primary */
   --color-primary-1: #196BEF;
   --color-primary-2: #669CF4;
   --color-primary-3: #EAF2FF;
   --color-primary-4: #0C5BDA;
+  --color-primary-track: #D6E4FA;
 
   /* Secondary */
   --color-secondary-1: #053788;
   --color-secondary-2: #2F5085;
   --color-secondary-3: #082450;
 
-/* Neutral */
---color-gray-50: #FAFAFA;
---color-grey-1: #DBDBDB;
---color-grey-2: #848484;
---color-gray-500: #DBDBDB;
---color-black: #191919;
+  /* Neutral */
+  --color-gray-50: #FAFAFA;
+  --color-grey-1: #DBDBDB;
+  --color-grey-2: #848484;
+  --color-grey-deep: #6D6D6D;
+  --color-gray-500: #DBDBDB;
+  --color-black: #191919;
 
   /* Accent */
   --color-danger: #FE2323;
@@ -35,13 +37,21 @@
   --color-success-soft: #DAFFD1;
   --color-success: #188F00;
 
-  /* Radius */
+  /* Radius (Konsisten dengan Desain Figma) */
+  --radius-xs: 4px;
   --radius-sm: 8px;
-  --radius-button: 12px;
-  --radius-md: 16px;
+  --radius-button: 8px;
+  --radius-md: 14px;
+  --radius-card: 16px;
   --radius-lg: 24px;
 
-  /* Shadow */
+  /* Shadow - Standar & Figma Elevation */
+  --shadow-menu: 0 4px 4px 0 rgba(0, 0, 0, 0.08), 0 9px 5px 0 rgba(0, 0, 0, 0.05);
+  --shadow-nav: 0 9px 13px 0 rgba(0, 0, 0, 0.05), 0 0 5px 0 rgba(0, 0, 0, 0.06);
+  --shadow-control: 0 3px 3px 0 rgba(0, 0, 0, 0.10), 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  --shadow-primary-glow: 0 8px 10px 0 rgba(37, 99, 235, 0.20);
+  --shadow-toast: 0 10px 30px 0 rgba(0, 0, 0, 0.12);
+
   --shadow-type-1: 0 8px 24px 0 rgba(0, 0, 0, 0.10);
   --shadow-type-2:
     0 4px 27.7px 0 rgba(0, 0, 0, 0.04),
@@ -51,4 +61,3 @@
     0 3px 6px 0 rgba(0, 0, 0, 0.10);
   --shadow-type-3: 0 4px 27.7px 0 rgba(0, 0, 0, 0.04), 0 3px 6px 0 rgba(0, 0, 0, 0.10);
 }
-

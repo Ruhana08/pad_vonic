@@ -16,7 +16,7 @@ class DashboardController extends Controller
             'activities' => collect(range(1, 3))->map(fn () => [
                 'name' => 'Melisa Danuar, S.Kom',
                 'time' => '12 menit lalu',
-                'text' => 'Mengirimkan vote',
+                'text' => 'Mengirimkan suara',
             ]),
             'categories' => [
                 ['title' => 'Pembagian Peserta', 'options' => [

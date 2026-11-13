@@ -1,7 +1,7 @@
 @props(['paginator'])
 
 @php
-  $btn = 'flex h-9 items-center rounded-button bg-white px-5 text-xs font-semibold text-primary-1 shadow-type-3';
+  $btn = 'flex h-9 items-center rounded-sm bg-white px-5 text-xs font-semibold text-primary-1 shadow-menu hover:bg-primary-3/30 transition-all';
   $off = 'pointer-events-none opacity-40';
 @endphp
 
@@ -15,13 +15,12 @@
       @endif
     @endforeach
 
-    <span class="{{ $btn }}">Tampilkan</span>
-    <select name="per_page" onchange="this.form.submit()"
-            class="h-9 rounded-sm border border-primary-1 bg-white px-3 text-xs font-semibold text-primary-1 focus:outline-none">
-      @foreach ([10, 25, 50] as $n)
-        <option value="{{ $n }}" @selected($paginator->perPage() === $n)>{{ $n }}</option>
-      @endforeach
-    </select>
+    <span class="text-xs font-medium text-black">Tampilkan</span>
+    <x-dropdown-select name="per_page"
+                       :value="$paginator->perPage()"
+                       :options="[10 => '10', 25 => '25', 50 => '50']"
+                       :autoSubmit="true"
+                       variant="primary" />
   </form>
 
   {{-- Sebelumnya  1/6  Selanjutnya --}}
@@ -29,7 +28,7 @@
     <a href="{{ $paginator->previousPageUrl() ?? '#' }}"
        class="{{ $btn }} {{ $paginator->onFirstPage() ? $off : '' }}">Sebelumnya</a>
 
-    <span class="flex h-9 items-center rounded-sm border border-primary-1 bg-white px-3 text-xs font-semibold text-primary-1">
+    <span class="flex h-9 items-center rounded-sm border border-primary-1 bg-white px-3.5 text-xs font-semibold text-primary-1 shadow-xs">
       {{ $paginator->currentPage() }}/{{ $paginator->lastPage() }}
     </span>
 

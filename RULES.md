@@ -41,7 +41,7 @@ resources/views/
 * **Logo Dimensions:**
   * Logo UGM: `h-9`
   * Logo Vonic Blue: `h-8`
-* **Title Font:** `font-skranji text-2xl font-bold text-primary-1`
+* **Title Font:** `font-sans text-2xl font-bold text-primary-1`
 
 ### Sisi Kanan (Controls & User Profile)
 * **Control Group Gap:** `gap-3` (12px) — *Jarak antara Tombol Notifikasi dan Profile Dropdown*
@@ -61,8 +61,8 @@ resources/views/
 ## 3. Font Family Usage
 * **Primary (Sans):** `'Be Vietnam Pro', sans-serif` (`font-sans`)
   * *Digunakan untuk:* Teks menu, isi konten, tabel, tombol, dan instruksi UI.
-* **Branding (Display):** `'Skranji', cursive` (`font-skranji`)
-  * *Digunakan untuk:* Judul "Admin Area" & Logo Branding Vonic.
+* **Primary (Sans):** `'Be Vietnam Pro', sans-serif` (`font-sans`) - Digunakan untuk seluruh teks, branding, dan UI.
+
 
 ---
 
