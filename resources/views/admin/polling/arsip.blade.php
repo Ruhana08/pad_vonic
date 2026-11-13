@@ -99,13 +99,10 @@ $btn = 'flex h-9 items-center rounded-button bg-white px-5 text-xs font-semibold
 
   {{-- ===== Riwayat (tabel) + Akses ===== --}}
   <script>
+    // @ts-nocheck
     window.riwayatData = {
-      items: {
-        !!json_encode($history, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP) !!
-      },
-      pub: {
-        !!json_encode($publicIds) !!
-      }
+      items: {!! json_encode($history, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP) !!},
+      pub: {!! json_encode($publicIds) !!}
     };
 
     document.addEventListener('alpine:init', () => {
