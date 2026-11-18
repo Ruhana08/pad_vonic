@@ -3,11 +3,26 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // ===== STATE CONTROL =====
+        // ?empty=1 → Dashboard kosong (belum ada polling aktif)
+        $isEmpty = $request->boolean('empty');
+
+        if ($isEmpty) {
+            return view('admin.dashboard', [
+                'countdown'  => ['days' => 0, 'hours' => 0, 'minutes' => 0],
+                'deadline'   => '-',
+                'totalVote'  => ['percent' => 0, 'received' => 0, 'pending' => 0],
+                'activities' => collect(),
+                'categories' => [],
+            ]);
+        }
+
         // Data dummy: nanti ganti dengan query database
         return view('admin.dashboard', [
             'countdown' => ['days' => 3, 'hours' => 8, 'minutes' => 45],

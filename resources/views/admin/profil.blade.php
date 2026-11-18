@@ -170,88 +170,71 @@
           </div>
         </div>
 
-        {{-- Tabel Log Aktivitas Header Biru Gelap --}}
-        <div class="mt-6 overflow-x-auto">
-          <table class="w-full min-w-[700px] border-separate border-spacing-y-2 text-xs">
-            <thead>
-              <tr class="bg-primary-1 text-white text-[11px] font-bold tracking-wider text-left">
-                <th class="rounded-l-sm py-3 px-3 text-left w-14">NO.</th>
-                <th class="py-3 px-3 text-left w-28">ID</th>
-                <th class="py-3 px-4 text-left">DESKRIPSI</th>
-                <th class="py-3 px-4 text-left">ADMIN</th>
-                <th class="py-3 px-3 text-left w-36">WAKTU</th>
-                <th class="rounded-r-sm py-3 px-3 text-left w-32">STATUS</th>
+        {{-- Tabel Log Aktivitas Header Biru Gelap Menggunakan Komponen Reusable <x-table> --}}
+        <div class="mt-6">
+          <x-table :columns="[
+            ['label' => 'NO.', 'width' => '56px'],
+            ['label' => 'ID', 'width' => '112px'],
+            ['label' => 'DESKRIPSI'],
+            ['label' => 'ADMIN'],
+            ['label' => 'WAKTU', 'width' => '144px'],
+            ['label' => 'AKSI', 'width' => '96px'],
+          ]" minWidth="700px" headerBg="bg-secondary-1">
+            @forelse ($logs as $log)
+              <tr class="transition-colors duration-150 hover:bg-[#F3F7FF] bg-white">
+                {{-- No. --}}
+                <td class="border-b border-gray-100 py-3 px-3 text-left">
+                  <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 bg-white text-[11px] font-semibold text-black">
+                    {{ str_pad($logs->firstItem() + $loop->index, 2, '0', STR_PAD_LEFT) }}
+                  </span>
+                </td>
+
+                {{-- ID --}}
+                <td class="border-b border-gray-100 py-3 px-3 text-left font-medium text-black">
+                  {{ $log['id'] }}
+                </td>
+
+                {{-- Deskripsi --}}
+                <td class="border-b border-gray-100 py-3 px-4 font-semibold text-black text-left">
+                  {{ $log['desc'] }}
+                </td>
+
+                {{-- Admin --}}
+                <td class="border-b border-gray-100 py-3 px-4 text-left uppercase tracking-tight text-black text-[11px]">
+                  {{ $log['admin'] }}
+                </td>
+
+                {{-- Waktu --}}
+                <td class="border-b border-gray-100 py-3 px-3 text-left font-medium text-black">
+                  {{ $log['time'] }}
+                </td>
+
+                {{-- Aksi: Rollback / Pulihkan & Hapus --}}
+                <td class="border-b border-gray-100 py-3 px-3 text-left">
+                  <div class="flex items-center gap-1.5">
+                    <x-action-button type="rollback" label="Rollback / Kembalikan aktivitas ini"
+                                     onclick="alert('Aktivitas {{ $log['id'] }} berhasil di-rollback/dikembalikan!')" />
+                    <x-action-button type="delete" label="Hapus log ini"
+                                     onclick="alert('Log {{ $log['id'] }} berhasil dihapus!')" />
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              @forelse ($logs as $log)
-                <tr class="transition-colors hover:bg-primary-3/20 bg-white">
-                  {{-- No. --}}
-                  <td class="border-b border-gray-100 py-3 px-3 text-left">
-                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 bg-white text-[11px] font-semibold text-black">
-                      {{ str_pad($logs->firstItem() + $loop->index, 2, '0', STR_PAD_LEFT) }}
-                    </span>
-                  </td>
-
-                  {{-- ID --}}
-                  <td class="border-b border-gray-100 py-3 px-3 text-left font-medium text-black">
-                    {{ $log['id'] }}
-                  </td>
-
-                  {{-- Deskripsi --}}
-                  <td class="border-b border-gray-100 py-3 px-4 font-semibold text-black text-left">
-                    {{ $log['desc'] }}
-                  </td>
-
-                  {{-- Admin --}}
-                  <td class="border-b border-gray-100 py-3 px-4 text-left uppercase tracking-tight text-black text-[11px]">
-                    {{ $log['admin'] }}
-                  </td>
-
-                  {{-- Waktu --}}
-                  <td class="border-b border-gray-100 py-3 px-3 text-left font-medium text-black">
-                    {{ $log['time'] }}
-                  </td>
-
-                  {{-- Status Dropdown/Pill --}}
-                  <td class="border-b border-gray-100 py-3 px-3 text-left">
-                    <div class="inline-flex items-center justify-between gap-2 rounded-sm border border-grey-1 bg-gray-50/70 px-3 py-1.5 text-[11px] font-semibold text-black">
-                      <span>{{ $log['status'] }}</span>
-                      <x-solar-alt-arrow-down-linear class="h-3 w-3 text-grey-2" />
-                    </div>
-                  </td>
-                </tr>
-              @empty
-                <tr>
-                  <td colspan="6" class="py-12 bg-white">
-                    <x-empty-state 
-                      icon="solar-history-linear"
-                      title="Belum Ada Riwayat Aktivitas"
-                      message="Semua aktivitas autentikasi, perubahan akun, atau pengelolaan polling Anda akan tercatat secara kronologis di sini." />
-                  </td>
-                </tr>
-              @endforelse
-            </tbody>
-          </table>
+            @empty
+              <tr>
+                <td colspan="6" class="py-12 bg-white">
+                  <x-empty-state 
+                    icon="solar-history-linear"
+                    title="Belum Ada Riwayat Aktivitas"
+                    message="Semua aktivitas autentikasi, perubahan akun, atau pengelolaan polling Anda akan tercatat secara kronologis di sini." />
+                </td>
+              </tr>
+            @endforelse
+          </x-table>
         </div>
 
-        {{-- Footer Paginasi Log --}}
-        <div class="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
-          <p class="text-xs text-grey-2">Halaman {{ $logs->currentPage() }} dari {{ $logs->lastPage() }}</p>
-
-          <div class="flex items-center gap-2">
-            <a href="{{ $logs->previousPageUrl() ?? '#' }}"
-               class="flex h-9 w-9 items-center justify-center rounded-sm border border-grey-1 bg-white text-primary-1 shadow-xs hover:bg-primary-3/30 transition-all {{ $logs->onFirstPage() ? 'opacity-40 pointer-events-none' : '' }}">
-              <x-solar-alt-arrow-left-linear class="h-4 w-4" />
-            </a>
-            <span class="flex h-9 min-w-[64px] items-center justify-center rounded-sm bg-primary-1 px-3 text-xs font-semibold text-white">
-              {{ $logs->currentPage() }}/{{ $logs->lastPage() }}
-            </span>
-            <a href="{{ $logs->nextPageUrl() ?? '#' }}"
-               class="flex h-9 w-9 items-center justify-center rounded-sm border border-grey-1 bg-white text-primary-1 shadow-xs hover:bg-primary-3/30 transition-all {{ $logs->hasMorePages() ? '' : 'opacity-40 pointer-events-none' }}">
-              <x-solar-alt-arrow-right-linear class="h-4 w-4" />
-            </a>
-          </div>
+        {{-- Footer Paginasi Log Menggunakan Komponen Reusable --}}
+        <div class="mt-6 border-t border-gray-100 pt-4">
+          <x-table-pagination :paginator="$logs" paramName="page" />
         </div>
 
       </div>

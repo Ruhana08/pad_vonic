@@ -78,7 +78,12 @@ class PollingController extends Controller
         // TODO: simpan $data dengan kolom status = $status.
         // Bersihkan HTML rich text (description, question) di server, mis. mews/purifier.
 
+        if ($publish) {
+            return redirect()->route('admin.polling.aktif')
+                ->with('success', 'Polling berhasil diposting! Silakan cek jalannya voting pada halaman Polling Aktif.');
+        }
+
         return redirect()->route('admin.polling.arsip')
-            ->with('success', $publish ? 'Polling berhasil diposting dan kini aktif!' : 'Draft polling berhasil disimpan.');
+            ->with('success', 'Draft polling berhasil disimpan! Silakan cek daftar draft pada tabel di halaman Arsip.');
     }
 }

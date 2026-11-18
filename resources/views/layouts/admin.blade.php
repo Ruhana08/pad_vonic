@@ -15,6 +15,30 @@
   <script src="{{ asset('vendor/flatpickr.min.js') }}" defer></script>
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+  <script>
+    // Mempertahankan posisi scroll saat refresh / navigasi form pagination
+    document.addEventListener('DOMContentLoaded', () => {
+      const scrollPos = sessionStorage.getItem('vonic_scroll_pos');
+      if (scrollPos !== null) {
+        window.scrollTo({ top: parseInt(scrollPos, 10), behavior: 'instant' });
+        sessionStorage.removeItem('vonic_scroll_pos');
+      }
+
+      window.addEventListener('beforeunload', () => {
+        sessionStorage.setItem('vonic_scroll_pos', window.scrollY);
+      });
+    });
+
+    // Support jika ada navigasi via Turbo
+    document.addEventListener('turbo:render', () => {
+      const scrollPos = sessionStorage.getItem('vonic_scroll_pos');
+      if (scrollPos !== null) {
+        window.scrollTo({ top: parseInt(scrollPos, 10), behavior: 'instant' });
+        sessionStorage.removeItem('vonic_scroll_pos');
+      }
+    });
+  </script>
+
   <style>[x-cloak] { display: none !important; }</style>
 </head>
 
@@ -27,10 +51,10 @@
 
   <!--
     Margin kiri = sidebar total width (224px) + gap ke konten (16px) = 240px
-    Padding atas = jarak atas navbar (16px) + tinggi navbar (80px) + gap ke konten (16px) = 112px
+    Padding atas = jarak atas navbar (16px) + tinggi navbar (80px) + gap ke konten (32px) = 128px
     Padding bawah = ruang napas konten sebelum footer = 48px
   -->
-  <main class="ml-[240px] flex-1 pb-[48px] pr-4 pt-[112px]">
+  <main class="ml-[240px] flex-1 pb-[48px] pr-4 pt-[128px]">
     @yield('content')
   </main>
 

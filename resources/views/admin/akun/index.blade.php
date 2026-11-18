@@ -164,7 +164,7 @@
   </form>
 
   {{-- Card Wrapper untuk Tab, Tabel, dan Pagination --}}
-  <x-card class="p-6 border border-primary-1 shadow-sm">
+  <x-card class="p-6 border-2 border-primary-1 shadow-sm">
 
     {{-- Tab Segmented Button: Dosen / Tenaga Kependidikan --}}
     <div class="flex items-center gap-3">
@@ -190,20 +190,20 @@
           <col class="w-[6%] min-w-[80px]">   {{-- AKSI --}}
         </colgroup>
         <thead>
-          <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider text-left">
-            <th class="rounded-l-sm py-3 px-3 text-left">NO.</th>
-            <th class="py-3 px-3 text-left">ID</th>
-            <th class="py-3 px-4 text-left">NAMA</th>
-            <th class="py-3 px-4 text-left">EMAIL</th>
-            <th class="py-3 px-3 text-left">UNIT KERJA</th>
-            <th class="py-3 px-3 text-left">NO. TELP</th>
-            <th class="py-3 px-3 text-left">STATUS</th>
-            <th class="rounded-r-sm py-3 px-3 text-left">AKSI</th>
+          <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider text-center">
+            <th class="rounded-l-sm py-3 px-3 text-center">NO.</th>
+            <th class="py-3 px-3 text-center">ID</th>
+            <th class="py-3 px-4 text-center">NAMA</th>
+            <th class="py-3 px-4 text-center">EMAIL</th>
+            <th class="py-3 px-3 text-center">UNIT KERJA</th>
+            <th class="py-3 px-3 text-center">NO. TELP</th>
+            <th class="py-3 px-3 text-center">STATUS</th>
+            <th class="rounded-r-sm py-3 px-3 text-center">AKSI</th>
           </tr>
         </thead>
         <tbody>
           @forelse ($accounts as $a)
-            <tr class="transition-colors hover:bg-primary-3/20 bg-white">
+            <tr class="transition-colors duration-150 hover:bg-[#F3F7FF] bg-white">
               {{-- No. --}}
               <td class="border-b border-gray-100 py-3.5 px-3 text-left">
                 <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs">

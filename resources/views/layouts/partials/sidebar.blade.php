@@ -26,7 +26,7 @@
 
   // Class card menu Figma: bayangan presisi drop-shadow 4px/9px dan radius 8px (rounded-sm)
   $btnBase   = 'flex h-12 w-full items-center rounded-sm text-sm font-medium transition-all duration-200 shadow-menu shrink-0';
-  $btnIdle   = 'bg-white text-black hover:bg-primary-3/60 hover:text-primary-1';
+  $btnIdle   = 'bg-white text-black hover:bg-primary-3/60 hover:text-primary-1 group';
   $btnActive = 'bg-primary-1 text-white font-bold shadow-primary-glow';
 
   // Class submenu
@@ -36,17 +36,24 @@
 @endphp
 
 <!-- Sidebar: outer wrapper provides padding so item shadows are not clipped -->
-<aside class="fixed top-[112px] bottom-4 left-0 z-20 flex w-[224px] flex-col select-none overflow-visible pl-4 pr-3 pt-1">
+<aside class="fixed top-[128px] bottom-4 left-0 z-20 flex w-[224px] flex-col select-none overflow-visible pl-4 pr-3 pt-1">
 
   <!-- Navigasi -->
   <nav class="flex flex-col gap-4">
+
+    <!-- Tambah Polling -->
+    <a href="{{ route('admin.polling.create') }}" data-turbo="false"
+       class="flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-gradient-to-r from-primary-1 to-secondary-1 text-sm font-semibold text-white shadow-primary-glow transition-all duration-200 hover:opacity-90 shrink-0">
+      <x-solar-add-circle-linear class="h-5 w-5" />
+      <span>Tambah Polling</span>
+    </a>
 
     <!-- Dashboard dan Akun Pengguna -->
     @foreach ($links as $link)
       <a href="{{ route($link['route']) }}"
          class="{{ $btnBase }} {{ $link['active'] ? $btnActive : $btnIdle }} justify-start px-3.5">
         <x-dynamic-component :component="$link['icon']"
-          class="h-5 w-5 shrink-0 {{ $link['active'] ? 'text-white' : 'text-gray-700' }}" />
+          class="h-5 w-5 shrink-0 transition-colors duration-200 {{ $link['active'] ? 'text-white' : 'text-gray-700 group-hover:text-primary-1' }}" />
         <span class="ml-3 truncate text-sm {{ $link['active'] ? 'font-bold text-white' : 'font-medium' }}">
           {{ $link['label'] }}
         </span>
@@ -63,7 +70,7 @@
       <button class="{{ $btnBase }} {{ $isPollingActive ? $btnActive : $btnIdle }} justify-between px-3.5">
         <div class="flex items-center truncate">
           <x-solar-clipboard-check-linear
-            class="h-5 w-5 shrink-0 {{ $isPollingActive ? 'text-white' : 'text-gray-700' }}" />
+            class="h-5 w-5 shrink-0 transition-colors duration-200 {{ $isPollingActive ? 'text-white' : 'text-gray-700 group-hover:text-primary-1' }}" />
 
           <div class="ml-3 flex items-center truncate text-sm font-medium">
             <span>Polling</span>

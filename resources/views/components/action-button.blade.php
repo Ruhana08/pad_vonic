@@ -1,5 +1,5 @@
 @props([
-  'type'     => 'edit', // 'view' | 'edit' | 'delete' | 'download' | 'upload' | 'publish' | 'stop'
+  'type'     => 'edit', // 'view' | 'edit' | 'delete' | 'download' | 'upload' | 'publish' | 'stop' | 'rollback'
   'href'     => null,
   'label'    => null,
   'color'    => null,
@@ -22,6 +22,11 @@
       'color' => 'text-danger border-gray-200 hover:border-danger hover:bg-rose-50',
       'icon'  => 'solar-trash-bin-trash-linear',
       'label' => 'Hapus',
+    ],
+    'rollback' => [
+      'color' => 'text-primary-1 border-gray-200 hover:border-primary-1 hover:bg-primary-3/40',
+      'icon'  => 'solar-restart-linear',
+      'label' => 'Rollback / Pulihkan',
     ],
     'download' => [
       'color' => 'text-primary-1 border-gray-200 hover:border-primary-1 hover:bg-primary-3/40',

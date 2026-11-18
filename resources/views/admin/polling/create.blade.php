@@ -3,6 +3,14 @@
 @section('title', 'Form Pembuatan Polling')
 @section('page_title', 'Form Pembuatan Polling')
 
+@section('header_actions')
+  <a href="{{ url()->previous() === url()->current() ? route('admin.polling.arsip') : url()->previous() }}"
+     class="flex items-center gap-2 text-xs font-semibold text-primary-1 hover:underline">
+    <x-solar-arrow-left-linear class="h-4 w-4" />
+    <span>Kembali</span>
+  </a>
+@endsection
+
 @section('content')
 @php
   $input  = 'w-full rounded-sm bg-white px-4 py-2.5 text-sm text-black shadow-type-3 placeholder:text-grey-2 focus:outline-none focus:ring-2 focus:ring-primary-1';
@@ -13,6 +21,25 @@
   $cancel = 'rounded-button px-5 py-2.5 text-sm font-semibold text-danger hover:bg-danger-soft/40';
   $panel  = 'rounded-md bg-primary-3 p-5';
   $tab    = 'rounded-button px-8 py-2.5 text-sm font-semibold text-primary-1';
+
+  $wisataCategories = [
+    '__custom__' => '+ Tambahkan lainnya (ketik sendiri)',
+    'Wisata Pantai & Bahari' => 'Wisata Pantai & Bahari',
+    'Wisata Pegunungan & Dataran Tinggi' => 'Wisata Pegunungan & Dataran Tinggi',
+    'Wisata Air Terjun (Curug)' => 'Wisata Air Terjun (Curug)',
+    'Taman Hiburan (Theme Park)' => 'Taman Hiburan (Theme Park)',
+    'Wisata Air (Waterpark)' => 'Wisata Air (Waterpark)',
+    'Wisata Sejarah & Cagar Budaya' => 'Wisata Sejarah & Cagar Budaya',
+    'Wisata Kuliner' => 'Wisata Kuliner',
+    'Wisata Belanja (Shopping Tourism)' => 'Wisata Belanja (Shopping Tourism)',
+    'Wisata Desa Adat' => 'Wisata Desa Adat',
+    'Wisata Edukasi & Museum' => 'Wisata Edukasi & Museum',
+    'Wisata Satwa & Konservasi' => 'Wisata Satwa & Konservasi',
+    'Wisata Agro (Agrowisata)' => 'Wisata Agro (Agrowisata)',
+    'Wisata Petualangan (Adventure)' => 'Wisata Petualangan (Adventure)',
+    'Wisata Religi' => 'Wisata Religi',
+    'Wisata Kebugaran (Wellness Tourism)' => 'Wisata Kebugaran (Wellness Tourism)',
+  ];
 @endphp
 
 <link rel="stylesheet" href="{{ asset('vendor/quill.snow.css') }}">
@@ -73,6 +100,37 @@
       modal: null,
       allSizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'],
       
+      wisataCategories: [
+        { value: '__custom__', label: '+ Tambahkan lainnya (ketik sendiri)' },
+        { value: 'Wisata Pantai & Bahari', label: 'Wisata Pantai & Bahari' },
+        { value: 'Wisata Pegunungan & Dataran Tinggi', label: 'Wisata Pegunungan & Dataran Tinggi' },
+        { value: 'Wisata Air Terjun (Curug)', label: 'Wisata Air Terjun (Curug)' },
+        { value: 'Taman Hiburan (Theme Park)', label: 'Taman Hiburan (Theme Park)' },
+        { value: 'Wisata Air (Waterpark)', label: 'Wisata Air (Waterpark)' },
+        { value: 'Wisata Sejarah & Cagar Budaya', label: 'Wisata Sejarah & Cagar Budaya' },
+        { value: 'Wisata Kuliner', label: 'Wisata Kuliner' },
+        { value: 'Wisata Belanja (Shopping Tourism)', label: 'Wisata Belanja (Shopping Tourism)' },
+        { value: 'Wisata Desa Adat', label: 'Wisata Desa Adat' },
+        { value: 'Wisata Edukasi & Museum', label: 'Wisata Edukasi & Museum' },
+        { value: 'Wisata Satwa & Konservasi', label: 'Wisata Satwa & Konservasi' },
+        { value: 'Wisata Agro (Agrowisata)', label: 'Wisata Agro (Agrowisata)' },
+        { value: 'Wisata Petualangan (Adventure)', label: 'Wisata Petualangan (Adventure)' },
+        { value: 'Wisata Religi', label: 'Wisata Religi' },
+        { value: 'Wisata Kebugaran (Wellness Tourism)', label: 'Wisata Kebugaran (Wellness Tourism)' }
+      ],
+      
+      selectWisataCategory(opt, catVal) {
+        if (catVal === '__custom__') {
+          opt.isCustom = true;
+          opt.label = '';
+          opt.openDropdown = false;
+        } else {
+          opt.isCustom = false;
+          opt.label = catVal;
+          opt.openDropdown = false;
+        }
+      },
+
       // Memory / Master Data Tempat Wisata Tersimpan (Katalog)
       wisataLibrary: [
         {
@@ -152,7 +210,9 @@
             {
               uid: 3,
               name: 'Pantai Kartini',
-              label: 'Pantai',
+              label: 'Wisata Pantai & Bahari',
+              isCustom: false,
+              openDropdown: false,
               lokasi: 'Pantai Kartini, Jepara, Jawa Tengah.',
               jarak: 120,
               lama: '2 Hari',
@@ -169,6 +229,8 @@
               uid: 4,
               name: '',
               label: '',
+              isCustom: false,
+              openDropdown: false,
               lokasi: '',
               jarak: '',
               lama: '',
@@ -261,6 +323,8 @@
           memoryId: null,
           name: '',
           label: '',
+          isCustom: false,
+          openDropdown: false,
           lokasi: '',
           jarak: '',
           lama: '',
@@ -658,8 +722,59 @@
                   <input type="text" x-model="o.name" class="mt-1 {{ $input }} !shadow-none border border-grey-1" placeholder="Pantai Kartini">
                 </div>
                 <div>
-                  <label class="text-[11px] font-semibold text-black">Label / Kategori Wisata</label>
-                  <input type="text" x-model="o.label" list="label-wisata" class="mt-1 {{ $input }} !shadow-none border border-grey-1" placeholder="Pantai, Budaya, dll">
+                  <label class="text-[11px] font-semibold text-black">Kategori Wisata</label>
+                  <div class="relative mt-1">
+                    {{-- Mode Dropdown Select Custom (Sama persis dropdown pagination/arsip) --}}
+                    <div x-show="!o.isCustom" class="relative" @click.outside="o.openDropdown = false">
+                      {{-- Trigger Button --}}
+                      <button type="button"
+                              @click="o.openDropdown = !o.openDropdown"
+                              class="flex h-10 w-full items-center justify-between rounded-sm border border-grey-1 bg-white px-3.5 text-xs font-semibold text-black shadow-xs transition-all hover:border-primary-1 focus:outline-none cursor-pointer">
+                        <span x-text="o.label ? o.label : 'Pilih Kategori Wisata'"
+                              :class="o.label ? 'text-black' : 'text-grey-2 font-normal'"
+                              class="truncate"></span>
+                        <x-solar-alt-arrow-down-linear class="h-3.5 w-3.5 shrink-0 text-grey-2 transition-transform duration-200"
+                                                       ::class="o.openDropdown ? 'rotate-180 text-primary-1' : ''" />
+                      </button>
+
+                      {{-- Popover Dropdown Panel Sesuai Gambar --}}
+                      <div x-show="o.openDropdown" x-cloak
+                           x-transition:enter="transition ease-out duration-150"
+                           x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
+                           x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                           x-transition:leave="transition ease-in duration-100"
+                           x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                           x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
+                           class="absolute left-0 top-full z-40 mt-1 max-h-60 w-full overflow-y-auto rounded-sm border border-primary-1 bg-white shadow-menu">
+                        <div class="flex flex-col py-0.5">
+                          <template x-for="cat in wisataCategories" :key="cat.value">
+                            <button type="button"
+                                    @click="selectWisataCategory(o, cat.value)"
+                                    class="flex min-h-[34px] w-full items-center px-3.5 text-xs font-semibold text-left transition-colors cursor-pointer"
+                                    :class="o.label === cat.value
+                                      ? 'bg-primary-1 text-white font-bold'
+                                      : (cat.value === '__custom__' ? 'text-primary-1 bg-primary-3/30 hover:bg-primary-3 font-bold border-b border-gray-100' : 'text-primary-1 bg-white hover:bg-primary-3/50')">
+                              <span x-text="cat.label" class="truncate"></span>
+                            </button>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+
+                    {{-- Mode Input Manual Saat Memilih '+ Tambahkan lainnya' --}}
+                    <div x-show="o.isCustom" x-cloak class="relative flex items-center">
+                      <input type="text"
+                             x-model="o.label"
+                             class="{{ $input }} !shadow-none border border-primary-1 pr-16"
+                             placeholder="Ketik kategori wisata lainnya...">
+                      <button type="button"
+                              @click="o.isCustom = false; o.label = ''; o.openDropdown = true"
+                              title="Kembali ke pilihan dropdown"
+                              class="absolute right-2 px-2.5 py-1 text-[11px] font-bold text-primary-1 hover:underline cursor-pointer">
+                        Pilih
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -723,10 +838,6 @@
             </div>
           </template>
         </div>
-
-        <datalist id="label-wisata">
-          <option value="Pantai"><option value="Gunung"><option value="Budaya"><option value="Kuliner"><option value="Edukasi"><option value="Wahana">
-        </datalist>
 
         <button type="button" class="{{ $ghost }} mt-4" x-on:click="addWisata()">+ Tambah Opsi Wisata</button>
       </section>
@@ -857,11 +968,17 @@
     <div class="w-full max-w-sm rounded-xl bg-white p-6 shadow-type-1" x-on:click.outside="modal = null">
 
       <template x-if="modal === 'cancel'">
-        <div>
+        <div class="relative">
+          {{-- Tombol close (X) --}}
+          <button type="button" class="absolute -top-1 -right-1 p-1 text-grey-2 hover:text-black transition-colors" x-on:click="modal = null">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
           <h3 class="text-lg font-bold text-black">Buang perubahan?</h3>
           <p class="mt-2 text-sm text-grey-2">Isian yang belum disimpan akan hilang. Kamu bisa menyimpannya sebagai draft dulu.</p>
           <div class="mt-5 flex flex-wrap justify-end gap-2">
-            <button type="button" class="{{ $ghost }}" x-on:click="modal = null">Lanjut mengedit</button>
             <button type="button" class="{{ $outl }}" x-on:click="submit('draft')">Simpan Draft</button>
             <button type="button" class="rounded-button bg-danger px-5 py-2.5 text-sm font-semibold text-white" x-on:click="confirmCancel()">Buang</button>
           </div>

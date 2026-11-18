@@ -2,10 +2,11 @@
   'name' => null,
   'value' => null,
   'options' => [], // array of ['value' => ..., 'label' => ...] or simple array
-  'placeholder' => 'Pilih...',
+  'placeholder' => null,
   'autoSubmit' => false,
   'variant' => 'primary', // 'primary' (border biru & teks biru sesuai gambar) | 'default' (border grey-1)
   'size' => 'md', // 'sm', 'md'
+  'disabled' => false,
 ])
 
 @php
@@ -19,21 +20,37 @@
     }
   }
 
-  $selectedLabel = $placeholder;
+  // Cari label terpilih
+  $selectedLabel = null;
   foreach ($normalized as $item) {
     if ((string)$item['value'] === (string)$value) {
       $selectedLabel = $item['label'];
       break;
     }
   }
+
+  // Jika tidak ada yang cocok tapi ada placeholder, pakai placeholder. Jika tidak ada placeholder, default ke opsi pertama atau '10'
+  if ($selectedLabel === null) {
+    if ($placeholder !== null) {
+      $selectedLabel = $placeholder;
+    } elseif (!empty($normalized)) {
+      $selectedLabel = $normalized[0]['label'];
+      $value = $normalized[0]['value'];
+    } else {
+      $selectedLabel = '10';
+      $value = '10';
+    }
+  }
 @endphp
 
 <div x-data="{
        open: false,
+       disabled: {{ $disabled ? 'true' : 'false' }},
        selectedVal: '{{ (string)$value }}',
        selectedText: '{{ addslashes($selectedLabel) }}',
        options: {{ json_encode($normalized) }},
        select(val, lbl) {
+         if (this.disabled) return;
          this.selectedVal = val;
          this.selectedText = lbl;
          this.open = false;
@@ -58,9 +75,10 @@
 
   {{-- Trigger Button Sesuai Gambar Figma --}}
   <button type="button"
-          @click="open = !open"
+          @click="if (!disabled) open = !open"
+          :disabled="disabled"
           @class([
-            'inline-flex items-center justify-between gap-2.5 rounded-sm bg-white font-semibold transition-all shadow-xs focus:outline-none cursor-pointer',
+            'inline-flex items-center justify-between gap-2.5 rounded-sm bg-white font-semibold transition-all shadow-xs focus:outline-none cursor-pointer disabled:opacity-40 disabled:pointer-events-none',
             'h-9 px-3.5 text-xs' => $size === 'md',
             'h-8 px-2.5 text-xs' => $size === 'sm',
             'border border-primary-1 text-primary-1 hover:bg-primary-3/20' => $variant === 'primary',
@@ -79,7 +97,7 @@
        x-transition:leave="transition ease-in duration-100"
        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
        x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
-       class="absolute left-0 top-full z-40 mt-1 min-w-full overflow-hidden rounded-sm border border-primary-1 bg-white shadow-menu">
+       class="absolute left-0 top-full z-40 mt-1 max-h-60 overflow-y-auto min-w-full rounded-sm border border-primary-1 bg-white shadow-menu">
 
     <div class="flex flex-col py-0.5">
       <template x-for="opt in options" :key="opt.value">

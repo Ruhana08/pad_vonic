@@ -16,24 +16,33 @@ class AkunController extends Controller
         $perPage = in_array($perPage, [10, 25, 50]) ? $perPage : 10;
         $page = max(1, (int) $request->query('page', 1));
 
-        // Data dummy: nanti ganti dengan query database
-        $units = ['TRIK', 'TEKNO', 'TEDI', 'ADMIN'];
-        $all = collect(range(1, 60))->map(fn($i) => [
-            'id'     => '12Q67Hab' . $i,
-            'name'   => $tab === 'dosen' ? 'Melisa Danuar, S.T' : 'Budi Santoso, S.Kom',
-            'email'  => $tab === 'dosen' ? 'melisadanuar@mail.ugm.ac.id' : 'budisantoso@mail.ugm.ac.id',
-            'unit'   => $units[$i % count($units)],
-            'phone'  => '+623897702722',
-            'status' => $i % 4 === 0 ? 'Nonaktif' : 'Aktif',
-        ]);
+        // ===== STATE CONTROL =====
+        // ?empty=1 → Tabel akun kosong (test empty state)
+        $isEmpty = $request->boolean('empty');
 
-        $filtered = $all
-            ->when($request->filled('nama'), fn($c) => $c->filter(
-                fn($a) => str_contains(strtolower($a['name']), strtolower($request->nama))
-            ))
-            ->when($request->filled('unit'), fn($c) => $c->where('unit', $request->unit))
-            ->when($request->filled('status'), fn($c) => $c->where('status', $request->status))
-            ->values();
+        $units = ['TRIK', 'TEKNO', 'TEDI', 'ADMIN'];
+
+        if ($isEmpty) {
+            $filtered = collect();
+        } else {
+            // Data dummy: nanti ganti dengan query database
+            $all = collect(range(1, 60))->map(fn($i) => [
+                'id'     => '12Q67Hab' . $i,
+                'name'   => $tab === 'dosen' ? 'Melisa Danuar, S.T' : 'Budi Santoso, S.Kom',
+                'email'  => $tab === 'dosen' ? 'melisadanuar@mail.ugm.ac.id' : 'budisantoso@mail.ugm.ac.id',
+                'unit'   => $units[$i % count($units)],
+                'phone'  => '+623897702722',
+                'status' => $i % 4 === 0 ? 'Nonaktif' : 'Aktif',
+            ]);
+
+            $filtered = $all
+                ->when($request->filled('nama'), fn($c) => $c->filter(
+                    fn($a) => str_contains(strtolower($a['name']), strtolower($request->nama))
+                ))
+                ->when($request->filled('unit'), fn($c) => $c->where('unit', $request->unit))
+                ->when($request->filled('status'), fn($c) => $c->where('status', $request->status))
+                ->values();
+        }
 
         $accounts = new LengthAwarePaginator(
             $filtered->forPage($page, $perPage)->values(),

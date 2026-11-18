@@ -89,6 +89,25 @@ class PollingAktifController extends Controller
 
     public function index(Request $request)
     {
+        // ===== STATE CONTROL =====
+        // ?empty=1 → Polling aktif kosong (belum ada voting berjalan)
+        $isEmpty = $request->boolean('empty');
+
+        if ($isEmpty) {
+            return view('admin.polling.aktif', [
+                'title'      => 'Belum Ada Polling Aktif',
+                'subtitle'   => 'Saat ini belum ada sesi pemungutan suara yang sedang berlangsung.',
+                'countdown'  => ['days' => 0, 'hours' => 0, 'minutes' => 0],
+                'deadline'   => ['-', '-'],
+                'totalVote'  => ['percent' => 0, 'received' => 0, 'pending' => 0],
+                'categories' => [],
+                'kategori'   => 'semua',
+                'activities' => new LengthAwarePaginator(collect(), 0, 10, 1, ['path' => $request->url()]),
+                'rekapKaos'  => [],
+                'totalKaos'  => 0,
+            ]);
+        }
+
         $categories = [
             'peserta' => ['label' => 'Peserta', 'options' => [
                 ['name' => 'Dosen dan tendik dipisah',   'dosen' => 154, 'tendik' => 66],
@@ -99,6 +118,9 @@ class PollingAktifController extends Controller
                 ['name' => 'Karimunjawa',     'dosen' => 80,  'tendik' => 30],
                 ['name' => 'Candi Borobudur', 'dosen' => 60,  'tendik' => 20],
                 ['name' => 'Kebun Teh',       'dosen' => 40,  'tendik' => 10],
+                ['name' => 'Pantai Indrayanti','dosen' => 35, 'tendik' => 15],
+                ['name' => 'Bromo Sunrise',   'dosen' => 30,  'tendik' => 10],
+                ['name' => 'Dieng Plateau',   'dosen' => 20,  'tendik' => 5],
             ]],
             'kaos' => ['label' => 'Desain Kaos', 'options' => [
                 ['name' => 'Navy Polo Gathering', 'dosen' => 110, 'tendik' => 50],

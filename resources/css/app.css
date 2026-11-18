@@ -27,6 +27,7 @@
   --color-grey-1: #DBDBDB;
   --color-grey-2: #848484;
   --color-grey-deep: #6D6D6D;
+  --color-grey-dark: #4A4A4A; /* Standar warna teks isi tabel seragam (Dark Grey elegan) */
   --color-gray-500: #DBDBDB;
   --color-black: #191919;
 
@@ -60,4 +61,83 @@
     0 11px 11px 0 rgba(0, 0, 0, 0.09),
     0 3px 6px 0 rgba(0, 0, 0, 0.10);
   --shadow-type-3: 0 4px 27.7px 0 rgba(0, 0, 0, 0.04), 0 3px 6px 0 rgba(0, 0, 0, 0.10);
+}
+
+/* ==========================================================================
+   GLOBAL TABLE STANDARDIZATION
+   Menyeragamkan seluruh tabel di sistem:
+   1. Judul Kolom (th): Ukuran teks, padding, font-weight, letter-spacing seragam.
+   2. Isi Sel Tabel (td): Warna teks grey gelap (#4A4A4A), ukuran 12px (text-xs),
+      tanpa paksaan text-transform (AA/Ab bebas/alami), padding konsisten.
+   ========================================================================== */
+table {
+  border-collapse: separate;
+  border-spacing: 0 0.5rem; /* border-spacing-y-2 konsisten */
+}
+
+/* 1. STANDAR HEADER TABEL (th) */
+table thead th {
+  padding-top: 0.875rem !important;   /* py-3.5 */
+  padding-bottom: 0.875rem !important;
+  padding-left: 0.875rem !important;  /* px-3.5 */
+  padding-right: 0.875rem !important;
+  font-size: 0.6875rem !important;    /* 11px */
+  font-weight: 700 !important;        /* font-bold */
+  letter-spacing: 0.05em !important;  /* tracking-wider */
+  text-transform: uppercase !important;
+  line-height: 1rem !important;
+  text-align: center !important;      /* Semua judul rata tengah */
+}
+
+/* 2. STANDAR ISI DATA TABEL (td) */
+table tbody tr:not(.no-hover) td {
+  padding-top: 0.875rem !important;   /* py-3.5 */
+  padding-bottom: 0.875rem !important;
+  padding-left: 0.875rem !important;  /* px-3.5 */
+  padding-right: 0.875rem !important;
+  font-size: 0.75rem !important;      /* 12px / text-xs */
+  line-height: 1.25rem !important;
+  text-transform: none !important;    /* Bebas penulisan tanpa paksaan */
+}
+
+/* Warna standar teks isi sel: Dark Grey (#4A4A4A) */
+table tbody tr:not(.no-hover) td,
+table tbody tr:not(.no-hover) td span:not([class*="bg-"]):not([class*="text-"]):not([class*="badge"]),
+table tbody tr:not(.no-hover) td p:not([class*="bg-"]):not([class*="text-"]),
+table tbody tr:not(.no-hover) td a:not([class*="bg-"]):not([class*="text-"]) {
+  color: var(--color-grey-dark) !important;
+  font-weight: 500 !important;
+}
+
+/* Pengecualian elemen khusus (Nomor kotak, Badge status, Tombol aksi, Link judul) */
+table tbody tr td span.h-7.w-7 {
+  color: var(--color-grey-dark) !important;
+  font-weight: 600 !important;
+}
+
+table tbody tr td a:hover {
+  color: var(--color-primary-1) !important;
+}
+
+/* ==========================================================================
+   GLOBAL INTERACTIVE TABLE ROW HOVER
+   Semua baris tabel (tr) di dalam tbody akan otomatis berubah warna background
+   menjadi soft ice blue saat di-hover dan sel td-nya akan mewarisi background.
+   Kecuali baris yang memiliki class .no-hover (seperti banner sub-judul kategori).
+   ========================================================================== */
+table tbody tr:not(.no-hover) {
+  transition: background-color 0.15s ease-in-out;
+}
+
+table tbody tr:not(.no-hover):hover {
+  background-color: #EAF2FF !important; /* Soft ice blue senada Vonic */
+}
+
+table tbody tr:not(.no-hover):hover td {
+  background-color: transparent !important;
+}
+
+table tbody tr.no-hover,
+table tbody tr.no-hover:hover {
+  background-color: transparent !important;
 }

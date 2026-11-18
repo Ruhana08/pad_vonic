@@ -62,70 +62,32 @@
 
   {{-- ===== SECTION 1: STATUS POLLING ===== --}}
   <div class="space-y-3">
-    {{-- Baris Atas: Judul Status Polling & Tombol Tambah Polling --}}
-    <div class="flex items-center justify-between">
+    {{-- Baris Atas: Judul Status Polling --}}
+    <div>
       <h1 class="text-2xl font-bold tracking-tight text-black">Status Polling</h1>
-
-      <x-button variant="gradient" :href="route('admin.polling.create')" data-turbo="false" class="px-5 py-2.5 text-xs font-semibold shadow-primary-glow">
-        <x-solar-add-circle-linear class="h-4 w-4" />
-        <span>Tambah Polling</span>
-      </x-button>
     </div>
 
     {{-- Baris Filter/Pagination Atas (di luar card): Tampilkan [10] & Sebelumnya 1/6 Selanjutnya --}}
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-      <form method="GET" class="flex items-center gap-2">
-        @foreach (request()->except(['per_page', 'page']) as $key => $value)
-          @if (is_string($value))
-            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-          @endif
-        @endforeach
-
-        <span class="flex h-9 items-center justify-center rounded-sm bg-white px-5 text-xs font-medium text-primary-1 shadow-menu">
-          Tampilkan
-        </span>
-        <x-dropdown-select name="per_page"
-                           :value="$polls->perPage()"
-                           :options="[10 => '10', 25 => '25', 50 => '50']"
-                           :autoSubmit="true"
-                           variant="primary" />
-      </form>
-
-      <div class="flex items-center gap-2">
-        <a href="{{ $polls->previousPageUrl() ?? '#' }}"
-           class="flex h-9 items-center rounded-sm bg-white px-5 text-xs font-medium text-primary-1 shadow-menu hover:bg-primary-3/30 transition-all {{ $polls->onFirstPage() ? 'pointer-events-none opacity-40' : '' }}">
-          Sebelumnya
-        </a>
-
-        <span class="flex h-9 items-center rounded-sm border border-primary-1 bg-white px-3.5 text-xs font-semibold text-primary-1 shadow-xs">
-          {{ $polls->currentPage() }}/{{ $polls->lastPage() }}
-        </span>
-
-        <a href="{{ $polls->nextPageUrl() ?? '#' }}"
-           class="flex h-9 items-center rounded-sm bg-white px-5 text-xs font-medium text-primary-1 shadow-menu hover:bg-primary-3/30 transition-all {{ $polls->hasMorePages() ? '' : 'pointer-events-none opacity-40' }}">
-          Selanjutnya
-        </a>
-      </div>
-    </div>
+    <x-table-pagination :paginator="$polls" paramName="per_page" class="pt-1" />
 
     {{-- Card Tabel Status Polling --}}
-    <x-card class="p-6 border border-primary-1 shadow-sm">
+    <x-card class="p-6 border-2 border-primary-1 shadow-sm">
       <div class="overflow-x-auto">
         <table class="w-full min-w-[900px] border-separate border-spacing-y-2 text-xs">
           <thead>
-            <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider">
+            <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider text-center">
               <th class="rounded-l-sm py-3 px-3 text-center w-14">NO.</th>
               <th class="py-3 px-3 text-center w-28">ID</th>
-              <th class="py-3 px-4 text-left">POLLING</th>
+              <th class="py-3 px-4 text-center">POLLING</th>
               <th class="py-3 px-4 text-center w-40">WAKTU MULAI</th>
               <th class="py-3 px-4 text-center w-40">WAKTU SELESAI</th>
               <th class="py-3 px-3 text-center w-28">STATUS</th>
-              <th class="rounded-r-sm py-3 px-3 text-left w-36">AKSI</th>
+              <th class="rounded-r-sm py-3 px-3 text-center w-36">AKSI</th>
             </tr>
           </thead>
           <tbody>
             @forelse ($polls as $p)
-              <tr class="transition-colors hover:bg-primary-3/20">
+              <tr class="transition-colors duration-150 hover:bg-[#F3F7FF] bg-white">
                 {{-- No. --}}
                 <td class="border-b border-gray-100 py-3.5 px-3 text-center">
                   <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs">
@@ -226,19 +188,14 @@
 
   {{-- ===== SECTION 2: RIWAYAT PEMILIHAN & AKSES ===== --}}
   <script>
-    document.addEventListener('alpine:init', () => {
-      Alpine.data('riwayat', () => ({
-        items: [],
-        pub: [],
+    function riwayat() {
+      return {
+        items: @json($history),
+        pub: @json($publicIds),
         snapshot: [],
         editMode: false,
         page: 1,
         perPage: 10,
-
-        init() {
-          this.items = JSON.parse(this.$root.dataset.items || '[]');
-          this.pub = JSON.parse(this.$root.dataset.pub || '[]');
-        },
 
         get totalPages() {
           return Math.max(1, Math.ceil(this.items.length / this.perPage));
@@ -282,52 +239,38 @@
         save() {
           this.editMode = false;
         }
-      }));
-    });
+      };
+    }
   </script>
 
-  <div class="grid grid-cols-1 items-start gap-4 xl:grid-cols-[1fr_240px]" x-data="riwayat"
-       data-items="{{ json_encode($history) }}" data-pub="{{ json_encode($publicIds) }}">
+  <div class="grid grid-cols-1 items-start gap-4 xl:grid-cols-[1fr_240px]" x-data="riwayat()">
 
-    {{-- Card Tabel Riwayat (Gaya identik dengan Status Polling) --}}
-    <x-card class="p-6 border border-primary-1 shadow-sm">
+    {{-- Card Tabel Riwayat (Border Biru Tebal Sesuai Status Polling & Figma) --}}
+    <x-card class="p-6 border-2 border-primary-1 shadow-sm">
       <h2 class="text-xl font-bold text-black">Daftar Riwayat Pemilihan Destinasi Wisata Piknik DTEDI</h2>
 
-      {{-- Kontrol Pagination Riwayat --}}
-      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <span class="flex h-9 items-center justify-center rounded-sm bg-white px-5 text-xs font-medium text-primary-1 shadow-menu">
-            Tampilkan
-          </span>
-          <x-dropdown-select x-model.number="perPage"
-                             x-on:change="changePerPage()"
-                             :value="10"
-                             :options="[10 => '10', 25 => '25', 50 => '50']"
-                             variant="primary" />
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button type="button" class="flex h-9 items-center rounded-sm bg-white px-5 text-xs font-medium text-primary-1 shadow-menu hover:bg-primary-3/30 disabled:opacity-40 disabled:pointer-events-none transition-all"
-                  x-bind:disabled="page === 1" x-on:click="page--">Sebelumnya</button>
-          <span class="flex h-9 items-center rounded-sm border border-primary-1 bg-white px-3.5 text-xs font-semibold text-primary-1 shadow-xs"
-                x-text="page + '/' + totalPages"></span>
-          <button type="button" class="flex h-9 items-center rounded-sm bg-white px-5 text-xs font-medium text-primary-1 shadow-menu hover:bg-primary-3/30 disabled:opacity-40 disabled:pointer-events-none transition-all"
-                  x-bind:disabled="page === totalPages" x-on:click="page++">Selanjutnya</button>
-        </div>
-      </div>
+      {{-- Kontrol Pagination Riwayat Menggunakan Komponen Reusable --}}
+      <x-table-pagination class="mt-4"
+                          alpineModel="perPage"
+                          alpineChange="changePerPage()"
+                          alpinePage="page"
+                          alpineTotalPages="totalPages"
+                          alpinePrev="page--"
+                          alpineNext="page++"
+                          :disabled="count($history) === 0" />
 
       {{-- Tabel Riwayat: Kolom PERIODE dihapus, Aksi diubah menjadi Hasil Polling --}}
       <div class="mt-4 overflow-x-auto">
         <table class="w-full min-w-[820px] border-separate border-spacing-y-2 text-xs">
           <thead>
-            <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider">
+            <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider text-center">
               <th x-show="editMode" x-cloak class="rounded-l-sm py-3 px-3 text-center w-12">
                 <input type="checkbox" class="size-4 cursor-pointer accent-white"
                        x-bind:checked="allOnPageChecked" x-on:change="toggleAllOnPage()" aria-label="Pilih semua di halaman ini">
               </th>
               <th class="py-3 px-3 text-center w-14" x-bind:class="editMode ? '' : 'rounded-l-sm'">NO.</th>
-              <th class="py-3 px-4 text-left">JUDUL</th>
-              <th class="py-3 px-4 text-left">DESKRIPSI</th>
+              <th class="py-3 px-4 text-center">JUDUL</th>
+              <th class="py-3 px-4 text-center">DESKRIPSI</th>
               <th class="py-3 px-4 text-center w-40">WAKTU MULAI</th>
               <th class="py-3 px-4 text-center w-40">WAKTU SELESAI</th>
               <th class="py-3 px-3 text-center w-28">AKSES</th>
@@ -336,7 +279,7 @@
           </thead>
           <tbody>
             <template x-for="(h, i) in pageItems" x-bind:key="h.id">
-              <tr class="transition-colors hover:bg-primary-3/20"
+              <tr class="transition-colors duration-150 hover:bg-[#F3F7FF] bg-white"
                   x-bind:class="[editMode ? 'cursor-pointer hover:bg-primary-3/50' : '', editMode && isPub(h.id) ? 'bg-primary-3' : '']"
                   x-on:click="toggle(h.id)">
                 <td x-show="editMode" x-cloak class="border-b border-gray-100 py-3.5 px-3 text-center">
@@ -376,13 +319,28 @@
                 </td>
               </tr>
             </template>
+            <template x-if="items.length === 0">
+              <tr>
+                <td colspan="8" class="py-10 bg-white text-center">
+                  <div class="flex flex-col items-center justify-center text-center">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary-3/50 text-primary-1 mb-3">
+                      <x-solar-history-linear class="h-6 w-6" />
+                    </div>
+                    <p class="text-sm font-bold text-black">Belum Ada Riwayat Arsip Polling</p>
+                    <p class="mt-1 text-xs text-grey-deep max-w-sm">
+                      Polling yang telah selesai dilaksanakan akan otomatis masuk dan tercatat di daftar riwayat arsip ini.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
     </x-card>
 
     {{-- Panel Samping: Akses (Publik / Private) --}}
-    <x-card class="p-5 border border-primary-1 shadow-sm xl:sticky xl:top-[112px]">
+    <x-card class="p-5 border-2 border-primary-1 shadow-sm xl:sticky xl:top-[112px]">
       <div class="flex items-center justify-between pb-3 border-b border-gray-100">
         <span class="text-sm font-bold text-primary-1">Akses</span>
         <button type="button" x-show="!editMode" x-on:click="startEdit()" aria-label="Ubah akses"

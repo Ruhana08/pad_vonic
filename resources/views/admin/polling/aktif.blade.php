@@ -88,14 +88,29 @@
 
         <div class="mt-4 border-t border-grey-1/30 pt-3">
           <p class="text-[10px] text-grey-2 uppercase tracking-wider font-semibold">Penutupan:</p>
-          <p class="mt-0.5 text-xs font-bold text-black">{{ $deadline[0] ?? 'Jumat, 16 Okt 2026' }}, {{ $deadline[1] ?? '18.00 WIB' }}</p>
+          <p class="mt-0.5 text-xs font-bold text-black">
+            @if (($deadline[0] ?? '-') === '-' || ($countdown['days'] == 0 && $countdown['hours'] == 0 && $countdown['minutes'] == 0))
+              <span class="text-grey-deep">Tanggal Tidak Aktif</span>
+            @else
+              {{ $deadline[0] ?? 'Jumat, 16 Okt 2026' }}, {{ $deadline[1] ?? '18.00 WIB' }}
+            @endif
+          </p>
         </div>
       </x-card>
     </div>
   </div>
 
   {{-- Card Mandiri Rekapitulasi Suara (Border Stroke Biru Paling Luar Sesuai Figma) --}}
-  <x-card id="rekapitulasi-suara" class="p-6 border-2 border-primary-1">
+  <x-card id="rekapitulasi-suara" class="p-6 border-2 border-primary-1"
+          x-data="{
+            expandedCats: {},
+            toggleCat(key) {
+              this.expandedCats[key] = !this.expandedCats[key];
+            },
+            isExpanded(key) {
+              return !!this.expandedCats[key];
+            }
+          }">
     <div class="flex flex-wrap items-center justify-between gap-3 border-b-2 border-gray-100 pb-3">
       <h3 class="text-xl font-bold text-black">Rekapitulasi Suara</h3>
       <div class="flex flex-wrap gap-2">
@@ -118,40 +133,52 @@
       <table class="w-full min-w-[850px] border-separate border-spacing-0 text-xs">
         {{-- Header Kolom Ringan (Teks Biru) --}}
         <thead>
-          <tr class="text-[11px] font-bold text-primary-1 text-left">
-            <th class="py-3 px-4 text-left w-14">No.</th>
-            <th class="py-3 px-4 text-left">Pilihan</th>
-            <th class="py-3 px-4 text-left">Dosen</th>
-            <th class="py-3 px-4 text-left">Tendik</th>
-            <th class="py-3 px-4 text-left">Total suara</th>
-            <th class="py-3 px-4 text-left">Proporsi</th>
+          <tr class="text-[11px] font-bold text-primary-1 text-center">
+            <th class="py-3 px-4 text-center w-14">No.</th>
+            <th class="py-3 px-4 text-center">Pilihan</th>
+            <th class="py-3 px-4 text-center">Dosen</th>
+            <th class="py-3 px-4 text-center">Tendik</th>
+            <th class="py-3 px-4 text-center">Total suara</th>
+            <th class="py-3 px-4 text-center">Proporsi</th>
           </tr>
         </thead>
 
-        @foreach ($categories as $key => $cat)
+        @forelse ($categories as $key => $cat)
           @continue($kategori !== 'semua' && $kategori !== $key)
           @php
-            $rows = $kategori === 'semua' ? $cat['options']->take(3) : $cat['options'];
+            $totalOpts = $cat['options']->count();
           @endphp
           <tbody>
-            {{-- Banner Pembatas Kategori (Biru Muda Lembut Sesuai Desain Gambar) --}}
-            <tr>
-              <td colspan="6" class="pt-3 pb-1">
+            {{-- Banner Pembatas Kategori (Sub-judul Kategori: Bebas Hover) --}}
+            <tr class="no-hover">
+              <td colspan="6" class="pt-3 pb-1 !bg-transparent">
                 <div class="flex items-center justify-between rounded-sm bg-[#EAF2FF] px-4 py-2.5">
                   <span class="text-xs font-bold text-black">{{ $cat['label'] }}</span>
-                  @if ($kategori === 'semua' && $cat['options']->count() > 3)
-                    <a href="{{ route('admin.polling.aktif', ['kategori' => $key]) }}"
-                       class="text-xs font-semibold text-primary-1 hover:underline">Lihat Semua</a>
+                  
+                  {{-- Jika opsi lebih dari 5: Ada tombol toggle Lihat Semua / Tutup --}}
+                  @if ($totalOpts > 5)
+                    <button type="button"
+                            @click="toggleCat('{{ $key }}')"
+                            class="text-xs font-semibold text-primary-1 hover:underline cursor-pointer flex items-center gap-1">
+                      <span x-text="isExpanded('{{ $key }}') ? 'Tutup' : 'Lihat Semua'"></span>
+                      <x-solar-alt-arrow-down-linear class="h-3.5 w-3.5 transition-transform duration-200"
+                                                     ::class="isExpanded('{{ $key }}') ? 'rotate-180' : ''" />
+                    </button>
                   @else
-                    <span class="text-[11px] font-semibold text-primary-1">Urutan Suara Terbanyak</span>
+                    {{-- Kurang dari sama dengan 5 opsi: Pilihan 'Lihat Semua' hilang --}}
+                    <span></span>
                   @endif
                 </div>
               </td>
             </tr>
 
-            {{-- Baris Pilihan (Fokus Suara Terbanyak: Baris Pertama Tebal / Leading) --}}
-            @foreach ($rows as $opt)
-              <tr class="border-b border-gray-100 transition-colors hover:bg-primary-3/20 {{ $loop->first ? 'bg-[#F9FBFF]' : '' }}">
+            {{-- Baris Pilihan: Default maks 5 baris, atau tampilkan semua bila expanded --}}
+            @foreach ($cat['options'] as $idx => $opt)
+              <tr class="border-b border-gray-100 transition-colors duration-150 hover:bg-[#F3F7FF] {{ $loop->first ? 'bg-[#F9FBFF]' : '' }}"
+                  @if ($idx >= 5)
+                    x-show="isExpanded('{{ $key }}')"
+                    x-cloak
+                  @endif>
                 <td class="py-3.5 px-4 text-left font-semibold {{ $loop->first ? 'text-primary-1' : 'text-grey-deep' }}">
                   {{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}
                 </td>
@@ -170,31 +197,24 @@
               </tr>
             @endforeach
           </tbody>
-        @endforeach
+        @empty
+          <tbody>
+            <tr>
+              <td colspan="6" class="py-12 bg-white text-center">
+                <div class="flex flex-col items-center justify-center text-center">
+                  <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary-3/50 text-primary-1 mb-3">
+                    <x-solar-chart-linear class="h-6 w-6" />
+                  </div>
+                  <p class="text-sm font-bold text-black">Belum Ada Polling Aktif</p>
+                  <p class="mt-1 text-xs text-grey-deep max-w-sm">
+                    Data rekapitulasi perolehan suara akan muncul di sini setelah ada pemungutan suara yang aktif dan menerima suara masuk.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        @endforelse
       </table>
-    </div>
-
-    {{-- Baris Footer Paginasi Rekapitulasi Suara (Sesuai Desain Figma) --}}
-    <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-medium text-black">Tampilkan</span>
-        <x-dropdown-select name="rekap_per_page"
-                           value="10"
-                           :options="[10 => '10', 25 => '25', 50 => '50']"
-                           variant="primary" />
-      </div>
-
-      <div class="flex items-center gap-2">
-        <span class="flex h-9 items-center rounded-sm bg-white px-5 text-xs font-semibold text-primary-1 shadow-menu opacity-40 pointer-events-none">
-          Sebelumnya
-        </span>
-        <span class="flex h-9 items-center rounded-sm border border-primary-1 bg-white px-3.5 text-xs font-semibold text-primary-1 shadow-xs">
-          1/6
-        </span>
-        <span class="flex h-9 items-center rounded-sm bg-white px-5 text-xs font-semibold text-primary-1 shadow-menu hover:bg-primary-3/30 transition-all cursor-pointer">
-          Selanjutnya
-        </span>
-      </div>
     </div>
   </x-card>
 
@@ -222,20 +242,20 @@
     <div class="mt-4 overflow-x-auto">
       <table class="w-full min-w-[950px] border-separate border-spacing-y-2 text-xs">
         <thead>
-          <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider text-left">
-            <th class="rounded-l-sm py-3 px-3 text-left w-14">NO.</th>
-            <th class="py-3 px-4 text-left">DOSEN</th>
-            <th class="py-3 px-4 text-left">EMAIL</th>
-            <th class="py-3 px-3 text-left">PESERTA</th>
-            <th class="py-3 px-3 text-left">TEMPAT WISATA</th>
-            <th class="py-3 px-4 text-left">DESAIN KAOS</th>
-            <th class="py-3 px-4 text-left">UKURAN</th>
-            <th class="rounded-r-sm py-3 px-3 text-left w-28">STATUS</th>
+          <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider text-center">
+            <th class="rounded-l-sm py-3 px-3 text-center w-14">NO.</th>
+            <th class="py-3 px-4 text-center">DOSEN</th>
+            <th class="py-3 px-4 text-center">EMAIL</th>
+            <th class="py-3 px-3 text-center">PESERTA</th>
+            <th class="py-3 px-3 text-center">TEMPAT WISATA</th>
+            <th class="py-3 px-4 text-center">DESAIN KAOS</th>
+            <th class="py-3 px-4 text-center">UKURAN</th>
+            <th class="rounded-r-sm py-3 px-3 text-center w-28">STATUS</th>
           </tr>
         </thead>
         <tbody>
           @forelse ($activities as $a)
-            <tr class="transition-colors hover:bg-primary-3/20 bg-white">
+            <tr class="transition-colors duration-150 hover:bg-[#F3F7FF] bg-white">
               {{-- No. --}}
               <td class="border-b border-gray-100 py-3 px-3 text-left">
                 <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs">
@@ -270,13 +290,13 @@
 
               {{-- Kolom Ukuran (Badge Stroke + Kuantitas) --}}
               <td class="border-b border-gray-100 py-3 px-4 text-left">
-                <div class="flex flex-wrap items-center justify-start gap-1.5">
+                <div class="flex flex-wrap items-center justify-start gap-2">
                   @foreach ($a['kaos_items'] as $item)
-                    <div class="inline-flex items-center gap-1 bg-white px-1.5 py-0.5 rounded-sm">
-                      <span class="inline-flex h-5 w-6 items-center justify-center rounded-sm border border-primary-1 text-[11px] font-bold text-primary-1 bg-primary-3/40">
+                    <div class="inline-flex items-center gap-1.5 bg-transparent py-0.5">
+                      <span class="inline-flex h-7 min-w-[28px] px-1.5 items-center justify-center rounded-sm border border-primary-1 text-xs font-bold text-primary-1 bg-white shadow-xs">
                         {{ $item['size'] }}
                       </span>
-                      <span class="text-[11px] font-semibold text-black">
+                      <span class="text-xs font-semibold text-black">
                         {{ $item['jumlah'] }}
                       </span>
                     </div>
