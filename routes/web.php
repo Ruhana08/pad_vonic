@@ -7,17 +7,29 @@ use App\Http\Controllers\Admin\PollingArsipController;
 use App\Http\Controllers\Admin\PollingController;
 use App\Http\Controllers\Admin\ProfilController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
-// Halaman pertama yang dibuka admin: Login / Register
+// Auth User & Admin
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login.page');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/login/process', [LoginController::class, 'login'])->name('login.process');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify.otp');
 
+// Halaman User / Sivitas
+Route::get('/home', function () {
+    return view('home');
+})->name('home');
+
+Route::get('/riwayat', function () {
+    return view('riwayat');
+})->name('riwayat');
+
+// Area Admin Vonic
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::redirect('/', '/admin/dashboard');
@@ -38,3 +50,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('/akun/{id}', [AkunController::class, 'destroy'])->name('akun.destroy');
     Route::view('/preview', 'admin.preview')->name('preview');
 });
+
+if (file_exists(__DIR__.'/settings.php')) {
+    require __DIR__.'/settings.php';
+}
