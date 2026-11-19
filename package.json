@@ -17,6 +17,7 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
-        "@hotwired/turbo": "^8.0.23"
+        "@hotwired/turbo": "^8.0.23",
+        "axios": "^1.21.1"
     }
 }
