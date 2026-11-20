@@ -73,10 +73,12 @@ class PollingController extends Controller
     public function vote(Request $request, $id)
     {
         $request->validate([
-            'id_paket' => 'required|exists:paket_wisata,id_paket',
-            'id_kaos' => 'required|exists:desain_kaos,id_kaos',
-            'id_ukuran' => 'required|exists:ukuran_kaos,id_ukuran',
-        ]);
+        'id_paket' => 'required|exists:paket_wisata,id_paket',
+        'id_kaos' => 'required|exists:desain_kaos,id_kaos',
+        'ukuran' => 'required|array|min:1',
+        'ukuran.*.id_ukuran' => 'required|exists:ukuran_kaos,id_ukuran',
+        'ukuran.*.jumlah' => 'required|integer|min:1',
+    ]);
 
         $periode = PeriodePolling::find($id);
 
@@ -130,24 +132,30 @@ class PollingController extends Controller
             'id_periode' => $id,
             'id_paket' => $request->id_paket,
             'id_kaos' => $request->id_kaos,
-            'id_ukuran' => $request->id_ukuran,
             'waktu_submit' => now(),
         ]);
+
+        foreach ($request->ukuran as $item) {
+            $partisipasi->detailUkuran()->create([
+                'id_ukuran' => $item['id_ukuran'],
+                'jumlah' => $item['jumlah'],
+            ]);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Voting berhasil disimpan.',
-            'data' => $partisipasi
+            'data' => $partisipasi->load('detailUkuran.ukuranKaos')
         ], 201);
     }
 
     public function riwayat(Request $request)
     {
         $riwayat = \App\Models\Partisipasi::with([
-            'periodePolling',
-            'paketWisata',
-            'desainKaos',
-            'ukuranKaos'
+        'periodePolling',
+        'paketWisata',
+        'desainKaos',
+        'detailUkuran.ukuranKaos'
         ])
         ->where('id_user', $request->user()->id_user)
         ->orderBy('waktu_submit', 'desc')
@@ -172,25 +180,81 @@ class PollingController extends Controller
             ], 404);
         }
 
-        $hasilPaket = \App\Models\Partisipasi::with('paketWisata')
-            ->where('id_periode', $id)
-            ->selectRaw('id_paket, COUNT(*) as jumlah_suara')
-            ->groupBy('id_paket')
-            ->get();
+        // Fungsi untuk mengambil hasil berdasarkan kategori peserta
+        $ambilHasil = function ($kategori = null) use ($id) {
 
-        $hasilKaos = \App\Models\Partisipasi::with('desainKaos')
-            ->where('id_periode', $id)
-            ->selectRaw('id_kaos, COUNT(*) as jumlah_suara')
-            ->groupBy('id_kaos')
-            ->get();
+            // Hasil paket wisata
+            $hasilPaket = \App\Models\Partisipasi::with('paketWisata')
+                ->where('id_periode', $id)
+                ->when($kategori, function ($query) use ($kategori) {
+                    $query->whereHas('user', function ($userQuery) use ($kategori) {
+                        $userQuery->where('kategori', $kategori);
+                    });
+                })
+                ->selectRaw('id_paket, COUNT(*) as jumlah_suara')
+                ->groupBy('id_paket')
+                ->get();
+
+            // Hasil desain kaos
+            $hasilKaos = \App\Models\Partisipasi::with('desainKaos')
+                ->where('id_periode', $id)
+                ->when($kategori, function ($query) use ($kategori) {
+                    $query->whereHas('user', function ($userQuery) use ($kategori) {
+                        $userQuery->where('kategori', $kategori);
+                    });
+                })
+                ->selectRaw('id_kaos, COUNT(*) as jumlah_suara')
+                ->groupBy('id_kaos')
+                ->get();
+
+            // Hasil jumlah kaos per ukuran
+            $hasilUkuran = \App\Models\DetailUkuranVote::with('ukuranKaos')
+                ->whereHas('partisipasi', function ($query) use ($id, $kategori) {
+                    $query->where('id_periode', $id)
+                        ->when($kategori, function ($subQuery) use ($kategori) {
+                            $subQuery->whereHas('user', function ($userQuery) use ($kategori) {
+                                $userQuery->where('kategori', $kategori);
+                            });
+                        });
+                })
+                ->selectRaw('id_ukuran, SUM(jumlah) as total_kaos')
+                ->groupBy('id_ukuran')
+                ->get();
+
+            return [
+                'hasil_paket_wisata' => $hasilPaket,
+                'hasil_desain_kaos' => $hasilKaos,
+                'hasil_ukuran_kaos' => $hasilUkuran,
+            ];
+        };
+
+        // Jika mode kelompok digabung
+        if ($periode->mode_kelompok === 'digabung') {
+            $hasil = $ambilHasil();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Hasil voting berhasil diambil.',
+                'data' => [
+                    'periode' => $periode,
+                    ...$hasil
+                ]
+            ]);
+        }
+
+        // Jika mode kelompok dipisah
+        $hasilDosen = $ambilHasil('dosen');
+        $hasilTendik = $ambilHasil('tendik');
 
         return response()->json([
             'success' => true,
             'message' => 'Hasil voting berhasil diambil.',
             'data' => [
                 'periode' => $periode,
-                'hasil_paket_wisata' => $hasilPaket,
-                'hasil_desain_kaos' => $hasilKaos
+                'hasil_per_kategori' => [
+                    'dosen' => $hasilDosen,
+                    'tendik' => $hasilTendik,
+                ]
             ]
         ]);
     }

@@ -17,7 +17,6 @@ class Partisipasi extends Model
         'id_periode',
         'id_paket',
         'id_kaos',
-        'id_ukuran',
         'waktu_submit',
     ];
 
@@ -41,8 +40,8 @@ class Partisipasi extends Model
         return $this->belongsTo(DesainKaos::class, 'id_kaos', 'id_kaos');
     }
 
-    public function ukuranKaos()
+    public function detailUkuran()
     {
-        return $this->belongsTo(UkuranKaos::class, 'id_ukuran', 'id_ukuran');
+        return $this->hasMany(DetailUkuranVote::class, 'id_vote', 'id_vote');
     }
 }

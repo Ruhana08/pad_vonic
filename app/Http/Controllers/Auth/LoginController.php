@@ -20,8 +20,7 @@ class LoginController extends Controller
             'email' => 'required|email',
         ]);
 
-        // Login dummy sementara.
-        // Nanti diganti dengan email dari hasil callback SSO UGM.
+        // Login dummy sementara. GANTI SSO
         $email = $request->input('email');
 
         $user = User::where('email', $email)->first();
