@@ -55,7 +55,7 @@
   $colorClass = $disabled
     ? 'border-gray-200 bg-gray-50/70 text-gray-300 cursor-not-allowed pointer-events-none'
     : ($color ?? $cfg['color']);
-  $classes = "inline-flex h-7 w-7 items-center justify-center rounded-sm border bg-white shadow-xs transition-all {$colorClass}";
+  $classes = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border bg-white shadow-xs transition-all {$colorClass}";
 @endphp
 
 @if ($href && !$disabled)

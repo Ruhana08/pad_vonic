@@ -19,13 +19,13 @@
     <div class="mt-5">
       @if ($actionUrl)
         <a href="{{ $actionUrl }}"
-           class="inline-flex items-center gap-2 rounded-sm bg-primary-1 px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
+           class="inline-flex items-center gap-2 rounded-xl bg-primary-1 px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
           <span>{{ $actionText }}</span>
         </a>
       @elseif ($actionClick)
         <button type="button"
                 @click="{{ $actionClick }}"
-                class="inline-flex items-center gap-2 rounded-sm bg-primary-1 px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
+                class="inline-flex items-center gap-2 rounded-xl bg-primary-1 px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
           <span>{{ $actionText }}</span>
         </button>
       @endif

@@ -18,7 +18,7 @@
   };
 @endphp
 
-{{-- Backdrop: fixed fullscreen overlay with blue tint + blur --}}
+{{-- Backdrop: transparan + blur minimal --}}
 <div x-show="{{ $show }}"
      x-cloak
      x-transition:enter="transition ease-out duration-200"
@@ -30,11 +30,11 @@
      @click.self="{{ $close }}"
      @keydown.escape.window="{{ $close }}"
      class="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
-     style="position: fixed; inset: 0px; width: 100vw; height: 100vh; background-color: rgba(102, 156, 244, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+     style="position: fixed; inset: 0px; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.18); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
 
-  {{-- Modal Card: constrained width, shadow-type-2, rounded --}}
+  {{-- Modal Card --}}
   <div class="w-full {{ $maxWidthClass }} rounded-2xl bg-white overflow-hidden"
-       style="box-shadow: var(--shadow-type-2, 0 4px 27.7px 0 rgba(0,0,0,.04), 0 46px 18px 0 rgba(0,0,0,.01), 0 26px 15px 0 rgba(0,0,0,.05), 0 11px 11px 0 rgba(0,0,0,.09), 0 3px 6px 0 rgba(0,0,0,.10));">
+       style="box-shadow: 0 8px 40px 0 rgba(0,0,0,.12), 0 2px 8px 0 rgba(0,0,0,.08);">
     {{ $slot }}
   </div>
 </div>

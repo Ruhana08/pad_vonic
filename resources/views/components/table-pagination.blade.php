@@ -30,8 +30,8 @@
     $opts[$opt] = (string)$opt;
   }
 
-  $btnBase = 'flex h-9 items-center rounded-sm bg-white px-5 text-xs font-semibold text-primary-1 shadow-menu transition-all';
-  $pillBase = 'flex h-9 items-center rounded-sm border border-primary-1 bg-white px-3.5 text-xs font-semibold text-primary-1 shadow-xs';
+  $btnBase = 'flex h-9 items-center rounded-xl bg-white px-5 text-xs font-semibold text-primary-1 shadow-menu transition-all';
+  $pillBase = 'flex h-9 items-center rounded-xl border border-primary-1 bg-white px-3.5 text-xs font-semibold text-primary-1 shadow-xs';
 @endphp
 
 <div {{ $attributes->class('flex flex-wrap items-center justify-between gap-3') }}>
@@ -40,7 +40,7 @@
   <div class="flex items-center gap-2">
     @if ($alpineModel)
       {{-- Mode Alpine.js (Client-side) --}}
-      <span class="flex h-9 items-center justify-center rounded-sm bg-white px-5 text-xs font-medium text-primary-1 shadow-menu">
+      <span class="flex h-9 items-center justify-center rounded-xl bg-white px-5 text-xs font-medium text-primary-1 shadow-menu">
         Tampilkan
       </span>
       <x-dropdown-select :x-model.number="$alpineModel"
@@ -58,7 +58,7 @@
           @endif
         @endforeach
 
-        <span class="flex h-9 items-center justify-center rounded-sm bg-white px-5 text-xs font-medium text-primary-1 shadow-menu">
+        <span class="flex h-9 items-center justify-center rounded-xl bg-white px-5 text-xs font-medium text-primary-1 shadow-menu">
           Tampilkan
         </span>
         <x-dropdown-select :name="$paramName"

@@ -3,17 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PeriodePolling;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // ===== STATE CONTROL =====
-        // ?empty=1 → Dashboard kosong (belum ada polling aktif)
-        $isEmpty = $request->boolean('empty');
+        $periodeAktif = PeriodePolling::with(['paketWisata', 'desainKaos', 'partisipasi.user'])
+            ->where('status', 'aktif')
+            ->first();
 
-        if ($isEmpty) {
+        if (! $periodeAktif) {
             return view('admin.dashboard', [
                 'countdown'  => ['days' => 0, 'hours' => 0, 'minutes' => 0],
                 'deadline'   => '-',
@@ -23,32 +24,76 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Data dummy: nanti ganti dengan query database
-        return view('admin.dashboard', [
-            'countdown' => ['days' => 3, 'hours' => 8, 'minutes' => 45],
-            'deadline'  => 'Jumat, 16 Okt 2026, 18.00 WIB',
-            'totalVote' => ['percent' => 82, 'received' => 279, 'pending' => 61],
-            'activities' => collect(range(1, 3))->map(fn () => [
-                'name' => 'Melisa Danuar, S.Kom',
-                'time' => '12 menit lalu',
+        $endDate = \Carbon\Carbon::parse($periodeAktif->tanggal_selesai . ' 23:59:59');
+        $diff = now()->diff($endDate);
+        $countdown = [
+            'days'    => max(0, $diff->days),
+            'hours'   => max(0, $diff->h),
+            'minutes' => max(0, $diff->i),
+        ];
+
+        $deadline = $endDate->translatedFormat('l, d M Y, H.i') . ' WIB';
+
+        $partisipasi = $periodeAktif->partisipasi;
+        $totalReceived = $partisipasi->count();
+        $totalSivitas = 340;
+        $percent = $totalSivitas > 0 ? round(($totalReceived / $totalSivitas) * 100) : 0;
+        $totalVote = [
+            'percent'  => $percent,
+            'received' => $totalReceived,
+            'pending'  => max(0, $totalSivitas - $totalReceived),
+        ];
+
+        $activities = $partisipasi->take(5)->map(function ($pt) {
+            return [
+                'name' => $pt->user->nama ?? 'Sivitas DTEDI',
+                'time' => 'Baru saja',
                 'text' => 'Mengirimkan suara',
-            ]),
-            'categories' => [
-                ['title' => 'Pembagian Peserta', 'options' => [
-                    ['name' => 'Dosen dan Tenaga Didik dipisah', 'percent' => 58],
-                    ['name' => 'Fully In-Person Only', 'percent' => 42],
-                ]],
-                ['title' => 'Paket Wisata', 'options' => [
-                    ['name' => 'Pantai Soleram', 'percent' => 51],
-                    ['name' => 'Pantai Soleram', 'percent' => 31],
-                    ['name' => 'Pantai Soleram', 'percent' => 18],
-                ]],
-                ['title' => 'Kaos', 'options' => [
-                    ['name' => 'Premium Zip-Up Hoodie', 'percent' => 45],
-                    ['name' => 'Embroidered Baseball Cap', 'percent' => 33],
-                    ['name' => 'Organic Cotton Tee', 'percent' => 22],
-                ]],
+            ];
+        });
+
+        // Kategori persentase
+        $wisataTotal = $partisipasi->count();
+        $wisataOptions = $periodeAktif->paketWisata->map(function ($p) use ($partisipasi, $wisataTotal) {
+            $cnt = $partisipasi->where('id_paket', $p->id_paket)->count();
+            return [
+                'name'    => $p->nama_destinasi,
+                'percent' => $wisataTotal > 0 ? round(($cnt / $wisataTotal) * 100) : 0,
+            ];
+        });
+
+        $kaosOptions = $periodeAktif->desainKaos->map(function ($k) use ($partisipasi, $wisataTotal) {
+            $cnt = $partisipasi->where('id_kaos', $k->id_kaos)->count();
+            return [
+                'name'    => $k->nama_desain,
+                'percent' => $wisataTotal > 0 ? round(($cnt / $wisataTotal) * 100) : 0,
+            ];
+        });
+
+        $pesertaDipisah = $partisipasi->where('pilihan_kelompok', 'dipisah')->count();
+        $pesertaOptions = [
+            [
+                'name'    => 'Dosen dan Tenaga Didik dipisah',
+                'percent' => $wisataTotal > 0 ? round(($pesertaDipisah / $wisataTotal) * 100) : 50,
             ],
+            [
+                'name'    => 'Dosen dan Tenaga Didik digabung',
+                'percent' => $wisataTotal > 0 ? (100 - round(($pesertaDipisah / $wisataTotal) * 100)) : 50,
+            ],
+        ];
+
+        $categories = [
+            ['title' => 'Pembagian Peserta', 'options' => $pesertaOptions],
+            ['title' => 'Paket Wisata', 'options' => $wisataOptions->toArray()],
+            ['title' => 'Kaos', 'options' => $kaosOptions->toArray()],
+        ];
+
+        return view('admin.dashboard', [
+            'countdown'  => $countdown,
+            'deadline'   => $deadline,
+            'totalVote'  => $totalVote,
+            'activities' => $activities,
+            'categories' => $categories,
         ]);
     }
 }

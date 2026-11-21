@@ -22,12 +22,16 @@
   --color-secondary-2: #2F5085;
   --color-secondary-3: #082450;
 
+  /* Gradient / Main-Blue: linear-gradient(90deg, #053788 0%, #196BEF 100%) */
+  --bg-main-blue: linear-gradient(90deg, #053788 0%, #196BEF 100%);
+  --background-image-main-blue: linear-gradient(90deg, #053788 0%, #196BEF 100%);
+
   /* Neutral */
   --color-gray-50: #FAFAFA;
   --color-grey-1: #DBDBDB;
   --color-grey-2: #848484;
   --color-grey-deep: #6D6D6D;
-  --color-grey-dark: #4A4A4A; /* Standar warna teks isi tabel seragam (Dark Grey elegan) */
+  --color-grey-dark: #4A4A4A; 
   --color-gray-500: #DBDBDB;
   --color-black: #191919;
 
@@ -64,6 +68,97 @@
 }
 
 /* ==========================================================================
+   TYPOGRAPHY SYSTEM (H1 - H6 & BODY 1 - BODY 5)
+   Hierarki tipografi standar sistem sesuai desain Figma:
+   H1: 32px (2rem)
+   H2: 24px (1.5rem)
+   H3: 20px (1.25rem)
+   H4: 18px (1.125rem)
+   H5: 16px (1rem)
+   H6: 14px (0.875rem)
+   Body 1: 16px (1rem)
+   Body 2: 14px (0.875rem)
+   Body 3: 13px (0.8125rem)
+   Body 4: 12px (0.75rem)
+   Body 5: 10px / 11px (0.6875rem)
+   ========================================================================== */
+@layer base {
+  h1, .h1 {
+    font-size: 2rem; /* 32px */
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  h2, .h2 {
+    font-size: 1.5rem; /* 24px */
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+
+  h3, .h3 {
+    font-size: 1.25rem; /* 20px */
+    line-height: 1.35;
+    font-weight: 600;
+  }
+
+  h4, .h4 {
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  h5, .h5 {
+    font-size: 1rem; /* 16px */
+    line-height: 1.45;
+    font-weight: 600;
+  }
+
+  h6, .h6 {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.5;
+    font-weight: 600;
+  }
+}
+
+/* Utility Classes untuk Body 1 sampai Body 5 */
+.body-1 {
+  font-size: 1rem; /* 16px */
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.body-2 {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.body-3 {
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.body-4 {
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.body-5 {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+/* Gradient Utility - Main-Blue (Figma System) */
+.bg-gradient-main-blue {
+  background: linear-gradient(90deg, #053788 0%, #196BEF 100%) !important;
+}
+
+/* ==========================================================================
    GLOBAL TABLE STANDARDIZATION
    Menyeragamkan seluruh tabel di sistem:
    1. Judul Kolom (th): Ukuran teks, padding, font-weight, letter-spacing seragam.
@@ -81,7 +176,7 @@ table thead th {
   padding-bottom: 0.875rem !important;
   padding-left: 0.875rem !important;  /* px-3.5 */
   padding-right: 0.875rem !important;
-  font-size: 0.6875rem !important;    /* 11px */
+  font-size: 0.75rem !important;      /* 12px / text-xs */
   font-weight: 700 !important;        /* font-bold */
   letter-spacing: 0.05em !important;  /* tracking-wider */
   text-transform: uppercase !important;
@@ -140,4 +235,276 @@ table tbody tr:not(.no-hover):hover td {
 table tbody tr.no-hover,
 table tbody tr.no-hover:hover {
   background-color: transparent !important;
+}
+
+/* ==========================================================================
+   VONIC 9-CARD DESIGN SYSTEM UTILITIES
+   Class terintegrasi agar komponen & styling card reusable, bersih, dan konsisten.
+   ========================================================================== */
+
+/* 1. Polling Aktif Hero Card */
+.card-hero-polling {
+  border-radius: var(--radius-lg, 24px);
+  background-color: #ffffff;
+  border: 2px solid var(--color-primary-1);
+  box-shadow: var(--shadow-type-1);
+}
+
+/* 2. FAQ Accordion Hero Card */
+.card-hero-faq {
+  border-radius: var(--radius-lg, 24px);
+  background-color: var(--color-primary-1);
+  color: #ffffff;
+  box-shadow: var(--shadow-type-1);
+}
+
+/* 3. Base Section Panel (Container Utama) */
+.card-panel {
+  border-radius: 16px;
+  background-color: #ffffff;
+  border: 1px solid var(--color-grey-1);
+  box-shadow: var(--shadow-type-1);
+}
+
+/* 4. Item Showcase Card (Riwayat & Modal Preview) */
+.card-showcase {
+  border-radius: 16px;
+  background-color: #ffffff;
+  border: 1px solid var(--color-grey-1);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+.card-showcase:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* 5. Interactive Choice Card (Opsi Wisata, Kaos, Peserta) */
+.card-choice {
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid var(--color-grey-1);
+  padding: 1.125rem 1.25rem; /* Inner padding lebih leluasa (18px 20px) */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.card-choice:hover {
+  border-color: rgba(25, 107, 239, 0.6);
+}
+.card-choice.is-active,
+.card-choice.active,
+.card-choice[aria-checked="true"] {
+  border-color: var(--color-primary-1);
+  outline: 2px solid var(--color-primary-1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 6. Stepper Counter Card (Ukuran Kaos) */
+.card-stepper {
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid var(--color-grey-1);
+  padding: 1rem 1.125rem; /* Inner padding proporsional (16px 18px) */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+.card-stepper:hover {
+  border-color: rgba(25, 107, 239, 0.5);
+}
+.card-stepper.is-active,
+.card-stepper.active {
+  border-color: var(--color-primary-1);
+  background-color: rgba(234, 242, 255, 0.35);
+  outline: 2px solid var(--color-primary-1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
+/* 7. Metric & Stat Card (Dashboard & Partisipasi) */
+.card-stat {
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid var(--color-primary-1);
+  box-shadow: var(--shadow-control);
+}
+
+/* 8. Sub-Info Box (Metadata kecil) */
+.card-info-box {
+  border-radius: 12px;
+  background-color: rgba(250, 250, 250, 0.7);
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* 9. Empty State Card */
+.card-empty-state {
+  border-radius: 16px;
+  background-color: #ffffff;
+  border: 2px dashed var(--color-grey-1);
+  text-align: center;
+}
+
+/* ==========================================================================
+   VONIC 5-BUTTON DESIGN SYSTEM UTILITIES
+   State baku dan terintegrasi untuk seluruh tombol di aplikasi VONIC.
+   ========================================================================== */
+
+/* 1. Gradient CTA Button */
+.btn-gradient {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem; /* rounded-xl (12px) */
+  background-image: linear-gradient(90deg, var(--color-secondary-1) 0%, var(--color-primary-1) 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: var(--shadow-primary-glow);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  border: none;
+}
+.btn-gradient:hover {
+  opacity: 0.95;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25);
+}
+.btn-gradient:active {
+  opacity: 0.90;
+  transform: scale(0.98);
+}
+.btn-gradient:disabled,
+.btn-gradient.disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 2. Primary Solid Button */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: var(--color-primary-1);
+  color: #ffffff;
+  border: 1px solid var(--color-primary-1);
+  font-weight: 600;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-4);
+  border-color: var(--color-primary-4);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.btn-primary:active {
+  background-color: var(--color-secondary-1);
+  border-color: var(--color-secondary-1);
+  transform: scale(0.98);
+}
+.btn-primary:disabled,
+.btn-primary.disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 3. Secondary Outline Button */
+.btn-secondary,
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: #ffffff;
+  border: 1px solid var(--color-grey-1);
+  color: var(--color-grey-dark);
+  font-weight: 600;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.btn-secondary:hover,
+.btn-outline:hover {
+  border-color: var(--color-primary-1);
+  background-color: rgba(234, 242, 255, 0.4);
+  color: var(--color-primary-1);
+}
+.btn-secondary:active,
+.btn-outline:active {
+  background-color: rgba(234, 242, 255, 0.7);
+  transform: scale(0.98);
+}
+.btn-secondary:disabled,
+.btn-secondary.disabled,
+.btn-outline:disabled,
+.btn-outline.disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 4. Danger Action Button */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: #fff1f2; /* rose-50 */
+  border: 1px solid rgba(254, 35, 35, 0.25);
+  color: var(--color-danger);
+  font-weight: 600;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.btn-danger:hover {
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #ffffff;
+}
+.btn-danger:active {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+  color: #ffffff;
+  transform: scale(0.98);
+}
+.btn-danger:disabled,
+.btn-danger.disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 5. Square Action Icon Button (Tabel & Quick Action) */
+.btn-icon {
+  display: inline-flex;
+  height: 2rem; /* 32px */
+  width: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb; /* gray-200 */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.btn-icon:hover {
+  border-color: var(--color-primary-1);
+  background-color: rgba(234, 242, 255, 0.4);
+}
+.btn-icon:active {
+  transform: scale(0.95);
+}
+.btn-icon-danger {
+  color: var(--color-danger);
+}
+.btn-icon-danger:hover {
+  border-color: var(--color-danger);
+  background-color: #fff1f2;
 }

@@ -78,11 +78,10 @@
           @click="if (!disabled) open = !open"
           :disabled="disabled"
           @class([
-            'inline-flex items-center justify-between gap-2.5 rounded-sm bg-white font-semibold transition-all shadow-xs focus:outline-none cursor-pointer disabled:opacity-40 disabled:pointer-events-none',
-            'h-9 px-3.5 text-xs' => $size === 'md',
-            'h-8 px-2.5 text-xs' => $size === 'sm',
-            'border border-primary-1 text-primary-1 hover:bg-primary-3/20' => $variant === 'primary',
-            'border border-grey-1 text-black hover:border-primary-1' => $variant === 'default',
+            'btn-secondary inline-flex items-center justify-between gap-2.5 px-3.5 text-xs',
+            'h-10' => $size === 'md',
+            'h-8' => $size === 'sm',
+            '!border-primary-1 !text-primary-1' => $variant === 'primary',
           ])>
     <span x-text="selectedText" class="truncate"></span>
     <x-solar-alt-arrow-down-linear class="h-3.5 w-3.5 shrink-0 transition-transform duration-200"
@@ -97,7 +96,7 @@
        x-transition:leave="transition ease-in duration-100"
        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
        x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
-       class="absolute left-0 top-full z-40 mt-1 max-h-60 overflow-y-auto min-w-full rounded-sm border border-primary-1 bg-white shadow-menu">
+       class="absolute left-0 top-full z-40 mt-1 max-h-60 overflow-y-auto min-w-full rounded-xl border border-primary-1 bg-white shadow-menu">
 
     <div class="flex flex-col py-0.5">
       <template x-for="opt in options" :key="opt.value">

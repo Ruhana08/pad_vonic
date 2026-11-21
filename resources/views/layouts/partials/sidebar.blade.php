@@ -24,13 +24,13 @@
   ];
   $activeSubmenu = collect($pollingMenu)->first(fn ($m) => request()->routeIs($m['route']))['tag'] ?? null;
 
-  // Class card menu Figma: bayangan presisi drop-shadow 4px/9px dan radius 8px (rounded-sm)
-  $btnBase   = 'flex h-12 w-full items-center rounded-sm text-sm font-medium transition-all duration-200 shadow-menu shrink-0';
+  // Class card menu Figma: bayangan presisi drop-shadow 4px/9px dan radius 8px (rounded-xl)
+  $btnBase   = 'flex h-12 w-full items-center rounded-xl text-sm font-medium transition-all duration-200 shadow-menu shrink-0';
   $btnIdle   = 'bg-white text-black hover:bg-primary-3/60 hover:text-primary-1 group';
   $btnActive = 'bg-primary-1 text-white font-bold shadow-primary-glow';
 
   // Class submenu
-  $subBase   = 'flex h-11 w-full items-center rounded-sm px-3 text-xs font-medium transition-all duration-200 shadow-menu';
+  $subBase   = 'flex h-11 w-full items-center rounded-xl px-3 text-xs font-medium transition-all duration-200 shadow-menu';
   $subIdle   = 'bg-white text-black hover:bg-primary-3 hover:text-primary-1';
   $subActive = 'bg-primary-1 text-white font-semibold';
 @endphp
@@ -39,32 +39,36 @@
 <aside class="fixed top-[128px] bottom-4 left-0 z-20 flex w-[224px] flex-col select-none overflow-visible pl-4 pr-3 pt-1">
 
   <!-- Navigasi -->
-  <nav class="flex flex-col gap-4">
+  <nav class="flex flex-col">
 
-    <!-- Tambah Polling -->
-    <a href="{{ route('admin.polling.create') }}" data-turbo="false"
-       class="flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-gradient-to-r from-primary-1 to-secondary-1 text-sm font-semibold text-white shadow-primary-glow transition-all duration-200 hover:opacity-90 shrink-0">
-      <x-solar-add-circle-linear class="h-5 w-5" />
-      <span>Tambah Polling</span>
-    </a>
-
-    <!-- Dashboard dan Akun Pengguna -->
-    @foreach ($links as $link)
-      <a href="{{ route($link['route']) }}"
-         class="{{ $btnBase }} {{ $link['active'] ? $btnActive : $btnIdle }} justify-start px-3.5">
-        <x-dynamic-component :component="$link['icon']"
-          class="h-5 w-5 shrink-0 transition-colors duration-200 {{ $link['active'] ? 'text-white' : 'text-gray-700 group-hover:text-primary-1' }}" />
-        <span class="ml-3 truncate text-sm {{ $link['active'] ? 'font-bold text-white' : 'font-medium' }}">
-          {{ $link['label'] }}
-        </span>
+    <!-- Tombol CTA Aksi Utama: Tambah Polling (Diberi margin-bottom pemisah khusus) -->
+    <div class="mb-6">
+      <a href="{{ route('admin.polling.create') }}" data-turbo="false"
+         class="btn-gradient flex h-12 w-full shrink-0">
+        <x-solar-add-circle-linear class="h-5 w-5" />
+        <span>Tambah Polling</span>
       </a>
-    @endforeach
+    </div>
 
-    <!-- Polling Menu (Accordion Auto Hover) -->
-    <div class="relative w-full shrink-0"
-         x-data="{ isHovered: false }"
-         @mouseenter="isHovered = true"
-         @mouseleave.debounce.150ms="isHovered = false">
+    <!-- Kelompok Menu Navigasi Utama -->
+    <div class="flex flex-col gap-3">
+      <!-- Dashboard dan Akun Pengguna -->
+      @foreach ($links as $link)
+        <a href="{{ route($link['route']) }}"
+           class="{{ $btnBase }} {{ $link['active'] ? $btnActive : $btnIdle }} justify-start px-3.5">
+          <x-dynamic-component :component="$link['icon']"
+            class="h-5 w-5 shrink-0 transition-colors duration-200 {{ $link['active'] ? 'text-white' : 'text-gray-700 group-hover:text-primary-1' }}" />
+          <span class="ml-3 truncate text-sm {{ $link['active'] ? 'font-bold text-white' : 'font-medium' }}">
+            {{ $link['label'] }}
+          </span>
+        </a>
+      @endforeach
+
+      <!-- Polling Menu (Accordion Auto Hover) -->
+      <div class="relative w-full shrink-0"
+           x-data="{ isHovered: false }"
+           @mouseenter="isHovered = true"
+           @mouseleave.debounce.150ms="isHovered = false">
 
       <!-- Tombol Induk Polling -->
       <button class="{{ $btnBase }} {{ $isPollingActive ? $btnActive : $btnIdle }} justify-between px-3.5">

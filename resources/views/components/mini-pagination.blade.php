@@ -1,8 +1,8 @@
 @props(['paginator'])
 
 @php
-  $btn = 'flex h-8 w-8 items-center justify-center rounded-sm bg-primary-1 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all';
-  $pill = 'flex h-8 items-center justify-center rounded-sm bg-primary-1 px-4 text-xs font-bold text-white shadow-menu';
+  $btn = 'flex h-8 w-8 items-center justify-center rounded-xl bg-primary-1 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all';
+  $pill = 'flex h-8 items-center justify-center rounded-xl bg-primary-1 px-4 text-xs font-bold text-white shadow-menu';
   $off = 'pointer-events-none opacity-40';
 @endphp
 

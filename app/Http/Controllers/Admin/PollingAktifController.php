@@ -3,97 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Partisipasi;
+use App\Models\PeriodePolling;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class PollingAktifController extends Controller
 {
-    private function getSampleData()
-    {
-        return [
-            [
-                'name'       => 'Melisa Danuar, S.T',
-                'email'      => 'melisadanuar@mail.ugm.ac.id',
-                'unit_kerja' => 'Departemen Teknik Elektro dan Informatika',
-                'no_telp'    => '081234567890',
-                'peserta'    => 'Dosen & Tendik dipisah',
-                'wisata'     => 'Pantai Kartini',
-                'kaos'       => 'Navy Polo Gathering',
-                'status'     => 'Tersimpan',
-                'kaos_items' => [
-                    ['penerima' => 'Diri Sendiri', 'size' => 'L', 'jumlah' => 1],
-                    ['penerima' => 'Pasangan', 'size' => 'M', 'jumlah' => 1],
-                    ['penerima' => 'Anak 1', 'size' => 'S', 'jumlah' => 1],
-                ]
-            ],
-            [
-                'name'       => 'Dr. Budi Santoso, M.Kom',
-                'email'      => 'budisantoso@ugm.ac.id',
-                'unit_kerja' => 'Laboratorium Rekayasa Perangkat Lunak',
-                'no_telp'    => '081398765432',
-                'peserta'    => 'Dosen & Tendik dipisah',
-                'wisata'     => 'Karimunjawa',
-                'kaos'       => 'Navy Polo Gathering',
-                'status'     => 'Tersimpan',
-                'kaos_items' => [
-                    ['penerima' => 'Diri Sendiri', 'size' => 'XL', 'jumlah' => 1],
-                    ['penerima' => 'Istri', 'size' => 'L', 'jumlah' => 1],
-                    ['penerima' => 'Anak 1', 'size' => 'M', 'jumlah' => 1],
-                    ['penerima' => 'Anak 2', 'size' => 'S', 'jumlah' => 1],
-                ]
-            ],
-            [
-                'name'       => 'Siti Rahmawati, S.Kom., M.Cs',
-                'email'      => 'siti.rahma@ugm.ac.id',
-                'unit_kerja' => 'Program Studi Sarjana Terapan TRIK',
-                'no_telp'    => '082155667788',
-                'peserta'    => 'Dosen & Tendik digabung',
-                'wisata'     => 'Pantai Kartini',
-                'kaos'       => 'White Cotton Casual',
-                'status'     => 'Tersimpan',
-                'kaos_items' => [
-                    ['penerima' => 'Diri Sendiri', 'size' => 'M', 'jumlah' => 1],
-                ]
-            ],
-            [
-                'name'       => 'Ahmad Fauzan, S.T., M.Eng',
-                'email'      => 'ahmadfauzan@ugm.ac.id',
-                'unit_kerja' => 'Laboratorium Jaringan Komputer & IoT',
-                'no_telp'    => '085712344321',
-                'peserta'    => 'Dosen & Tendik dipisah',
-                'wisata'     => 'Candi Borobudur',
-                'kaos'       => 'Navy Polo Gathering',
-                'status'     => 'Tersimpan',
-                'kaos_items' => [
-                    ['penerima' => 'Diri Sendiri', 'size' => 'XXL', 'jumlah' => 1],
-                    ['penerima' => 'Istri', 'size' => 'XL', 'jumlah' => 1],
-                ]
-            ],
-            [
-                'name'       => 'Dewi Lestari, A.Md',
-                'email'      => 'dewi.lestari@ugm.ac.id',
-                'unit_kerja' => 'Tata Usaha DTEDI SV UGM',
-                'no_telp'    => '087899887766',
-                'peserta'    => 'Dosen & Tendik dipisah',
-                'wisata'     => 'Pantai Kartini',
-                'kaos'       => 'White Cotton Casual',
-                'status'     => 'Tersimpan',
-                'kaos_items' => [
-                    ['penerima' => 'Diri Sendiri', 'size' => 'S', 'jumlah' => 1],
-                    ['penerima' => 'Suami', 'size' => 'L', 'jumlah' => 1],
-                    ['penerima' => 'Anak', 'size' => 'XS', 'jumlah' => 1],
-                ]
-            ],
-        ];
-    }
-
     public function index(Request $request)
     {
-        // ===== STATE CONTROL =====
-        // ?empty=1 → Polling aktif kosong (belum ada voting berjalan)
-        $isEmpty = $request->boolean('empty');
+        // Cari polling yang sedang berstatus 'aktif' dari database nyata
+        $periodeAktif = PeriodePolling::with(['paketWisata', 'desainKaos', 'partisipasi.user', 'partisipasi.paketWisata', 'partisipasi.desainKaos', 'partisipasi.ukuranKaos'])
+            ->where('status', 'aktif')
+            ->first();
 
-        if ($isEmpty) {
+        // Jika tidak ada polling aktif di database
+        if (! $periodeAktif) {
             return view('admin.polling.aktif', [
                 'title'      => 'Belum Ada Polling Aktif',
                 'subtitle'   => 'Saat ini belum ada sesi pemungutan suara yang sedang berlangsung.',
@@ -108,35 +33,232 @@ class PollingAktifController extends Controller
             ]);
         }
 
+        // Hitung Countdown
+        $endDate = \Carbon\Carbon::parse($periodeAktif->tanggal_selesai . ' 23:59:59');
+        $diff = now()->diff($endDate);
+        $countdown = [
+            'days'    => max(0, $diff->days),
+            'hours'   => max(0, $diff->h),
+            'minutes' => max(0, $diff->i),
+        ];
+
+        $deadline = [
+            $endDate->translatedFormat('l'),
+            $endDate->translatedFormat('d M Y, H.i') . ' WIB',
+        ];
+
+        // Partisipasi
+        $partisipasi = $periodeAktif->partisipasi;
+        $totalReceived = $partisipasi->count();
+        $totalSivitas = 340; // Total estimasi pemilih DTEDI
+        $percent = $totalSivitas > 0 ? round(($totalReceived / $totalSivitas) * 100) : 0;
+        $totalVote = [
+            'percent'  => $percent,
+            'received' => $totalReceived,
+            'pending'  => max(0, $totalSivitas - $totalReceived),
+        ];
+
+        // Hitung suara per kategori
+        $wisataCounts = $partisipasi->groupBy('id_paket');
+        $wisataOptions = $periodeAktif->paketWisata->map(function ($p) use ($wisataCounts) {
+            $votes = $wisataCounts->get($p->id_paket, collect())->count();
+            return [
+                'name'   => $p->nama_destinasi,
+                'dosen'  => $votes,
+                'tendik' => 0,
+                'total'  => $votes,
+            ];
+        });
+
+        $kaosCounts = $partisipasi->groupBy('id_kaos');
+        $kaosOptions = $periodeAktif->desainKaos->map(function ($k) use ($kaosCounts) {
+            $votes = $kaosCounts->get($k->id_kaos, collect())->count();
+            return [
+                'name'   => $k->nama_desain,
+                'dosen'  => $votes,
+                'tendik' => 0,
+                'total'  => $votes,
+            ];
+        });
+
+        $pesertaOptions = [
+            ['name' => 'Dosen dan tendik dipisah', 'dosen' => $partisipasi->where('pilihan_kelompok', 'dipisah')->count(), 'tendik' => 0, 'total' => $partisipasi->where('pilihan_kelompok', 'dipisah')->count()],
+            ['name' => 'Dosen dan tendik digabung', 'dosen' => $partisipasi->where('pilihan_kelompok', 'digabung')->count(), 'tendik' => 0, 'total' => $partisipasi->where('pilihan_kelompok', 'digabung')->count()],
+        ];
+
         $categories = [
-            'peserta' => ['label' => 'Peserta', 'options' => [
-                ['name' => 'Dosen dan tendik dipisah',   'dosen' => 154, 'tendik' => 66],
-                ['name' => 'Dosen dan tendik digabung',  'dosen' => 90,  'tendik' => 40],
-            ]],
-            'wisata' => ['label' => 'Tempat Wisata', 'options' => [
-                ['name' => 'Pantai Kartini',  'dosen' => 120, 'tendik' => 40],
-                ['name' => 'Karimunjawa',     'dosen' => 80,  'tendik' => 30],
-                ['name' => 'Candi Borobudur', 'dosen' => 60,  'tendik' => 20],
-                ['name' => 'Kebun Teh',       'dosen' => 40,  'tendik' => 10],
-                ['name' => 'Pantai Indrayanti','dosen' => 35, 'tendik' => 15],
-                ['name' => 'Bromo Sunrise',   'dosen' => 30,  'tendik' => 10],
-                ['name' => 'Dieng Plateau',   'dosen' => 20,  'tendik' => 5],
-            ]],
-            'kaos' => ['label' => 'Desain Kaos', 'options' => [
-                ['name' => 'Navy Polo Gathering', 'dosen' => 110, 'tendik' => 50],
-                ['name' => 'White Cotton Casual', 'dosen' => 90,  'tendik' => 30],
-            ]],
+            'peserta' => ['label' => 'Peserta', 'options' => $pesertaOptions],
+            'wisata'  => ['label' => 'Tempat Wisata', 'options' => $wisataOptions->toArray()],
+            'kaos'    => ['label' => 'Desain Kaos', 'options' => $kaosOptions->toArray()],
         ];
 
         foreach ($categories as $key => &$cat) {
-            $catTotal = collect($cat['options'])->sum(fn ($o) => $o['dosen'] + $o['tendik']);
+            $catTotal = collect($cat['options'])->sum('total');
             $cat['options'] = collect($cat['options'])->map(function ($o) use ($catTotal) {
-                $total = $o['dosen'] + $o['tendik'];
+                $total = $o['total'];
                 return $o + [
-                    'total'      => $total,
-                    'dosen_pct'  => $total ? round($o['dosen'] / $total * 100) : 0,
-                    'tendik_pct' => $total ? round($o['tendik'] / $total * 100) : 0,
-                    'proporsi'   => $catTotal ? round($total / $catTotal * 100) : 0,
+                    'dosen_pct'  => 100,
+                    'tendik_pct' => 0,
+                    'proporsi'   => $catTotal > 0 ? round(($total / $catTotal) * 100) : 0,
+                ];
+            })->sortByDesc('total')->values();
+        }
+        unset($cat);
+
+        // Filter kategori view
+        $kategori = $request->query('kategori', 'semua');
+        $kategori = array_key_exists($kategori, $categories) ? $kategori : 'semua';
+
+        // Activities (Aktivitas suara masuk)
+        $activitiesList = $partisipasi->map(function ($pt) {
+            $u = $pt->user;
+            return [
+                'name'       => $u->nama ?? 'Sivitas DTEDI',
+                'email'      => $u->email ?? '-',
+                'unit_kerja' => 'DTEDI SV UGM',
+                'no_telp'    => '-',
+                'peserta'    => $pt->pilihan_kelompok === 'dipisah' ? 'Dosen & Tendik dipisah' : 'Dosen & Tendik digabung',
+                'wisata'     => $pt->paketWisata->nama_destinasi ?? '-',
+                'kaos'       => $pt->desainKaos->nama_desain ?? '-',
+                'status'     => 'Tersimpan',
+                'kaos_items' => [
+                    ['penerima' => 'Diri Sendiri', 'size' => $pt->ukuranKaos->kode_ukuran ?? 'L', 'jumlah' => 1]
+                ]
+            ];
+        });
+
+        $perPage = (int) $request->query('per_page', 10);
+        $page = max(1, (int) $request->query('page', 1));
+        $activities = new LengthAwarePaginator(
+            $activitiesList->forPage($page, $perPage)->values(),
+            $activitiesList->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // Rekap ukuran kaos
+        $rekapKaos = [
+            'XS'  => 0, 'S'   => 0, 'M'   => 0, 'L'   => 0, 'XL'  => 0, 'XXL' => 0, '3XL' => 0,
+        ];
+        foreach ($partisipasi as $pt) {
+            $kode = $pt->ukuranKaos->kode_ukuran ?? null;
+            if ($kode && isset($rekapKaos[$kode])) {
+                $rekapKaos[$kode]++;
+            }
+        }
+        $totalKaos = array_sum($rekapKaos);
+
+        return view('admin.polling.aktif', [
+            'title'      => $periodeAktif->nama_periode,
+            'subtitle'   => 'Pemungutan suara yang sedang berjalan untuk civitas DTEDI Sekolah Vokasi UGM.',
+            'countdown'  => $countdown,
+            'deadline'   => $deadline,
+            'totalVote'  => $totalVote,
+            'categories' => $categories,
+            'kategori'   => $kategori,
+            'activities' => $activities,
+            'rekapKaos'  => $rekapKaos,
+            'totalKaos'  => $totalKaos,
+            'isStandalone' => false,
+        ]);
+    }
+
+    public function detail(Request $request, $id = null)
+    {
+        // Cari polling spesifik berdasarkan ID jika diberikan, atau ambil polling aktif / polling pertama
+        $query = PeriodePolling::with(['paketWisata', 'desainKaos', 'partisipasi.user', 'partisipasi.paketWisata', 'partisipasi.desainKaos', 'partisipasi.ukuranKaos']);
+        
+        if ($id) {
+            $periode = $query->find($id);
+        } else {
+            $periode = $query->where('status', 'aktif')->first() ?? $query->first();
+        }
+
+        // Jika tidak ada data di DB, gunakan fallback tampilan dummy
+        if (! $periode) {
+            return view('admin.polling.detail', [
+                'title'      => 'Detail Polling',
+                'subtitle'   => 'Rincian dan data statistik pemungutan suara.',
+                'countdown'  => ['days' => 0, 'hours' => 0, 'minutes' => 0],
+                'deadline'   => ['-', '-'],
+                'totalVote'  => ['percent' => 0, 'received' => 0, 'pending' => 0],
+                'categories' => [],
+                'kategori'   => 'semua',
+                'activities' => new LengthAwarePaginator(collect(), 0, 10, 1, ['path' => $request->url()]),
+                'rekapKaos'  => [],
+                'totalKaos'  => 0,
+                'status'     => 'selesai',
+            ]);
+        }
+
+        // Hitung Countdown jika aktif
+        $endDate = \Carbon\Carbon::parse($periode->tanggal_selesai . ' 23:59:59');
+        $diff = now()->diff($endDate);
+        $countdown = [
+            'days'    => max(0, $diff->days),
+            'hours'   => max(0, $diff->h),
+            'minutes' => max(0, $diff->i),
+        ];
+
+        $deadline = [
+            $endDate->translatedFormat('l'),
+            $endDate->translatedFormat('d M Y, H.i') . ' WIB',
+        ];
+
+        // Partisipasi
+        $partisipasi = $periode->partisipasi;
+        $totalReceived = $partisipasi->count();
+        $totalSivitas = 340;
+        $percent = $totalSivitas > 0 ? round(($totalReceived / $totalSivitas) * 100) : 0;
+        $totalVote = [
+            'percent'  => $percent,
+            'received' => $totalReceived,
+            'pending'  => max(0, $totalSivitas - $totalReceived),
+        ];
+
+        // Hitung suara per kategori
+        $wisataCounts = $partisipasi->groupBy('id_paket');
+        $wisataOptions = $periode->paketWisata->map(function ($p) use ($wisataCounts) {
+            $votes = $wisataCounts->get($p->id_paket, collect())->count();
+            return [
+                'name'   => $p->nama_destinasi,
+                'dosen'  => $votes,
+                'tendik' => 0,
+                'total'  => $votes,
+            ];
+        });
+
+        $kaosCounts = $partisipasi->groupBy('id_kaos');
+        $kaosOptions = $periode->desainKaos->map(function ($k) use ($kaosCounts) {
+            $votes = $kaosCounts->get($k->id_kaos, collect())->count();
+            return [
+                'name'   => $k->nama_desain,
+                'dosen'  => $votes,
+                'tendik' => 0,
+                'total'  => $votes,
+            ];
+        });
+
+        $pesertaOptions = [
+            ['name' => 'Dosen dan tendik dipisah', 'dosen' => $partisipasi->where('pilihan_kelompok', 'dipisah')->count(), 'tendik' => 0, 'total' => $partisipasi->where('pilihan_kelompok', 'dipisah')->count()],
+            ['name' => 'Dosen dan tendik digabung', 'dosen' => $partisipasi->where('pilihan_kelompok', 'digabung')->count(), 'tendik' => 0, 'total' => $partisipasi->where('pilihan_kelompok', 'digabung')->count()],
+        ];
+
+        $categories = [
+            'peserta' => ['label' => 'Peserta', 'options' => $pesertaOptions],
+            'wisata'  => ['label' => 'Tempat Wisata', 'options' => $wisataOptions->toArray()],
+            'kaos'    => ['label' => 'Desain Kaos', 'options' => $kaosOptions->toArray()],
+        ];
+
+        foreach ($categories as $key => &$cat) {
+            $catTotal = collect($cat['options'])->sum('total');
+            $cat['options'] = collect($cat['options'])->map(function ($o) use ($catTotal) {
+                $total = $o['total'];
+                return $o + [
+                    'dosen_pct'  => 100,
+                    'tendik_pct' => 0,
+                    'proporsi'   => $catTotal > 0 ? round(($total / $catTotal) * 100) : 0,
                 ];
             })->sortByDesc('total')->values();
         }
@@ -145,46 +267,57 @@ class PollingAktifController extends Controller
         $kategori = $request->query('kategori', 'semua');
         $kategori = array_key_exists($kategori, $categories) ? $kategori : 'semua';
 
-        $perPage = (int) $request->query('per_page', 10);
-        $perPage = in_array($perPage, [10, 25, 50]) ? $perPage : 10;
-        $page = max(1, (int) $request->query('page', 1));
-
-        $sample = $this->getSampleData();
-        $all = collect(range(1, 40))->map(function ($i) use ($sample) {
-            $base = $sample[($i - 1) % count($sample)];
-            $base['name'] = $base['name'] . ($i > count($sample) ? ' (' . $i . ')' : '');
-            return $base;
+        // Activities
+        $activitiesList = $partisipasi->map(function ($pt) {
+            $u = $pt->user;
+            return [
+                'name'       => $u->nama ?? 'Sivitas DTEDI',
+                'email'      => $u->email ?? '-',
+                'unit_kerja' => 'DTEDI SV UGM',
+                'no_telp'    => '-',
+                'peserta'    => $pt->pilihan_kelompok === 'dipisah' ? 'Dosen & Tendik dipisah' : 'Dosen & Tendik digabung',
+                'wisata'     => $pt->paketWisata->nama_destinasi ?? '-',
+                'kaos'       => $pt->desainKaos->nama_desain ?? '-',
+                'status'     => 'Tersimpan',
+                'kaos_items' => [
+                    ['penerima' => 'Diri Sendiri', 'size' => $pt->ukuranKaos->kode_ukuran ?? 'L', 'jumlah' => 1]
+                ]
+            ];
         });
 
+        $perPage = (int) $request->query('per_page', 10);
+        $page = max(1, (int) $request->query('page', 1));
         $activities = new LengthAwarePaginator(
-            $all->forPage($page, $perPage)->values(),
-            $all->count(), $perPage, $page,
+            $activitiesList->forPage($page, $perPage)->values(),
+            $activitiesList->count(),
+            $perPage,
+            $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        // Rekap total ukuran kaos untuk keperluan produksi vendor
         $rekapKaos = [
-            'XS'  => 12,
-            'S'   => 48,
-            'M'   => 85,
-            'L'   => 120,
-            'XL'  => 64,
-            'XXL' => 22,
-            '3XL' => 8,
+            'XS'  => 0, 'S'   => 0, 'M'   => 0, 'L'   => 0, 'XL'  => 0, 'XXL' => 0, '3XL' => 0,
         ];
+        foreach ($partisipasi as $pt) {
+            $kode = $pt->ukuranKaos->kode_ukuran ?? null;
+            if ($kode && isset($rekapKaos[$kode])) {
+                $rekapKaos[$kode]++;
+            }
+        }
         $totalKaos = array_sum($rekapKaos);
 
-        return view('admin.polling.aktif', [
-            'title'      => 'Piknik DTEDI Periode 2026',
-            'subtitle'   => 'Pemungutan suara untuk menentukan lokasi dan tanggal pelaksanaan piknik tahunan civitas DTEDI.',
-            'countdown'  => ['days' => 3, 'hours' => 8, 'minutes' => 45],
-            'deadline'   => ['Jumat', '16 Okt 2026, 18.00 WIB'],
-            'totalVote'  => ['percent' => 82, 'received' => 279, 'pending' => 61],
+        return view('admin.polling.detail', [
+            'title'      => $periode->nama_periode,
+            'subtitle'   => 'Rincian dan analitik pemungutan suara sivitas DTEDI Sekolah Vokasi UGM.',
+            'countdown'  => $countdown,
+            'deadline'   => $deadline,
+            'totalVote'  => $totalVote,
             'categories' => $categories,
             'kategori'   => $kategori,
             'activities' => $activities,
             'rekapKaos'  => $rekapKaos,
             'totalKaos'  => $totalKaos,
+            'status'     => $periode->status,
         ]);
     }
 
@@ -206,21 +339,21 @@ class PollingAktifController extends Controller
         $callback = function () {
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
-
-            // Header kolom CSV sesuai permintaan user: Nama, Unit Kerja, No Telp, Ukuran Kaos
             fputcsv($handle, ['No', 'Nama', 'Unit Kerja', 'No Telp', 'Ukuran Kaos']);
 
-            $data = $this->getSampleData();
+            $periodeAktif = PeriodePolling::with(['partisipasi.user', 'partisipasi.ukuranKaos'])
+                ->where('status', 'aktif')
+                ->first();
+
             $no = 1;
-            foreach ($data as $d) {
-                foreach ($d['kaos_items'] as $item) {
-                    $namaDisplay = $d['name'] . ($item['penerima'] !== 'Diri Sendiri' ? ' (' . $item['penerima'] . ')' : '');
+            if ($periodeAktif) {
+                foreach ($periodeAktif->partisipasi as $pt) {
                     fputcsv($handle, [
                         $no++,
-                        $namaDisplay,
-                        $d['unit_kerja'] ?? '-',
-                        $d['no_telp'] ?? '-',
-                        $item['size'],
+                        $pt->user->nama ?? 'Sivitas',
+                        'DTEDI SV UGM',
+                        '-',
+                        $pt->ukuranKaos->kode_ukuran ?? 'L',
                     ]);
                 }
             }
