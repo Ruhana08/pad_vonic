@@ -73,7 +73,7 @@
           <h2 class="text-2xl font-bold text-black">Hasil Sementara</h2>
           <p class="mt-1 text-sm text-primary-1">Prioritas utama untuk memantau pilihan teratas di setiap kategori.</p>
         </div>
-        <x-button variant="gradient" :href="route('admin.polling.aktif') . '#rekapitulasi-suara'" class="px-6 py-2.5 text-sm">
+        <x-button variant="primary-1" :href="route('admin.polling.aktif') . '#rekapitulasi-suara'" class="px-6 py-2.5 text-sm">
           Lihat Semua
         </x-button>
       </div>
@@ -112,7 +112,7 @@
 
         <div class="mt-4 space-y-3">
           @forelse ($activities as $a)
-            <div class="flex items-center gap-3 rounded-xl bg-[#fafafa] p-3 shadow-xs">
+            <div class="flex items-center gap-3 rounded-xl bg-gray-50 p-3 shadow-xs">
               <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-3 text-xs font-bold text-primary-1">
                 <x-avatar :name="$a['name']" size="sm" />
               </span>

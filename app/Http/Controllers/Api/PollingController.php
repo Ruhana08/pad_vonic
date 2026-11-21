@@ -73,9 +73,10 @@ class PollingController extends Controller
     public function vote(Request $request, $id)
     {
         $request->validate([
-            'id_paket' => 'required|exists:paket_wisata,id_paket',
-            'id_kaos' => 'required|exists:desain_kaos,id_kaos',
-            'id_ukuran' => 'required|exists:ukuran_kaos,id_ukuran',
+            'id_paket'         => 'required|exists:paket_wisata,id_paket',
+            'id_kaos'          => 'required|exists:desain_kaos,id_kaos',
+            'id_ukuran'        => 'required|exists:ukuran_kaos,id_ukuran',
+            'pilihan_kelompok' => 'nullable|in:dipisah,digabung',
         ]);
 
         $periode = PeriodePolling::find($id);
@@ -109,12 +110,13 @@ class PollingController extends Controller
         }
 
         $partisipasi = \App\Models\Partisipasi::create([
-            'id_user' => $request->user()->id_user,
-            'id_periode' => $id,
-            'id_paket' => $request->id_paket,
-            'id_kaos' => $request->id_kaos,
-            'id_ukuran' => $request->id_ukuran,
-            'waktu_submit' => now(),
+            'id_user'          => $request->user()->id_user,
+            'id_periode'       => $id,
+            'id_paket'         => $request->id_paket,
+            'id_kaos'          => $request->id_kaos,
+            'id_ukuran'        => $request->id_ukuran,
+            'pilihan_kelompok' => $request->pilihan_kelompok ?? 'dipisah',
+            'waktu_submit'     => now(),
         ]);
 
         return response()->json([

@@ -90,7 +90,7 @@
               <tr class="transition-colors duration-150 hover:bg-[#F3F7FF] bg-white">
                 {{-- No. --}}
                 <td class="border-b border-gray-100 py-3.5 px-3 text-center">
-                  <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs">
+                  <span class="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs">
                     {{ str_pad($polls->firstItem() + $loop->index, 2, '0', STR_PAD_LEFT) }}
                   </span>
                 </td>
@@ -103,7 +103,7 @@
                 {{-- Polling Name (Bisa diklik untuk melihat analitik jika Aktif atau Selesai) --}}
                 <td class="border-b border-gray-100 py-3.5 px-4 font-semibold text-black">
                   @if ($p['status'] === 'Aktif' || $p['status'] === 'Selesai')
-                    <a href="{{ route('admin.polling.aktif') }}" class="hover:text-primary-1 hover:underline transition-colors" title="Lihat Statistik & Analitik Lengkap">
+                    <a href="{{ route('admin.polling.detail', ['id' => $p['id']]) }}" class="hover:text-primary-1 hover:underline transition-colors" title="Lihat Statistik & Analitik Lengkap">
                       {{ $p['name'] }}
                     </a>
                   @else
@@ -113,14 +113,14 @@
 
                 {{-- Waktu Mulai --}}
                 <td class="border-b border-gray-100 py-3.5 px-4 text-center">
-                  <span class="inline-flex h-7 items-center rounded-sm border border-primary-1 bg-white px-2.5 text-[11px] font-medium text-black shadow-xs">
+                  <span class="inline-flex h-7 items-center rounded-xl border border-primary-1 bg-white px-2.5 text-[11px] font-medium text-black shadow-xs">
                     {{ $p['start'] }}
                   </span>
                 </td>
 
                 {{-- Waktu Selesai --}}
                 <td class="border-b border-gray-100 py-3.5 px-4 text-center">
-                  <span class="inline-flex h-7 items-center rounded-sm border border-primary-1 bg-white px-2.5 text-[11px] font-medium text-black shadow-xs">
+                  <span class="inline-flex h-7 items-center rounded-xl border border-primary-1 bg-white px-2.5 text-[11px] font-medium text-black shadow-xs">
                     {{ $p['end'] }}
                   </span>
                 </td>
@@ -151,15 +151,15 @@
                       <x-action-button type="delete" label="Hapus Polling"
                                        @click="openDeleteModal({{ json_encode($p) }})" />
                     @elseif ($p['status'] === 'Aktif')
-                      {{-- Aktif: Lihat aktif (buka analitik full), Edit disabled, Post disabled, Hapus aktif (menghentikan voting) --}}
-                      <x-action-button type="view" :href="route('admin.polling.aktif')" label="Lihat Rincian & Analitik Voting" />
+                      {{-- Aktif: Lihat aktif (buka analitik full dengan tombol kembali), Edit disabled, Post disabled, Hapus aktif (menghentikan voting) --}}
+                      <x-action-button type="view" :href="route('admin.polling.detail', ['id' => $p['id']])" label="Lihat Rincian & Analitik Voting" />
                       <x-action-button type="edit" :disabled="true" label="Tidak dapat mengedit polling yang sedang aktif" />
                       <x-action-button type="upload" :disabled="true" label="Polling sudah aktif" />
                       <x-action-button type="delete" label="Hentikan / Akhiri Polling"
                                        @click="openDeleteModal({{ json_encode($p) }})" />
                     @else
-                      {{-- Selesai: Lihat aktif (buka analitik arsip), Edit disabled, Post disabled, Hapus aktif --}}
-                      <x-action-button type="view" :href="route('admin.polling.aktif')" label="Lihat Rincian & Analitik Voting" />
+                      {{-- Selesai: Lihat aktif (buka analitik arsip dengan tombol kembali), Edit disabled, Post disabled, Hapus aktif --}}
+                      <x-action-button type="view" :href="route('admin.polling.detail', ['id' => $p['id']])" label="Lihat Rincian & Analitik Voting" />
                       <x-action-button type="edit" :disabled="true" label="Polling yang telah selesai tidak dapat diedit" />
                       <x-action-button type="upload" :disabled="true" label="Polling sudah selesai" />
                       <x-action-button type="delete" label="Hapus Polling"
@@ -287,7 +287,7 @@
                          x-bind:checked="isPub(h.id)" x-on:click.stop="toggle(h.id)" aria-label="Jadikan publik">
                 </td>
                 <td class="border-b border-gray-100 py-3.5 px-3 text-center">
-                  <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs"
+                  <span class="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs"
                         x-text="String((page - 1) * perPage + i + 1).padStart(2, '0')"></span>
                 </td>
                 <td class="border-b border-gray-100 py-3.5 px-4 font-semibold text-black">
@@ -297,11 +297,11 @@
                     x-bind:title="h.description" x-text="h.description"></td>
                 {{-- Waktu Mulai --}}
                 <td class="border-b border-gray-100 py-3.5 px-4 text-center">
-                  <span class="inline-flex h-7 items-center rounded-sm border border-primary-1 bg-white px-2.5 text-[11px] font-medium text-black shadow-xs" x-text="h.start"></span>
+                  <span class="inline-flex h-7 items-center rounded-xl border border-primary-1 bg-white px-2.5 text-[11px] font-medium text-black shadow-xs" x-text="h.start"></span>
                 </td>
                 {{-- Waktu Selesai --}}
                 <td class="border-b border-gray-100 py-3.5 px-4 text-center">
-                  <span class="inline-flex h-7 items-center rounded-sm border border-primary-1 bg-white px-2.5 text-[11px] font-medium text-black shadow-xs" x-text="h.end"></span>
+                  <span class="inline-flex h-7 items-center rounded-xl border border-primary-1 bg-white px-2.5 text-[11px] font-medium text-black shadow-xs" x-text="h.end"></span>
                 </td>
                 {{-- Akses Pill --}}
                 <td class="border-b border-gray-100 py-3.5 px-3 text-center">
@@ -313,7 +313,7 @@
                 <td class="border-b border-gray-100 py-3.5 px-3 text-center">
                   <button type="button"
                           @click.stop="openResultModal(h)"
-                          class="inline-flex items-center justify-center rounded-sm bg-primary-1 px-3 py-1.5 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all cursor-pointer">
+                          class="inline-flex items-center justify-center rounded-xl bg-primary-1 px-3 py-1.5 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all cursor-pointer">
                     Hasil Polling
                   </button>
                 </td>
@@ -344,30 +344,30 @@
       <div class="flex items-center justify-between pb-3 border-b border-gray-100">
         <span class="text-sm font-bold text-primary-1">Akses</span>
         <button type="button" x-show="!editMode" x-on:click="startEdit()" aria-label="Ubah akses"
-                class="flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 text-primary-1 shadow-xs hover:border-primary-1 hover:bg-primary-3/30 transition-all">
+                class="flex h-7 w-7 items-center justify-center rounded-xl border border-grey-1 text-primary-1 shadow-xs hover:border-primary-1 hover:bg-primary-3/30 transition-all">
           <x-solar-pen-new-square-linear class="h-4 w-4" />
         </button>
       </div>
 
       <div class="mt-4 space-y-2.5">
         <div class="flex items-center gap-2">
-          <span class="flex-1 rounded-sm bg-primary-1 px-3 py-2 text-xs font-medium text-white shadow-xs">Publik</span>
-          <span class="min-w-14 rounded-sm border border-grey-1 bg-white px-2 py-2 text-center text-xs font-bold text-black shadow-xs leading-none" x-text="publik">0</span>
+          <span class="flex-1 rounded-xl bg-primary-1 px-3 py-2 text-xs font-medium text-white shadow-xs">Publik</span>
+          <span class="min-w-14 rounded-xl border border-grey-1 bg-white px-2 py-2 text-center text-xs font-bold text-black shadow-xs leading-none" x-text="publik">0</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="flex-1 rounded-sm bg-primary-1 px-3 py-2 text-xs font-medium text-white shadow-xs">Private</span>
-          <span class="min-w-14 rounded-sm border border-grey-1 bg-white px-2 py-2 text-center text-xs font-bold text-black shadow-xs leading-none" x-text="privat">0</span>
+          <span class="flex-1 rounded-xl bg-primary-1 px-3 py-2 text-xs font-medium text-white shadow-xs">Private</span>
+          <span class="min-w-14 rounded-xl border border-grey-1 bg-white px-2 py-2 text-center text-xs font-bold text-black shadow-xs leading-none" x-text="privat">0</span>
         </div>
       </div>
 
       <div x-show="editMode" x-cloak class="mt-5 space-y-2 border-t border-gray-100 pt-4">
         <p class="text-[11px] leading-snug text-grey-deep">Centang baris yang ingin dijadikan publik.</p>
         <button type="button" x-on:click="save()"
-                class="w-full rounded-sm bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
+                class="w-full rounded-xl bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
           Simpan
         </button>
         <button type="button" x-on:click="cancel()"
-                class="w-full rounded-sm border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
+                class="w-full rounded-xl border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
           Batal
         </button>
       </div>
@@ -389,7 +389,7 @@
       <div class="mt-6">
         <button type="button"
                 @click="modalMode = null"
-                class="w-full rounded-sm bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
+                class="w-full rounded-xl bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
           Mengerti
         </button>
       </div>
@@ -408,12 +408,12 @@
       </p>
       <div class="mt-6 flex items-center gap-3">
         <a :href="'{{ route('admin.polling.create') }}?id=' + (targetPoll ? targetPoll.id : '')"
-           class="flex-1 rounded-sm border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all text-center">
+           class="flex-1 rounded-xl border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all text-center">
           Edit Waktu
         </a>
         <button type="button"
                 @click="confirmPostNow()"
-                class="flex-1 rounded-sm bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
+                class="flex-1 rounded-xl bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
           Tetap Post
         </button>
       </div>
@@ -433,12 +433,12 @@
       <div class="mt-6 flex items-center gap-3">
         <button type="button"
                 @click="modalMode = null"
-                class="flex-1 rounded-sm border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
+                class="flex-1 rounded-xl border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
           Batal
         </button>
         <button type="button"
                 @click="confirmDelete()"
-                class="flex-1 rounded-sm bg-danger py-2 text-xs font-semibold text-white shadow-menu hover:bg-red-700 transition-all">
+                class="flex-1 rounded-xl bg-danger py-2 text-xs font-semibold text-white shadow-menu hover:bg-red-700 transition-all">
           Ya, Hentikan
         </button>
       </div>
@@ -458,12 +458,12 @@
       <div class="mt-6 flex items-center gap-3">
         <button type="button"
                 @click="modalMode = null"
-                class="flex-1 rounded-sm border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
+                class="flex-1 rounded-xl border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
           Batal
         </button>
         <button type="button"
                 @click="confirmDelete()"
-                class="flex-1 rounded-sm bg-danger py-2 text-xs font-semibold text-white shadow-menu hover:bg-red-700 transition-all">
+                class="flex-1 rounded-xl bg-danger py-2 text-xs font-semibold text-white shadow-menu hover:bg-red-700 transition-all">
           Ya, Hapus
         </button>
       </div>
@@ -480,8 +480,8 @@
           <h2 class="mt-1 text-2xl font-bold text-black" x-text="activeHistoryItem?.title"></h2>
         </div>
         <button type="button" @click="modalMode = null"
-                class="flex h-8 w-8 items-center justify-center rounded-full text-grey-2 hover:bg-gray-100 hover:text-black transition-colors cursor-pointer">
-          <x-solar-close-circle-linear class="h-6 w-6" />
+                class="flex h-8 w-8 items-center justify-center rounded-full text-grey-2 hover:bg-gray-100 hover:text-danger transition-colors cursor-pointer">
+          <x-solar-close-circle-linear class="h-5 w-5" />
         </button>
       </div>
 
@@ -663,7 +663,7 @@
       <button type="button"
               @click="previewImage = null"
               class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors cursor-pointer">
-        <x-solar-close-circle-linear class="h-6 w-6" />
+        <x-solar-close-circle-linear class="h-5 w-5" />
       </button>
       <div class="w-full max-h-[80vh] flex items-center justify-center overflow-hidden rounded-xl p-2">
         <img :src="previewImage" alt="Preview Foto Fullscreen" class="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl">

@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-  $field = 'h-10 w-full rounded-sm border border-grey-1 bg-white px-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none';
+  $field = 'h-10 w-full rounded-xl border border-grey-1 bg-white px-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none';
 @endphp
 
 <div class="space-y-6" x-data="{
@@ -78,9 +78,9 @@
          @mouseenter="openDropdown = true"
          @mouseleave="openDropdown = false">
       
-      {{-- Tombol Utama --}}
+      {{-- Tombol Utama Tambah Akun Baru (Size LG / h-11) --}}
       <button type="button"
-              class="inline-flex items-center gap-2 rounded-sm bg-gradient-to-r from-primary-1 to-secondary-1 px-5 py-2.5 text-xs font-semibold text-white shadow-primary-glow hover:opacity-95 transition-all">
+              class="btn-gradient h-11 px-5 text-xs">
         <x-solar-add-circle-linear class="h-4 w-4" />
         <span>Tambah Akun Baru</span>
         <x-solar-alt-arrow-down-linear class="h-3 w-3 ml-0.5 transition-transform duration-200"
@@ -152,13 +152,13 @@
 
     {{-- Tombol Reset Filter --}}
     <a href="{{ route('admin.akun.index', ['tab' => $tab]) }}"
-       class="flex h-10 items-center justify-center rounded-sm border border-grey-1 bg-white px-5 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 hover:text-black transition-all">
+       class="btn-secondary h-10 px-5 text-xs">
       Reset Filter
     </a>
 
     {{-- Tombol Cari Data --}}
     <button type="submit"
-            class="flex h-10 items-center justify-center rounded-sm border border-grey-1 bg-white px-5 text-xs font-semibold text-primary-1 shadow-xs hover:border-primary-1 hover:bg-primary-3/30 transition-all">
+            class="btn-secondary h-10 px-5 text-xs">
       Cari Data
     </button>
   </form>
@@ -170,7 +170,7 @@
     <div class="flex items-center gap-3">
       @foreach (['dosen' => 'Dosen', 'tendik' => 'Tenaga Kependidikan'] as $key => $label)
         <a href="{{ route('admin.akun.index', ['tab' => $key]) }}"
-           class="flex h-10 items-center justify-center rounded-sm px-7 text-xs font-semibold transition-all {{ $tab === $key ? 'bg-primary-1 text-white shadow-menu' : 'border border-primary-1 bg-white text-primary-1 hover:bg-primary-3/30' }}">
+           class="h-10 px-7 text-xs font-semibold {{ $tab === $key ? 'btn-primary' : 'btn-secondary' }}">
           {{ $label }}
         </a>
       @endforeach
@@ -182,12 +182,12 @@
         <colgroup>
           <col class="w-[5%] min-w-[50px]">   {{-- NO --}}
           <col class="w-[12%] min-w-[110px]"> {{-- ID --}}
-          <col class="w-[22%] min-w-[180px]"> {{-- NAMA --}}
-          <col class="w-[25%] min-w-[200px]"> {{-- EMAIL --}}
+          <col class="w-[20%] min-w-[170px]"> {{-- NAMA --}}
+          <col class="w-[23%] min-w-[190px]"> {{-- EMAIL --}}
           <col class="w-[10%] min-w-[90px]">  {{-- UNIT KERJA --}}
           <col class="w-[12%] min-w-[120px]"> {{-- NO TELP --}}
           <col class="w-[8%] min-w-[85px]">   {{-- STATUS --}}
-          <col class="w-[6%] min-w-[80px]">   {{-- AKSI --}}
+          <col class="w-[10%] min-w-[96px]">  {{-- AKSI --}}
         </colgroup>
         <thead>
           <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider text-center">
@@ -206,7 +206,7 @@
             <tr class="transition-colors duration-150 hover:bg-[#F3F7FF] bg-white">
               {{-- No. --}}
               <td class="border-b border-gray-100 py-3.5 px-3 text-left">
-                <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs">
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs">
                   {{ str_pad($accounts->firstItem() + $loop->index, 2, '0', STR_PAD_LEFT) }}
                 </span>
               </td>
@@ -297,11 +297,11 @@
         </div>
         <div class="flex items-center gap-2">
           <button type="button" @click="modalMode = null"
-                  class="rounded-sm border border-grey-1 px-4 py-2 text-xs font-semibold text-grey-deep hover:bg-gray-50 transition-all">
+                  class="rounded-xl border border-grey-1 px-4 py-2 text-xs font-semibold text-grey-deep hover:bg-gray-50 transition-all">
             Batal
           </button>
           <button type="button" @click="alert('Data akun berhasil disimpan!'); modalMode = null"
-                  class="rounded-sm bg-primary-1 px-6 py-2 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
+                  class="rounded-xl bg-primary-1 px-6 py-2 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
             Simpan
           </button>
         </div>
@@ -319,7 +319,7 @@
         </div>
 
         <div>
-          <label class="inline-flex cursor-pointer items-center gap-2 rounded-sm bg-primary-1 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-4 transition-all shadow-xs">
+          <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary-1 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-4 transition-all shadow-xs">
             <x-solar-upload-linear class="h-4 w-4" />
             <span>Upload Gambar</span>
             <input type="file" accept="image/*" class="hidden" @change="handleManualPhoto($event)">
@@ -331,7 +331,7 @@
       {{-- Input Fields Sesuai Gambar Figma --}}
       <div class="mt-6 space-y-3.5">
         {{-- Nama --}}
-        <div class="flex items-center rounded-sm border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
+        <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
           <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
             <x-solar-user-linear class="h-4 w-4 text-primary-1" />
             <span>Nama</span>
@@ -342,7 +342,7 @@
         </div>
 
         {{-- Email --}}
-        <div class="flex items-center rounded-sm border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
+        <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
           <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
             <x-solar-letter-linear class="h-4 w-4 text-primary-1" />
             <span>Email</span>
@@ -353,7 +353,7 @@
         </div>
 
         {{-- No. Telp --}}
-        <div class="flex items-center rounded-sm border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
+        <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
           <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
             <x-solar-phone-linear class="h-4 w-4 text-primary-1" />
             <span>No. Telp</span>
@@ -364,7 +364,7 @@
         </div>
 
         {{-- Pekerjaan / Role --}}
-        <div class="flex items-center rounded-sm border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
+        <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
           <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
             <x-solar-case-linear class="h-4 w-4 text-primary-1" />
             <span>Pekerjaan</span>
@@ -377,7 +377,7 @@
         </div>
 
         {{-- Unit Kerja --}}
-        <div class="flex items-center rounded-sm border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
+        <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
           <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
             <x-solar-buildings-linear class="h-4 w-4 text-primary-1" />
             <span>Unit kerja</span>
@@ -401,7 +401,7 @@
           <h2 class="text-xl font-bold text-primary-1">Impor Data Akun Massal</h2>
           <p class="mt-0.5 text-xs text-grey-deep">Unggah berkas CSV atau PDF data civitas untuk mengimpor akun sekaligus.</p>
         </div>
-        <button type="button" @click="modalMode = null" class="text-grey-2 hover:text-black text-2xl font-bold leading-none">&times;</button>
+        <button type="button" @click="modalMode = null" aria-label="Tutup" class="shrink-0 rounded-lg p-1.5 text-grey-2 hover:text-danger hover:bg-red-50 transition-colors cursor-pointer"><x-solar-close-circle-linear class="h-5 w-5" /></button>
       </div>
 
       {{-- Dropzone Area dengan Border Putus-putus --}}
@@ -411,7 +411,7 @@
         </div>
         <p class="text-base font-semibold text-black">Drag and Drop to Upload File</p>
         <p class="text-xs text-grey-2 mt-1">Or</p>
-        <span class="mt-4 inline-flex items-center justify-center rounded-sm bg-primary-1 px-8 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
+        <span class="mt-4 inline-flex items-center justify-center rounded-xl bg-primary-1 px-8 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
           Upload
         </span>
         <span class="mt-3 text-[11px] text-grey-2">Mendukung format file .CSV atau .PDF (Maksimal 10 MB)</span>
@@ -434,11 +434,11 @@
         
         <div class="flex items-center gap-2">
           <button type="button" @click="modalMode = 'import_upload'"
-                  class="rounded-sm border border-grey-1 px-4 py-2 text-xs font-semibold text-grey-deep hover:bg-gray-50">
+                  class="rounded-xl border border-grey-1 px-4 py-2 text-xs font-semibold text-grey-deep hover:bg-gray-50">
             Ganti File
           </button>
           <button type="button" @click="alert('Seluruh data impor yang valid berhasil disimpan!'); modalMode = null"
-                  class="rounded-sm bg-primary-1 px-6 py-2 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
+                  class="rounded-xl bg-primary-1 px-6 py-2 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
             Simpan
           </button>
         </div>
@@ -457,7 +457,7 @@
       </div>
 
       {{-- Tabel Preview (Header Biru Gelap) --}}
-      <div class="mt-4 overflow-y-auto overflow-x-auto flex-1 border border-grey-1 rounded-sm max-h-[360px]">
+      <div class="mt-4 overflow-y-auto overflow-x-auto flex-1 border border-grey-1 rounded-xl max-h-[360px]">
         <table class="w-full min-w-[750px] border-separate border-spacing-0 text-xs">
           <thead class="sticky top-0 z-10">
             <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider text-left">
@@ -475,7 +475,7 @@
                   :class="row.valid ? 'hover:bg-primary-3/20' : 'bg-red-50/70 hover:bg-red-100/60'">
                 {{-- No. --}}
                 <td class="py-3 px-3 text-left">
-                  <span class="inline-flex h-6 w-6 items-center justify-center rounded-sm border border-grey-1 bg-white text-[11px] font-semibold text-black"
+                  <span class="inline-flex h-6 w-6 items-center justify-center rounded-xl border border-grey-1 bg-white text-[11px] font-semibold text-black"
                         x-text="row.no"></span>
                 </td>
                 {{-- Nama --}}
@@ -517,7 +517,7 @@
     <div class="p-6">
       <div class="flex items-center justify-between border-b border-grey-1 pb-3">
         <div class="flex items-center gap-2">
-          <div class="flex h-9 w-9 items-center justify-center rounded-sm bg-primary-3 text-primary-1">
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-3 text-primary-1">
             <x-solar-pen-new-square-linear class="h-5 w-5" />
           </div>
           <div>
@@ -525,7 +525,7 @@
             <p class="text-[11px] text-grey-2" x-text="'ID: ' + editData.id"></p>
           </div>
         </div>
-        <button type="button" @click="modalMode = null" class="text-grey-2 hover:text-black text-xl font-bold leading-none">&times;</button>
+        <button type="button" @click="modalMode = null" aria-label="Tutup" class="shrink-0 rounded-lg p-1.5 text-grey-2 hover:text-danger hover:bg-red-50 transition-colors cursor-pointer"><x-solar-close-circle-linear class="h-5 w-5" /></button>
       </div>
 
       <form action="{{ route('admin.akun.store') }}" method="POST" class="mt-4 space-y-3.5">
@@ -573,12 +573,12 @@
         {{-- Tombol Batal & Simpan --}}
         <div class="mt-5 flex items-center justify-end gap-2 pt-3 border-t border-grey-1">
           <button type="button" @click="modalMode = null"
-                  class="rounded-sm border border-grey-1 bg-white px-4 py-2 text-xs font-semibold text-grey-deep hover:bg-gray-50 transition-all cursor-pointer">
+                  class="rounded-xl border border-grey-1 bg-white px-4 py-2 text-xs font-semibold text-grey-deep hover:bg-gray-50 transition-all cursor-pointer">
             Batal
           </button>
           <button type="button"
                   @click="modalMode = null; alert('Perubahan data akun sivitas berhasil disimpan!')"
-                  class="rounded-sm bg-primary-1 px-5 py-2 text-xs font-semibold text-white shadow-primary-glow hover:bg-primary-4 transition-all cursor-pointer">
+                  class="rounded-xl bg-primary-1 px-5 py-2 text-xs font-semibold text-white shadow-primary-glow hover:bg-primary-4 transition-all cursor-pointer">
             Simpan Perubahan
           </button>
         </div>
@@ -599,12 +599,12 @@
 
       <div class="mt-5 flex items-center justify-center gap-2 pt-2">
         <button type="button" @click="modalMode = null"
-                class="rounded-sm border border-grey-1 bg-white px-4 py-2 text-xs font-semibold text-grey-deep hover:bg-gray-50 transition-all cursor-pointer">
+                class="rounded-xl border border-grey-1 bg-white px-4 py-2 text-xs font-semibold text-grey-deep hover:bg-gray-50 transition-all cursor-pointer">
           Batal
         </button>
         <button type="button"
                 @click="modalMode = null; alert('Akun ' + deleteData.name + ' berhasil dihapus dari sistem.')"
-                class="rounded-sm bg-danger px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-rose-700 transition-all cursor-pointer">
+                class="rounded-xl bg-danger px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-rose-700 transition-all cursor-pointer">
           Ya, Hapus
         </button>
       </div>

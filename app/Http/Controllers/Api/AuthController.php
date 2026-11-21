@@ -11,15 +11,28 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => [
+                'required',
+                'email',
+                function ($attribute, $value, $fail) {
+                    $val = strtolower(trim($value));
+                    if (!str_ends_with($val, '@ugm.ac.id') && !str_ends_with($val, '@mail.ugm.ac.id')) {
+                        $fail('Wajib menggunakan alamat email resmi UGM (@ugm.ac.id atau @mail.ugm.ac.id).');
+                    }
+                },
+            ],
+        ], [
+            'email.required' => 'Silakan masukkan alamat email UGM Anda.',
+            'email.email'    => 'Format email tidak valid. Masukkan format email yang benar.',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $email = strtolower(trim($request->email));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
 
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email tidak terdaftar.',
+                'message' => 'Email ini belum terdaftar di daftar pemilih resmi DTEDI UGM. Silakan hubungi Admin jika Anda merupakan sivitas aktif.',
                 'data' => null
             ], 401);
         }
@@ -28,7 +41,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Login berhasil.',
+            'message' => 'Login berhasil. Selamat datang di Vonic!',
             'data' => [
                 'user' => $user,
                 'token' => $token

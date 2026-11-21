@@ -1,7 +1,7 @@
 @props(['name', 'percent', 'leading' => false])
 
 <div {{ $attributes->class([
-    'rounded-sm bg-white p-3 min-h-[88px]',
+    'rounded-xl bg-white p-3 min-h-[88px]',
     'border border-primary-1' => $leading,
     'border border-transparent' => ! $leading,
 ]) }}>

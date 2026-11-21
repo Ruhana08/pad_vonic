@@ -3,7 +3,7 @@
 @section('title', 'Log In Admin')
 
 @section('content')
-<div class="w-full max-w-[550px] rounded-[24px] bg-white p-[28px] shadow-[0px_11px_20px_0px_rgba(0,0,0,0.09),0px_3px_6px_0px_rgba(0,0,0,0.1)] border border-gray-100 flex flex-col gap-[20px]"
+<div class="w-full max-w-[550px] rounded-[24px] bg-white p-6 sm:p-7 shadow-[0px_11px_20px_0px_rgba(0,0,0,0.09),0px_3px_6px_0px_rgba(0,0,0,0.1)] border border-gray-100 flex flex-col gap-4"
      x-data="{
        step: 'login', // 'login' | 'otp'
        email: '',
@@ -59,12 +59,12 @@
      }">
 
   {{-- Brand Logos Atas Sesuai Figma --}}
-  <div class="flex items-center justify-center gap-[20px] h-[50px]">
+  <div class="flex items-center justify-center gap-10">
     <div class="flex flex-col items-center">
-      <img src="{{ asset('images/logo-vonic-b.webp') }}" alt="Vonic" class="h-[32px] w-[40px] object-contain" />
-      <span class="text-[12px] font-bold text-[#196bef] tracking-[0.96px]">Vonic</span>
+      <img src="{{ asset('images/logo-vonic-b.webp') }}" alt="Vonic" class="h-10 w-auto object-contain" />
+      <span class="mt-1 text-sm font-bold text-primary-1 tracking-wider">Vonic</span>
     </div>
-    <div class="h-[40px] w-[40px]">
+    <div class="h-12 w-12 flex items-center justify-center">
       <img src="{{ asset('images/logo-ugm.webp') }}" alt="UGM" class="h-full w-full object-contain" />
     </div>
   </div>
@@ -72,15 +72,13 @@
   {{-- ==================== STEP 1: FORM LOGIN ==================== --}}
   <div x-show="step === 'login'" x-transition class="space-y-[16px]">
     <div>
-      <h2 class="text-[22px] font-semibold text-[#191919] leading-[1.3]">Log In Admin</h2>
+      <h2 class="text-[22px] font-semibold text-[#191919] leading-[1.3]">Login Admin</h2>
       <p class="text-[14px] text-[#6d6d6d] leading-[1.6] mt-0.5 tracking-[0.14px]">
         Selamat datang kembali Admin Vonic
       </p>
     </div>
 
     <form @submit.prevent="submitLogin()" class="space-y-[14px]">
-      <p class="text-[12px] font-bold text-primary-1">Masuk ke Akun</p>
-
       {{-- Input Username / Email --}}
       <div class="space-y-[6px]">
         <div class="flex items-center h-[44px] px-[12px] gap-[12px] rounded-[8px] border border-[#c4c4c4] bg-white focus-within:border-primary-1 focus-within:ring-1 focus-within:ring-primary-1">
@@ -105,26 +103,26 @@
                   @click="showPassword = !showPassword"
                   class="text-[#acacac] hover:text-[#525252] focus:outline-none">
             <template x-if="!showPassword">
-              <x-solar-eye-linear class="h-4 w-4" />
+              <x-solar-eye-closed-linear class="h-4 w-4" />
             </template>
             <template x-if="showPassword">
-              <x-solar-eye-closed-linear class="h-4 w-4" />
+              <x-solar-eye-linear class="h-4 w-4" />
             </template>
           </button>
         </div>
         <div class="text-right">
-          <a href="#" class="text-[12px] font-medium text-[#6d6d6d] hover:text-primary-1 transition-colors">
+          <a href="{{ route('password.request') }}" class="text-[12px] font-medium text-[#6d6d6d] hover:text-primary-1 transition-colors">
             Lupa kata sandi?
           </a>
         </div>
       </div>
 
-      {{-- Tombol Login (Warna #196BEF / Gradient Sesuai Figma) --}}
+      {{-- Tombol Login (Gradient Main-Blue Konsisten) --}}
       <div class="pt-[6px]">
         <button type="submit"
-                class="w-full h-[54px] px-[16px] flex items-center justify-center gap-[12px] rounded-[8px] bg-primary-1 text-white text-[14px] font-medium shadow-md hover:bg-primary-4 transition-all cursor-pointer">
-          <span>Log In</span>
-          <x-solar-arrow-right-linear class="h-5 w-5" />
+                class="w-full h-[52px] px-[16px] flex items-center justify-center gap-[12px] rounded-[12px] bg-gradient-main-blue text-white text-[14px] font-semibold shadow-primary-glow hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer">
+          <span>Login</span>
+          <x-solar-login-2-linear class="h-5 w-5 shrink-0" />
         </button>
       </div>
 
@@ -181,18 +179,10 @@
 
       {{-- Tombol Konfirmasi Verifikasi --}}
       <button type="submit"
-              class="w-full h-[50px] flex items-center justify-center gap-2 rounded-[8px] bg-primary-1 text-[14px] font-medium text-white shadow-md hover:bg-primary-4 transition-all cursor-pointer">
+              class="w-full h-[52px] flex items-center justify-center gap-2.5 rounded-[12px] bg-gradient-main-blue text-[14px] font-semibold text-white shadow-primary-glow hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer">
         <x-solar-check-circle-linear class="h-5 w-5" />
         <span>Verifikasi & Masuk Dashboard</span>
       </button>
-
-      <div class="text-center">
-        <button type="button"
-                @click="step = 'login'"
-                class="text-xs font-semibold text-grey-2 hover:text-black transition-colors">
-          &larr; Ganti Akun / Kembali
-        </button>
-      </div>
     </form>
   </div>
 

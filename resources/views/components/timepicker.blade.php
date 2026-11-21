@@ -32,6 +32,6 @@
            x-model="val"
            {{ $attributes->whereDoesntStartWith('class') }}
            placeholder="{{ $placeholder }}"
-           class="h-10 w-full rounded-sm border border-grey-1 bg-white pl-9 pr-3 text-xs font-semibold text-black placeholder:text-grey-2 shadow-xs transition-all focus:border-primary-1 focus:outline-none cursor-pointer">
+           class="h-10 w-full rounded-xl border border-grey-1 bg-white pl-9 pr-3 text-xs font-semibold text-black placeholder:text-grey-2 shadow-xs transition-all focus:border-primary-1 focus:outline-none cursor-pointer">
   </div>
 </div>

@@ -20,6 +20,10 @@ class PaketWisata extends Model
         'benefit',
         'harga',
         'foto',
+        'kategori',
+        'provinsi',
+        'rating',
+        'total_kunjungan',
     ];
     
     public function periodePolling()

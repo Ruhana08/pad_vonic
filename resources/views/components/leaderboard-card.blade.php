@@ -9,7 +9,7 @@
   $otherRanks = $sortedOptions->slice(1);
 @endphp
 
-<div {{ $attributes->merge(['class' => 'flex flex-col gap-4 rounded-md bg-primary-3 p-5']) }}>
+<div {{ $attributes->merge(['class' => 'flex flex-col gap-4 rounded-2xl bg-primary-3 p-5']) }}>
   {{-- Header Kategori --}}
   <h3 class="text-base font-bold text-black">{{ $title }}</h3>
 

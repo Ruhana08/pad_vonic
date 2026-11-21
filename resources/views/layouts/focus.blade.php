@@ -35,10 +35,6 @@
 
           <span class="h-6 w-px bg-grey-1"></span>
           <h1 class="text-sm font-medium text-grey-2">@yield('page_title')</h1>
-
-          <div class="ml-auto flex items-center gap-4">
-               @yield('header_actions')
-          </div>
      </header>
 
      <main class="mx-auto w-full flex-1 @yield('max_width', 'max-w-[1100px]') px-4 pb-[96px] pt-[96px]">

@@ -112,8 +112,8 @@
       <button type="button"
               @click="close()"
               aria-label="Tutup notifikasi"
-              class="shrink-0 text-grey-2 hover:text-black hover:bg-gray-100 rounded-md p-1 transition-colors cursor-pointer">
-        <x-solar-close-circle-linear class="h-4 w-4" />
+              class="shrink-0 rounded-lg p-1.5 text-grey-2 hover:text-danger hover:bg-red-50 transition-colors cursor-pointer">
+        <x-solar-close-circle-linear class="h-5 w-5" />
       </button>
     </div>
   </div>

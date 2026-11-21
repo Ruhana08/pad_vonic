@@ -18,6 +18,7 @@ class Partisipasi extends Model
         'id_paket',
         'id_kaos',
         'id_ukuran',
+        'pilihan_kelompok',
         'waktu_submit',
     ];
 
