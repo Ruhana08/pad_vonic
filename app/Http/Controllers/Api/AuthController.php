@@ -147,10 +147,35 @@ class AuthController extends Controller
     public function loginUser(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+        'id_token' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)
+        $client = new \Google\Client([
+            'client_id' => config('services.google.client_id'),
+        ]);
+
+        $payload = $client->verifyIdToken($request->id_token);
+
+        if (!$payload) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token Google tidak valid.',
+                'data' => null
+            ], 401);
+        }
+
+        $email = $payload['email'] ?? null;
+        $emailVerified = $payload['email_verified'] ?? false;
+
+        if (!$email || !$emailVerified || !str_ends_with($email, '@ugm.ac.id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gunakan akun Google UGM yang terverifikasi.',
+                'data' => null
+            ], 401);
+        }
+
+        $user = User::where('email', $email)
             ->where('role', 'user')
             ->first();
 

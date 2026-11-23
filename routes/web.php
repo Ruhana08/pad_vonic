@@ -10,3 +10,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/test-google', function () {
+    return view('test-google');
+});
