@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PollingArsipController;
 use App\Http\Controllers\Admin\PollingController;
 use App\Http\Controllers\Admin\ProfilController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
 // Halaman pertama yang dibuka admin: Login / Register
@@ -17,6 +18,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify.otp');
+
+Route::get('/test-google', function () {
+    return view('test-google');
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

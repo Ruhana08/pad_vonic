@@ -6,11 +6,15 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.2",
         "blade-ui-kit/blade-icons": "^1.10",
         "codeat3/blade-solar-icons": "*",
+        "google/apiclient": "^2.20",
         "laravel/framework": "^13.17",
+        "laravel/sanctum": "^4.0",
+        "laravel/socialite": "^5.33",
         "laravel/tinker": "^3.0",
+        "maatwebsite/excel": "3.1.70",
         "owenvoke/blade-fontawesome": "^3.3"
     },
     "require-dev": {
@@ -18,6 +22,7 @@
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
         "laravel/pint": "^1.27",
+        "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "phpunit/phpunit": "^12.5.12"
@@ -40,7 +45,7 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
-            "npm install --ignore-scripts",
+            "npm install",
             "npm run build"
         ],
         "dev": [
@@ -48,7 +53,7 @@
             "@php artisan dev"
         ],
         "test": [
-            "@php artisan config:clear --ansi @no_additional_args",
+            "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
         "post-autoload-dump": [
