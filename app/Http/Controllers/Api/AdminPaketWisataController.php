@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Models\PaketWisata;
 
 class AdminPaketWisataController extends Controller
 {
-    // Memastikan hanya admin yang bisa mengakses
     private function cekAdmin(Request $request)
     {
         if ($request->user()?->role !== 'admin') {
@@ -16,7 +16,6 @@ class AdminPaketWisataController extends Controller
         }
     }
 
-    // Menambahkan paket wisata
     public function store(Request $request)
     {
         $this->cekAdmin($request);
@@ -28,10 +27,32 @@ class AdminPaketWisataController extends Controller
             'durasi_perjalanan' => 'nullable|string|max:255',
             'benefit' => 'nullable|string',
             'harga' => 'nullable|integer|min:0',
-            'foto' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'galeri' => 'nullable|array|max:2',
+            'galeri.*' => 'image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
-        $paket = PaketWisata::create($validated);
+        $paket = PaketWisata::create([
+            'nama_destinasi' => $validated['nama_destinasi'],
+            'lokasi' => $validated['lokasi'] ?? null,
+            'jarak' => $validated['jarak'] ?? null,
+            'durasi_perjalanan' => $validated['durasi_perjalanan'] ?? null,
+            'benefit' => $validated['benefit'] ?? null,
+            'harga' => $validated['harga'] ?? null,
+            'foto' => isset($validated['foto'])
+                ? $validated['foto']->store('paket-wisata', 'public')
+                : null,
+        ]);
+
+        if ($request->hasFile('galeri')) {
+            foreach ($request->file('galeri') as $foto) {
+                $paket->galeri()->create([
+                    'foto' => $foto->store('paket-wisata/galeri', 'public'),
+                ]);
+            }
+        }
+
+        $paket->load('galeri');
 
         return response()->json([
             'success' => true,
@@ -40,13 +61,11 @@ class AdminPaketWisataController extends Controller
         ], 201);
     }
 
-    
-    // Mengubah data paket wisata
     public function update(Request $request, $id)
     {
         $this->cekAdmin($request);
 
-        $paket = PaketWisata::findOrFail($id);
+        $paket = PaketWisata::with('galeri')->findOrFail($id);
 
         $validated = $request->validate([
             'nama_destinasi' => 'sometimes|required|string|max:255',
@@ -55,10 +74,47 @@ class AdminPaketWisataController extends Controller
             'durasi_perjalanan' => 'sometimes|nullable|string|max:255',
             'benefit' => 'sometimes|nullable|string',
             'harga' => 'sometimes|nullable|integer|min:0',
-            'foto' => 'sometimes|nullable|string|max:255',
+            'foto' => 'sometimes|nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'galeri' => 'nullable|array',
+            'galeri.*' => 'image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
-        $paket->update($validated);
+        $jumlahFoto = ($paket->foto ? 1 : 0) + $paket->galeri->count();
+
+        $fotoUtamaBaru = $request->hasFile('foto');
+
+        $fotoTambahanBaru = count($request->file('galeri', []) ?? []);
+
+        $jumlahFotoAkhir = $jumlahFoto + $fotoTambahanBaru;
+
+        if ($jumlahFotoAkhir > 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Maksimal 3 foto untuk setiap paket wisata, termasuk foto utama.',
+            ], 422);
+        }
+
+        $data = collect($validated)->except(['foto', 'galeri'])->toArray();
+
+        if ($fotoUtamaBaru) {
+            if ($paket->foto) {
+                Storage::disk('public')->delete($paket->foto);
+            }
+
+            $data['foto'] = $request->file('foto')->store('paket-wisata', 'public');
+        }
+
+        $paket->update($data);
+
+        if ($request->hasFile('galeri')) {
+            foreach ($request->file('galeri') as $foto) {
+                $paket->galeri()->create([
+                    'foto' => $foto->store('paket-wisata/galeri', 'public'),
+                ]);
+            }
+        }
+
+        $paket->load('galeri');
 
         return response()->json([
             'success' => true,
@@ -67,12 +123,19 @@ class AdminPaketWisataController extends Controller
         ], 200);
     }
 
-    // Menghapus paket wisata
     public function destroy(Request $request, $id)
     {
         $this->cekAdmin($request);
 
-        $paket = PaketWisata::findOrFail($id);
+        $paket = PaketWisata::with('galeri')->findOrFail($id);
+
+        if ($paket->foto) {
+            Storage::disk('public')->delete($paket->foto);
+        }
+
+        foreach ($paket->galeri as $foto) {
+            Storage::disk('public')->delete($foto->foto);
+        }
 
         $paket->delete();
 
@@ -81,5 +144,4 @@ class AdminPaketWisataController extends Controller
             'message' => 'Paket wisata berhasil dihapus.'
         ], 200);
     }
-
 }

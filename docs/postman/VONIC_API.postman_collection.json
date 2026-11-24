@@ -1,442 +1,1304 @@
 {
   "info": {
     "_postman_id": "b80b31ca-efd1-426c-aac5-7ec6573b0075",
-    "name": "SI Pemilihan Wisata (Vonic)",
-    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "58252990",
-    "_collection_link": "https://go.postman.co/collection/58252990-b80b31ca-efd1-426c-aac5-7ec6573b0075?source=collection_link"
+    "name": "SI Pemilihan Wisata (VONIC)",
+    "description": "Postman Collection resmi untuk SI Pemilihan Wisata (VONIC).\n\nMendukung alur autentikasi admin via OTP email, login user via Google SSO (UGM), polling publik & voting partisipan (dukungan multi-size / keranjang kaos & single fallback), status voting otomatis (sudah_memilih), opsi kelompok dinamis (string bebas), galeri multi-foto (hingga 3 foto per item dengan accessor foto_url), serta manajemen admin lengkap.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token_admin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_user",
+      "value": "",
+      "type": "string"
+    }
+  ],
   "item": [
     {
       "name": "01. Authentication",
       "item": [
         {
-          "name": "Request-otp",
+          "name": "1. Request OTP (Admin)",
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"admin@ugm.ac.id\"\n}"
+            },
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/request-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["request-otp"]
+            },
+            "description": "Mengirimkan 6 digit OTP ke email admin yang terdaftar (berlaku 5 menit)."
           },
           "response": []
         },
         {
-          "name": "Verify-otp",
+          "name": "2. Verify OTP (Admin)",
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"admin@ugm.ac.id\",\n    \"otp\": \"123456\"\n}"
+            },
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/verify-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["verify-otp"]
+            },
+            "description": "Memverifikasi OTP admin dan mengembalikan Bearer Token untuk admin (simpan ke variable token_admin)."
           },
           "response": []
         },
         {
-          "name": "Logout",
+          "name": "3. Login User (Google SSO)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id_token\": \"eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login-user",
+              "host": ["{{baseUrl}}"],
+              "path": ["login-user"]
+            },
+            "description": "Login peserta menggunakan Google ID Token UGM (@ugm.ac.id) terverifikasi. Mengembalikan token peserta (simpan ke variable token_user)."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get User Profile",
           "request": {
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{authorization_secret}}",
+                  "value": "{{token_user}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["profile"]
+            },
+            "description": "Mengambil data profil pengguna yang sedang login."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_user}}",
                   "type": "string"
                 }
               ]
             },
             "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
               }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["logout"]
             },
-            "url": {
-              "raw": "http://127.0.0.1:8000/api/logout",
-              "protocol": "http",
-              "host": [
-                "127",
-                "0",
-                "0",
-                "1"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "logout"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Login user",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": ""
-            }
+            "description": "Menghapus token sesi aktif."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "02. Polling",
+      "name": "02. Polling (Publik & Detail)",
       "item": [
         {
-          "name": "Polling all",
+          "name": "1. Get All Polling",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "http://127.0.0.1:8000/api/polling",
-              "protocol": "http",
-              "host": [
-                "127",
-                "0",
-                "0",
-                "1"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "polling"
-              ]
-            }
+              "raw": "{{baseUrl}}/polling",
+              "host": ["{{baseUrl}}"],
+              "path": ["polling"]
+            },
+            "description": "Menampilkan daftar seluruh periode polling beserta relasi galeri foto paket wisata dan desain kaos."
           },
           "response": []
         },
         {
-          "name": "Detail polling",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://127.0.0.1:8000/api/polling/1",
-              "protocol": "http",
-              "host": [
-                "127",
-                "0",
-                "0",
-                "1"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "polling",
-                "1"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Pilihan polling",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://127.0.0.1:8000/api/polling/1/pilihan",
-              "protocol": "http",
-              "host": [
-                "127",
-                "0",
-                "0",
-                "1"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "polling",
-                "1",
-                "pilihan"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "03. Voting",
-      "item": [
-        {
-          "name": "Submit Vote",
+          "name": "2. Get Detail Polling",
           "request": {
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{authorization_secret}}",
+                  "value": "{{token_user}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/polling/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["polling", "1"]
+            },
+            "description": "Menampilkan detail satu periode polling. Jika header Authorization Bearer disertakan, respons langsung menyertakan status 'sudah_memilih': true/false."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Pilihan Polling (Termasuk Status sudah_memilih)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_user}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/polling/1/pilihan",
+              "host": ["{{baseUrl}}"],
+              "path": ["polling", "1", "pilihan"]
+            },
+            "description": "Mengambil opsi pilihan pada periode polling (paket wisata, kaos, ukuran kaos). Jika user menyertakan token auth, langsung mengembalikan properti 'sudah_memilih': true/false dan data rincian 'partisipasi_user' jika sudah memilih."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get Hasil Polling (Publik)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/polling/1/hasil",
+              "host": ["{{baseUrl}}"],
+              "path": ["polling", "1", "hasil"]
+            },
+            "description": "Menampilkan statistik hasil voting periode polling. Otomatis menyesuaikan mode rombongan (digabung atau dipisah per kategori dosen/tendik)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03. Voting & Riwayat (User)",
+      "item": [
+        {
+          "name": "1. Submit Vote (Multi-Size / Keranjang Kaos)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_user}}",
                   "type": "string"
                 }
               ]
             },
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"id_paket\": 1,\r\n    \"id_kaos\": 1,\r\n    \"id_ukuran\": 2\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n    \"id_paket\": 1,\n    \"id_kaos\": 1,\n    \"items_kaos\": [\n        {\n            \"id_ukuran\": 1,\n            \"jumlah\": 1\n        },\n        {\n            \"id_ukuran\": 2,\n            \"jumlah\": 2\n        }\n    ]\n}"
             },
             "url": {
-              "raw": "http://127.0.0.1:8000/api/polling/1/vote",
-              "protocol": "http",
-              "host": [
-                "127",
-                "0",
-                "0",
-                "1"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "polling",
-                "1",
-                "vote"
-              ]
-            }
+              "raw": "{{baseUrl}}/polling/1/vote",
+              "host": ["{{baseUrl}}"],
+              "path": ["polling", "1", "vote"]
+            },
+            "description": "Kebutuhan riil FE: Mengirim vote dengan multi-ukuran kaos (keranjang). Mendukung array 'items_kaos' maupun 'ukuran'."
           },
           "response": []
-        }
-      ]
-    },
-    {
-      "name": "04. Riwayat",
-      "item": [
+        },
         {
-          "name": "Riwayat voting",
+          "name": "2. Submit Vote (Single Size - Fallback)",
           "request": {
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{authorization_secret}}",
+                  "value": "{{token_user}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id_paket\": 1,\n    \"id_kaos\": 1,\n    \"id_ukuran\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/polling/1/vote",
+              "host": ["{{baseUrl}}"],
+              "path": ["polling", "1", "vote"]
+            },
+            "description": "Fallback kompatibilitas: Pemilih yang hanya mengirim 1 'id_ukuran' tunggal tetap diterima (otomatis dicatat dengan jumlah = 1)."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Riwayat Voting Peserta",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_user}}",
                   "type": "string"
                 }
               ]
             },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "http://127.0.0.1:8000/api/riwayat",
-              "protocol": "http",
-              "host": [
-                "127",
-                "0",
-                "0",
-                "1"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "riwayat"
+              "raw": "{{baseUrl}}/riwayat-voting",
+              "host": ["{{baseUrl}}"],
+              "path": ["riwayat-voting"]
+            },
+            "description": "Menampilkan riwayat partisipasi voting user yang sedang login beserta paket, kaos, dan rincian ukuran."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04. Admin - Dashboard",
+      "item": [
+        {
+          "name": "1. Dashboard Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
               ]
-            }
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "dashboard"]
+            },
+            "description": "Menampilkan statistik ringkas dashboard admin (total peserta, total polling, total paket wisata, total desain kaos, total voting)."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "05 Hasil Polling",
+      "name": "05. Admin - Manajemen Periode Polling",
       "item": [
         {
-          "name": "Hasil polling",
+          "name": "1. Get Daftar Periode Polling",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/admin/polling?page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "polling"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Menampilkan daftar periode polling dengan paginasi."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Detail Periode Polling",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/polling/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "polling", "1"]
+            },
+            "description": "Melihat detail satu periode polling."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Tambah Periode Polling (Opsi Kelompok Dinamis)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nama_periode\": \"Pemilihan Destinasi & Kaos Wisata 2026\",\n    \"tanggal_mulai\": \"2026-12-01\",\n    \"tanggal_selesai\": \"2026-12-10\",\n    \"status\": \"aktif\",\n    \"mode_kelompok\": \"Dosen & Tendik Terpisah\",\n    \"paket_wisata\": [1, 2],\n    \"desain_kaos\": [1, 2]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/polling",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "polling"]
+            },
+            "description": "Membuat periode polling baru. Nilai mode_kelompok (atau pilihan_kelompok) kini berupa string bebas dinamis (misal 'Dosen & Tendik Terpisah', 'Semua Sivitas Bersama', dll)."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Update Periode Polling",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nama_periode\": \"Pemilihan Destinasi & Kaos Wisata 2026 (Revisi)\",\n    \"tanggal_mulai\": \"2026-12-01\",\n    \"tanggal_selesai\": \"2026-12-15\",\n    \"status\": \"aktif\",\n    \"mode_kelompok\": \"Semua Sivitas Bersama\",\n    \"paket_wisata\": [1, 2],\n    \"desain_kaos\": [1, 2]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/polling/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "polling", "1"]
+            },
+            "description": "Mengubah data periode polling jika belum ada voting yang masuk."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Hapus Periode Polling",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/polling/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "polling", "1"]
+            },
+            "description": "Menghapus periode polling (hanya jika belum memiliki partisipasi voting)."
+          },
+          "response": []
+        },
+        {
+          "name": "6. Hasil Polling Admin",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/polling/1/hasil",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "polling", "1", "hasil"]
+            },
+            "description": "Melihat rekapitulasi hasil voting khusus admin."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "06 Profile",
+      "name": "06. Admin - Manajemen Paket Wisata",
       "item": [
         {
-          "name": "Profile",
+          "name": "1. Tambah Paket Wisata (Multi-Foto / Galeri)",
           "request": {
-            "method": "GET",
-            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nama_destinasi",
+                  "value": "Pantai Parangtritis & Gumuk Pasir",
+                  "type": "text"
+                },
+                {
+                  "key": "lokasi",
+                  "value": "Bantul, D.I. Yogyakarta",
+                  "type": "text"
+                },
+                {
+                  "key": "jarak",
+                  "value": "30 km",
+                  "type": "text"
+                },
+                {
+                  "key": "durasi_perjalanan",
+                  "value": "1 Jam 15 Menit",
+                  "type": "text"
+                },
+                {
+                  "key": "benefit",
+                  "value": "Transport bus pariwisata AC, Snack 1x, Makan 2x, Jeep wisata, Tiket masuk wisata, P3K",
+                  "type": "text"
+                },
+                {
+                  "key": "harga",
+                  "value": "350000",
+                  "type": "text"
+                },
+                {
+                  "key": "foto",
+                  "type": "file",
+                  "description": "Foto utama paket wisata"
+                },
+                {
+                  "key": "galeri[]",
+                  "type": "file",
+                  "description": "Foto tambahan galeri ke-1"
+                },
+                {
+                  "key": "galeri[]",
+                  "type": "file",
+                  "description": "Foto tambahan galeri ke-2 (maksimal total 3 foto)"
+                }
+              ]
+            },
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/admin/paket-wisata",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "paket-wisata"]
+            },
+            "description": "Menambahkan paket wisata baru dengan dukungan foto utama dan multi-foto galeri (hingga 3 foto total)."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Update Paket Wisata (Form-Data / Upload Foto)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nama_destinasi",
+                  "value": "Pantai Parangtritis Update",
+                  "type": "text"
+                },
+                {
+                  "key": "harga",
+                  "value": "375000",
+                  "type": "text"
+                },
+                {
+                  "key": "foto",
+                  "type": "file",
+                  "description": "Foto utama baru (opsional)"
+                },
+                {
+                  "key": "galeri[]",
+                  "type": "file",
+                  "description": "Foto galeri baru (opsional)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/paket-wisata/1/update",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "paket-wisata", "1", "update"]
+            },
+            "description": "Update data paket wisata beserta upload foto baru (menggunakan POST ke endpoint /update atau dengan _method: PUT)."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Update Paket Wisata (JSON - Data Saja)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nama_destinasi\": \"Pantai Parangtritis & Sunset Point\",\n    \"harga\": 360000,\n    \"lokasi\": \"Bantul\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/paket-wisata/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "paket-wisata", "1"]
+            },
+            "description": "Mengubah data teks paket wisata via HTTP PUT."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Hapus Paket Wisata",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/paket-wisata/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "paket-wisata", "1"]
+            },
+            "description": "Menghapus data paket wisata beserta file foto utama dan galeri terkait."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Hapus Foto Galeri Paket Wisata",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/galeri-paket-wisata/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "galeri-paket-wisata", "1"]
+            },
+            "description": "Menghapus salah satu foto galeri spesifik berdasarkan id_galeri."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "07 Admin",
+      "name": "07. Admin - Manajemen Desain Kaos",
       "item": [
         {
-          "name": "Paket Wisata",
-          "item": [
-            {
-              "name": "Tambah paket wisata",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
+          "name": "1. Tambah Desain Kaos (Multi-Foto / Galeri)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
                 }
-              },
-              "response": []
+              ]
             },
-            {
-              "name": "Edit paket wisata",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nama_desain",
+                  "value": "Kaos VONIC 2026 Navy Blue",
+                  "type": "text"
+                },
+                {
+                  "key": "foto",
+                  "type": "file",
+                  "description": "Mockup depan kaos (foto utama)"
+                },
+                {
+                  "key": "galeri[]",
+                  "type": "file",
+                  "description": "Mockup belakang kaos"
+                },
+                {
+                  "key": "galeri[]",
+                  "type": "file",
+                  "description": "Detail sablon / kerah kaos"
                 }
-              },
-              "response": []
+              ]
             },
-            {
-              "name": "Hapus paket wisata",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "response": []
-            }
-          ]
-        },
-        {
-          "name": "Desain Kaos",
-          "item": [
-            {
-              "name": "Tambah desain kaos",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "response": []
+            "url": {
+              "raw": "{{baseUrl}}/admin/desain-kaos",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "desain-kaos"]
             },
-            {
-              "name": "Edit desain kaos",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
+            "description": "Menambahkan desain kaos baru dengan dukungan hingga 3 foto (foto utama + 2 galeri)."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Update Desain Kaos (Form-Data / Upload Foto)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
                 }
-              },
-              "response": []
+              ]
             },
-            {
-              "name": "Hapus desain kaos",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nama_desain",
+                  "value": "Kaos VONIC 2026 Deep Navy",
+                  "type": "text"
+                },
+                {
+                  "key": "foto",
+                  "type": "file",
+                  "description": "Foto utama baru (opsional)"
+                },
+                {
+                  "key": "galeri[]",
+                  "type": "file",
+                  "description": "Foto galeri baru (opsional)"
                 }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/desain-kaos/1/update",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "desain-kaos", "1", "update"]
+            },
+            "description": "Memperbarui desain kaos dan file foto galeri via endpoint update."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Update Desain Kaos (JSON - Data Saja)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
               },
-              "response": []
-            }
-          ]
-        },
-        {
-          "name": "Daftar periode polling",
-          "request": {
-            "method": "GET",
-            "header": [],
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nama_desain\": \"Kaos VONIC 2026 Edition 2\"\n}"
+            },
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/admin/desain-kaos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "desain-kaos", "1"]
+            },
+            "description": "Mengubah nama desain kaos via HTTP PUT."
           },
           "response": []
         },
         {
-          "name": "Detail periode polling",
+          "name": "4. Hapus Desain Kaos",
           "request": {
-            "method": "GET",
-            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/admin/desain-kaos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "desain-kaos", "1"]
+            },
+            "description": "Menghapus desain kaos beserta file gambar terkait."
           },
           "response": []
         },
         {
-          "name": "Tambah periode polling",
+          "name": "5. Hapus Foto Galeri Desain Kaos",
           "request": {
-            "method": "GET",
-            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/admin/galeri-desain-kaos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "galeri-desain-kaos", "1"]
+            },
+            "description": "Menghapus satu foto galeri spesifik dari desain kaos."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08. Admin - Manajemen Peserta",
+      "item": [
+        {
+          "name": "1. Get Daftar Peserta",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/peserta?page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "peserta"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Menampilkan daftar seluruh peserta dengan paginasi 10 per halaman."
           },
           "response": []
         },
         {
-          "name": "Update periode polling",
+          "name": "2. Get Detail Peserta",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/admin/peserta/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "peserta", "1"]
+            },
+            "description": "Melihat detail lengkap satu peserta."
           },
           "response": []
         },
         {
-          "name": "Dashboard admin",
+          "name": "3. Tambah Peserta Baru",
           "request": {
-            "method": "GET",
-            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nama\": \"Dr. Eng. Ahmad Dahlan, S.T., M.Eng.\",\n    \"nip\": \"198701012015041002\",\n    \"email\": \"ahmad.dahlan@ugm.ac.id\",\n    \"pekerjaan\": \"Dosen\",\n    \"unit_kerja\": \"Teknik Elektro dan Teknologi Informasi\",\n    \"no_telp\": \"081234567891\",\n    \"kategori\": \"dosen\"\n}"
+            },
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/admin/peserta",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "peserta"]
+            },
+            "description": "Menambahkan peserta baru secara manual oleh admin."
           },
           "response": []
         },
         {
-          "name": "Hasil voting admin",
+          "name": "4. Update Data Peserta",
           "request": {
-            "method": "GET",
-            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nama\": \"Prof. Dr. Eng. Ahmad Dahlan, S.T., M.Eng.\",\n    \"no_telp\": \"081299998888\"\n}"
+            },
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/admin/peserta/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "peserta", "1"]
+            },
+            "description": "Mengubah data peserta yang sudah ada."
           },
           "response": []
         },
         {
-          "name": "Upload data user",
+          "name": "5. Hapus Peserta",
           "request": {
-            "method": "GET",
-            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": ""
-            }
+              "raw": "{{baseUrl}}/admin/peserta/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "peserta", "1"]
+            },
+            "description": "Menghapus data peserta (hanya jika peserta belum pernah melakukan voting)."
+          },
+          "response": []
+        },
+        {
+          "name": "6. Import Peserta (Excel/CSV)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "File template peserta (.xlsx, .xls, .csv)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/peserta/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "peserta", "import"]
+            },
+            "description": "Import data peserta massal dari file Excel (.xlsx / .csv)."
           },
           "response": []
         }

@@ -21,6 +21,20 @@ class PeriodePolling extends Model
         'created_by',
     ];
 
+    protected $appends = [
+        'pilihan_kelompok',
+    ];
+
+    public function getPilihanKelompokAttribute()
+    {
+        return $this->mode_kelompok;
+    }
+
+    public function setPilihanKelompokAttribute($value)
+    {
+        $this->attributes['mode_kelompok'] = $value;
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by', 'id_user');

@@ -38,12 +38,17 @@ class AdminPollingController extends Controller
     {
         $this->cekAdmin($request);
 
+        // Mendukung alias pilihan_kelompok dari frontend
+        if ($request->has('pilihan_kelompok') && !$request->has('mode_kelompok')) {
+            $request->merge(['mode_kelompok' => $request->pilihan_kelompok]);
+        }
+
         $validated = $request->validate([
             'nama_periode' => 'required|string|max:255',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'status' => 'required|in:draft,aktif,selesai',
-            'mode_kelompok' => 'required|in:dipisah,digabung',
+            'mode_kelompok' => 'required|string|max:255',
             'paket_wisata' => 'required|array|min:1',
             'paket_wisata.*' => 'required|exists:paket_wisata,id_paket',
             'desain_kaos' => 'required|array|min:1',
@@ -98,12 +103,17 @@ class AdminPollingController extends Controller
             ], 409);
         }
 
+        // Mendukung alias pilihan_kelompok dari frontend
+        if ($request->has('pilihan_kelompok') && !$request->has('mode_kelompok')) {
+            $request->merge(['mode_kelompok' => $request->pilihan_kelompok]);
+        }
+
         $validated = $request->validate([
             'nama_periode' => 'sometimes|required|string|max:255',
             'tanggal_mulai' => 'sometimes|required|date',
             'tanggal_selesai' => 'sometimes|required|date',
             'status' => 'sometimes|required|in:draft,aktif,selesai',
-            'mode_kelompok' => 'sometimes|required|in:dipisah,digabung',
+            'mode_kelompok' => 'sometimes|required|string|max:255',
             'paket_wisata' => 'sometimes|required|array|min:1',
             'paket_wisata.*' => 'required|exists:paket_wisata,id_paket',
             'desain_kaos' => 'sometimes|required|array|min:1',

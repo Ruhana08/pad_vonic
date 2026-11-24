@@ -21,7 +21,16 @@ class PaketWisata extends Model
         'harga',
         'foto',
     ];
-    
+
+    protected $appends = [
+        'foto_url',
+    ];
+
+    public function getFotoUrlAttribute()
+    {
+        return $this->foto ? url('storage/' . $this->foto) : null;
+    }
+
     public function periodePolling()
     {
         return $this->belongsToMany(
@@ -29,6 +38,15 @@ class PaketWisata extends Model
             'periode_paket_wisata',
             'id_paket',
             'id_periode'
+        );
+    }
+
+    public function galeri()
+    {
+        return $this->hasMany(
+            GaleriPaketWisata::class,
+            'id_paket',
+            'id_paket'
         );
     }
 }

@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\AdminPollingController;
 use App\Http\Controllers\Api\AdminPaketWisataController;
 use App\Http\Controllers\Api\AdminDesainKaosController;
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\AdminGaleriPaketWisataController;
+use App\Http\Controllers\Api\AdminGaleriDesainKaosController;
 
 // Login Admin menggunakan OTP
 Route::post('/request-otp', [AuthController::class, 'requestOtp']);
@@ -54,12 +56,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/polling/{id}/hasil', [AdminPollingController::class, 'hasil']);
 
         Route::post('/paket-wisata', [AdminPaketWisataController::class, 'store']);
+        Route::post('/paket-wisata/{id}/update', [AdminPaketWisataController::class, 'update']);
         Route::put('/paket-wisata/{id}', [AdminPaketWisataController::class, 'update']);
         Route::delete('/paket-wisata/{id}', [AdminPaketWisataController::class, 'destroy']);
 
         // Manajemen Desain Kaos
         Route::post('/desain-kaos', [AdminDesainKaosController::class, 'store']);
+        Route::post('/desain-kaos/{id}/update', [AdminDesainKaosController::class, 'update']);
         Route::put('/desain-kaos/{id}', [AdminDesainKaosController::class, 'update']);
         Route::delete('/desain-kaos/{id}', [AdminDesainKaosController::class, 'destroy']);
+        Route::delete('/galeri-paket-wisata/{id}', [AdminGaleriPaketWisataController::class, 'destroy']);
+        Route::delete('/galeri-desain-kaos/{id}', [AdminGaleriDesainKaosController::class, 'destroy']);
     });
 });

@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\PeriodePolling;
 use Illuminate\Http\Request;
 
-
 class PollingController extends Controller
 {
     public function index()
     {
-        $periode = PeriodePolling::with(['paketWisata', 'desainKaos'])
+        $periode = PeriodePolling::with([
+            'paketWisata.galeri',
+            'desainKaos.galeri'
+        ])
             ->orderBy('tanggal_mulai', 'desc')
             ->get();
 
@@ -22,11 +24,11 @@ class PollingController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $periode = PeriodePolling::with([
-            'paketWisata',
-            'desainKaos'
+            'paketWisata.galeri',
+            'desainKaos.galeri'
         ])->find($id);
 
         if (!$periode) {
@@ -37,17 +39,30 @@ class PollingController extends Controller
             ], 404);
         }
 
+        // Cek status voting user jika terautentikasi
+        $user = auth('sanctum')->user() ?? $request->user();
+        $sudahMemilih = false;
+        if ($user) {
+            $sudahMemilih = \App\Models\Partisipasi::where('id_user', $user->id_user)
+                ->where('id_periode', $id)
+                ->exists();
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Detail periode polling berhasil diambil.',
-            'data' => $periode
+            'data' => [
+                'periode' => $periode,
+                'sudah_memilih' => $sudahMemilih,
+            ]
         ]);
     }
-    public function pilihan($id)
+
+    public function pilihan(Request $request, $id)
     {
         $periode = PeriodePolling::with([
-            'paketWisata',
-            'desainKaos'
+            'paketWisata.galeri',
+            'desainKaos.galeri'
         ])->find($id);
 
         if (!$periode) {
@@ -60,25 +75,58 @@ class PollingController extends Controller
 
         $ukuranKaos = \App\Models\UkuranKaos::orderBy('id_ukuran')->get();
 
+        // Cek status voting user jika terautentikasi
+        $user = auth('sanctum')->user() ?? $request->user();
+        $sudahMemilih = false;
+        $partisipasiUser = null;
+
+        if ($user) {
+            $partisipasi = \App\Models\Partisipasi::with('detailUkuran.ukuranKaos')
+                ->where('id_user', $user->id_user)
+                ->where('id_periode', $id)
+                ->first();
+
+            if ($partisipasi) {
+                $sudahMemilih = true;
+                $partisipasiUser = $partisipasi;
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Pilihan polling berhasil diambil.',
             'data' => [
                 'periode' => $periode,
-                'ukuran_kaos' => $ukuranKaos
+                'ukuran_kaos' => $ukuranKaos,
+                'sudah_memilih' => $sudahMemilih,
+                'partisipasi_user' => $partisipasiUser,
             ]
         ]);
     }
 
     public function vote(Request $request, $id)
     {
+        // Mendukung payload ganda (items_kaos / ukuran / fallback id_ukuran tunggal)
+        if ($request->has('items_kaos') && !$request->has('ukuran')) {
+            $request->merge(['ukuran' => $request->items_kaos]);
+        } elseif ($request->has('id_ukuran') && !$request->has('ukuran')) {
+            $request->merge([
+                'ukuran' => [
+                    [
+                        'id_ukuran' => $request->id_ukuran,
+                        'jumlah' => (int) $request->input('jumlah', 1),
+                    ]
+                ]
+            ]);
+        }
+
         $request->validate([
-        'id_paket' => 'required|exists:paket_wisata,id_paket',
-        'id_kaos' => 'required|exists:desain_kaos,id_kaos',
-        'ukuran' => 'required|array|min:1',
-        'ukuran.*.id_ukuran' => 'required|exists:ukuran_kaos,id_ukuran',
-        'ukuran.*.jumlah' => 'required|integer|min:1',
-    ]);
+            'id_paket' => 'required|exists:paket_wisata,id_paket',
+            'id_kaos' => 'required|exists:desain_kaos,id_kaos',
+            'ukuran' => 'required|array|min:1',
+            'ukuran.*.id_ukuran' => 'required|exists:ukuran_kaos,id_ukuran',
+            'ukuran.*.jumlah' => 'required|integer|min:1',
+        ]);
 
         $periode = PeriodePolling::find($id);
 
@@ -99,6 +147,7 @@ class PollingController extends Controller
         }
 
         $hariIni = now()->toDateString();
+
         if ($hariIni < $periode->tanggal_mulai) {
             return response()->json([
                 'success' => false,
@@ -152,14 +201,14 @@ class PollingController extends Controller
     public function riwayat(Request $request)
     {
         $riwayat = \App\Models\Partisipasi::with([
-        'periodePolling',
-        'paketWisata',
-        'desainKaos',
-        'detailUkuran.ukuranKaos'
+            'periodePolling',
+            'paketWisata',
+            'desainKaos',
+            'detailUkuran.ukuranKaos'
         ])
-        ->where('id_user', $request->user()->id_user)
-        ->orderBy('waktu_submit', 'desc')
-        ->get();
+            ->where('id_user', $request->user()->id_user)
+            ->orderBy('waktu_submit', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -180,11 +229,9 @@ class PollingController extends Controller
             ], 404);
         }
 
-        // Fungsi untuk mengambil hasil berdasarkan kategori peserta
         $ambilHasil = function ($kategori = null) use ($id) {
 
-            // Hasil paket wisata
-            $hasilPaket = \App\Models\Partisipasi::with('paketWisata')
+            $hasilPaket = \App\Models\Partisipasi::with('paketWisata.galeri')
                 ->where('id_periode', $id)
                 ->when($kategori, function ($query) use ($kategori) {
                     $query->whereHas('user', function ($userQuery) use ($kategori) {
@@ -195,8 +242,7 @@ class PollingController extends Controller
                 ->groupBy('id_paket')
                 ->get();
 
-            // Hasil desain kaos
-            $hasilKaos = \App\Models\Partisipasi::with('desainKaos')
+            $hasilKaos = \App\Models\Partisipasi::with('desainKaos.galeri')
                 ->where('id_periode', $id)
                 ->when($kategori, function ($query) use ($kategori) {
                     $query->whereHas('user', function ($userQuery) use ($kategori) {
@@ -207,7 +253,6 @@ class PollingController extends Controller
                 ->groupBy('id_kaos')
                 ->get();
 
-            // Hasil jumlah kaos per ukuran
             $hasilUkuran = \App\Models\DetailUkuranVote::with('ukuranKaos')
                 ->whereHas('partisipasi', function ($query) use ($id, $kategori) {
                     $query->where('id_periode', $id)
@@ -228,8 +273,12 @@ class PollingController extends Controller
             ];
         };
 
-        // Jika mode kelompok digabung
-        if ($periode->mode_kelompok === 'digabung') {
+        $mode = strtolower(trim($periode->mode_kelompok ?? 'digabung'));
+        $isDigabung = in_array($mode, ['digabung', 'gabung', 'semua sivitas bersama', 'semua sivitas', 'bersama', 'semua'])
+            || str_contains($mode, 'gabung')
+            || str_contains($mode, 'bersama');
+
+        if ($isDigabung) {
             $hasil = $ambilHasil();
 
             return response()->json([
@@ -242,7 +291,6 @@ class PollingController extends Controller
             ]);
         }
 
-        // Jika mode kelompok dipisah
         $hasilDosen = $ambilHasil('dosen');
         $hasilTendik = $ambilHasil('tendik');
 

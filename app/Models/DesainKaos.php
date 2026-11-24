@@ -17,6 +17,15 @@ class DesainKaos extends Model
         'foto',
     ];
 
+    protected $appends = [
+        'foto_url',
+    ];
+
+    public function getFotoUrlAttribute()
+    {
+        return $this->foto ? url('storage/' . $this->foto) : null;
+    }
+
     public function periodePolling()
     {
         return $this->belongsToMany(
@@ -24,6 +33,15 @@ class DesainKaos extends Model
             'periode_kaos',
             'id_kaos',
             'id_periode'
+        );
+    }
+
+    public function galeri()
+    {
+        return $this->hasMany(
+            GaleriDesainKaos::class,
+            'id_kaos',
+            'id_kaos'
         );
     }
 }
