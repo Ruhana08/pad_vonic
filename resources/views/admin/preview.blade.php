@@ -1,12 +1,12 @@
 @extends('layouts.admin')
-@section('title', '🧪 State & Copywriting Inspector')
+@section('title', ' State & Copywriting Inspector')
 
 @section('content')
 <div class="space-y-6">
 
   {{-- Header --}}
   <div>
-    <h1 class="text-2xl font-bold text-black">🧪 State & Copywriting Inspector</h1>
+    <h1 class="text-2xl font-bold text-black"> State & Copywriting Inspector</h1>
     <p class="mt-1 text-sm text-grey-deep">Klik tombol di bawah untuk langsung melihat setiap state tampilan di browser. Semua URL menggunakan query parameter — tidak perlu database.</p>
   </div>
 
@@ -21,50 +21,50 @@
     <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {{-- Normal (semua data) --}}
       <a href="{{ route('admin.polling.arsip') }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">📊 Normal (Semua Data)</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Tampilan default: 1 Aktif, 1 Draft, 3 Selesai, plus tabel riwayat lengkap.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Normal (Semua Data)</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Tampilan default: 1 Aktif, 1 Draft, 3 Selesai, plus tabel riwayat lengkap.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip</span>
       </a>
 
       {{-- Empty State --}}
       <a href="{{ route('admin.polling.arsip', ['empty' => 1]) }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">📭 Empty State (Kosong)</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Semua tabel kosong. Lihat pesan "Belum Ada Polling yang Dibuat" dan ilustrasi empty state.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip?empty=1</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Empty State (Kosong)</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Semua tabel kosong. Lihat pesan "Belum Ada Polling yang Dibuat" dan ilustrasi empty state.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip?empty=1</span>
       </a>
 
       {{-- Tanpa Polling Aktif --}}
       <a href="{{ route('admin.polling.arsip', ['active' => 0]) }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">🔓 Tidak Ada Polling Aktif</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Polling Aktif dihilangkan. Tombol publish draft bisa diklik dan akan muncul popup "Jam Terlewat".</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip?active=0</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Tidak Ada Polling Aktif</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Polling Aktif dihilangkan. Tombol publish draft bisa diklik dan akan muncul popup "Jam Terlewat".</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip?active=0</span>
       </a>
 
       {{-- Hanya Draft --}}
       <a href="{{ route('admin.polling.arsip', ['state' => 'draft']) }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">📝 Hanya Draft</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Filter hanya polling Draft. Lihat tombol Edit, Publish, dan Hapus yang aktif.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip?state=draft</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Hanya Draft</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Filter hanya polling Draft. Lihat tombol Edit, Publish, dan Hapus yang aktif.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip?state=draft</span>
       </a>
 
       {{-- Hanya Selesai --}}
       <a href="{{ route('admin.polling.arsip', ['state' => 'selesai']) }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">✅ Hanya Selesai</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Filter hanya polling Selesai. Tombol Edit dan Publish disabled, Hapus tetap aktif.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip?state=selesai</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Hanya Selesai</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Filter hanya polling Selesai. Tombol Edit dan Publish disabled, Hapus tetap aktif.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip?state=selesai</span>
       </a>
 
       {{-- Hanya Aktif --}}
       <a href="{{ route('admin.polling.arsip', ['state' => 'aktif']) }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">🟢 Hanya Aktif</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Filter hanya polling Aktif. Lihat tombol Lihat aktif, Edit & Publish disabled, Hapus = hentikan.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip?state=aktif</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Hanya Aktif</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Filter hanya polling Aktif. Lihat tombol Lihat aktif, Edit & Publish disabled, Hapus = hentikan.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/arsip?state=aktif</span>
       </a>
     </div>
   </x-card>
@@ -79,17 +79,17 @@
 
     <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
       <a href="{{ route('admin.dashboard') }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">📊 Normal (Ada Polling Aktif)</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">82% partisipasi, countdown 3 hari, 3 kategori voting, dan aktivitas terakhir.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/dashboard</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Normal (Ada Polling Aktif)</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">82% partisipasi, countdown 3 hari, 3 kategori voting, dan aktivitas terakhir.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/dashboard</span>
       </a>
 
       <a href="{{ route('admin.dashboard', ['empty' => 1]) }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">📭 Kosong (Belum Ada Polling)</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Semua statistik 0, tidak ada countdown, tidak ada aktivitas.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/dashboard?empty=1</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Kosong (Belum Ada Polling)</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Semua statistik 0, tidak ada countdown, tidak ada aktivitas.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/dashboard?empty=1</span>
       </a>
     </div>
   </x-card>
@@ -104,24 +104,24 @@
 
     <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       <a href="{{ route('admin.akun.index') }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">📊 Normal (60 Akun Dosen)</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Daftar penuh akun dummy dosen dengan pagination.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/akun</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Normal (60 Akun Dosen)</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Daftar penuh akun dummy dosen dengan pagination.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/akun</span>
       </a>
 
       <a href="{{ route('admin.akun.index', ['tab' => 'tendik']) }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">👥 Tab Tendik</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Beralih ke tab Tenaga Kependidikan.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/akun?tab=tendik</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Tab Tendik</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Beralih ke tab Tenaga Kependidikan.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/akun?tab=tendik</span>
       </a>
 
       <a href="{{ route('admin.akun.index', ['empty' => 1]) }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">📭 Kosong (Belum Ada Akun)</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Tabel akun kosong. Lihat pesan empty state.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/akun?empty=1</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Kosong (Belum Ada Akun)</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Tabel akun kosong. Lihat pesan empty state.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/akun?empty=1</span>
       </a>
     </div>
   </x-card>
@@ -136,17 +136,17 @@
 
     <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
       <a href="{{ route('admin.polling.aktif') }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">📊 Normal (Voting Berjalan)</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Piknik DTEDI 2026 — countdown aktif, 82% partisipasi, rekap kaos, tabel aktivitas.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/aktif</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Normal (Voting Berjalan)</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Piknik DTEDI 2026 — countdown aktif, 82% partisipasi, rekap kaos, tabel aktivitas.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/aktif</span>
       </a>
 
       <a href="{{ route('admin.polling.aktif', ['empty' => 1]) }}"
-         class="group flex flex-col rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
-        <span class="text-xs font-bold text-black group-hover:text-primary-1">📭 Kosong (Belum Ada Voting)</span>
-        <span class="mt-1 text-[11px] text-grey-deep leading-snug">Semua statistik kosong. Countdown nol, tidak ada aktivitas.</span>
-        <span class="mt-2 text-[10px] font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/aktif?empty=1</span>
+         class="group flex flex-col rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-primary-glow transition-all">
+        <span class="text-xs font-bold text-black group-hover:text-primary-1"> Kosong (Belum Ada Voting)</span>
+        <span class="mt-1 text-xs text-grey-deep leading-snug">Semua statistik kosong. Countdown nol, tidak ada aktivitas.</span>
+        <span class="mt-2 text-xs font-mono text-primary-1 bg-primary-3/50 rounded px-1.5 py-0.5 self-start">/admin/polling/aktif?empty=1</span>
       </a>
     </div>
   </x-card>
@@ -199,44 +199,44 @@
     <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {{-- 1. Blocked Active --}}
       <button @click="activeModal = 'blocked_active'"
-              class="text-left rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-amber-400 hover:shadow-md transition-all cursor-pointer">
-        <span class="text-xs font-bold text-black">⚠️ Peringatan: 1 Aktif</span>
-        <span class="mt-1 block text-[11px] text-grey-deep leading-snug">Mencoba publish draft saat ada polling aktif. Muncul peringatan "hanya 1 polling aktif".</span>
+              class="text-left rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-amber-400 hover:shadow-md transition-all cursor-pointer">
+        <span class="text-xs font-bold text-black"> Peringatan: 1 Aktif</span>
+        <span class="mt-1 block text-xs text-grey-deep leading-snug">Mencoba publish draft saat ada polling aktif. Muncul peringatan "hanya 1 polling aktif".</span>
       </button>
 
       {{-- 2. Late Warning --}}
       <button @click="activeModal = 'late_warning'"
-              class="text-left rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
-        <span class="text-xs font-bold text-black">🕐 Waktu Mulai Terlewat</span>
-        <span class="mt-1 block text-[11px] text-grey-deep leading-snug">Publish setelah jadwal waktu mulai. Pilihan: "Edit Waktu" atau "Tetap Post".</span>
+              class="text-left rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
+        <span class="text-xs font-bold text-black"> Waktu Mulai Terlewat</span>
+        <span class="mt-1 block text-xs text-grey-deep leading-snug">Publish setelah jadwal waktu mulai. Pilihan: "Edit Waktu" atau "Tetap Post".</span>
       </button>
 
       {{-- 3. Delete Active --}}
       <button @click="activeModal = 'delete_active'"
-              class="text-left rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-rose-400 hover:shadow-md transition-all cursor-pointer">
-        <span class="text-xs font-bold text-black">🛑 Hapus Polling Aktif</span>
-        <span class="mt-1 block text-[11px] text-grey-deep leading-snug">Konfirmasi khusus: menghentikan voting → status menjadi Selesai.</span>
+              class="text-left rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-rose-400 hover:shadow-md transition-all cursor-pointer">
+        <span class="text-xs font-bold text-black"> Hapus Polling Aktif</span>
+        <span class="mt-1 block text-xs text-grey-deep leading-snug">Konfirmasi khusus: menghentikan voting → status menjadi Selesai.</span>
       </button>
 
       {{-- 4. Delete Draft --}}
       <button @click="activeModal = 'delete_draft'"
-              class="text-left rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-rose-400 hover:shadow-md transition-all cursor-pointer">
-        <span class="text-xs font-bold text-black">🗑️ Hapus Draft</span>
-        <span class="mt-1 block text-[11px] text-grey-deep leading-snug">Hapus polling draft secara permanen.</span>
+              class="text-left rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-rose-400 hover:shadow-md transition-all cursor-pointer">
+        <span class="text-xs font-bold text-black"> Hapus Draft</span>
+        <span class="mt-1 block text-xs text-grey-deep leading-snug">Hapus polling draft secara permanen.</span>
       </button>
 
       {{-- 5. Delete Completed --}}
       <button @click="activeModal = 'delete_completed'"
-              class="text-left rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-rose-400 hover:shadow-md transition-all cursor-pointer">
-        <span class="text-xs font-bold text-black">🗑️ Hapus Arsip</span>
-        <span class="mt-1 block text-[11px] text-grey-deep leading-snug">Hapus polling arsip (selesai) secara permanen.</span>
+              class="text-left rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-rose-400 hover:shadow-md transition-all cursor-pointer">
+        <span class="text-xs font-bold text-black"> Hapus Arsip</span>
+        <span class="mt-1 block text-xs text-grey-deep leading-snug">Hapus polling arsip (selesai) secara permanen.</span>
       </button>
 
       {{-- 6. Hasil Polling --}}
       <button @click="activeModal = 'view_result'"
-              class="text-left rounded-sm border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-md transition-all cursor-pointer">
-        <span class="text-xs font-bold text-black">🏆 Hasil Polling (Pemenang)</span>
-        <span class="mt-1 block text-[11px] text-grey-deep leading-snug">Modal besar: kaos pemenang, destinasi wisata, foto clickable lightbox, cashback.</span>
+              class="text-left rounded-xl border border-grey-1 bg-white p-4 shadow-xs hover:border-primary-1 hover:shadow-md transition-all cursor-pointer">
+        <span class="text-xs font-bold text-black"> Hasil Polling (Pemenang)</span>
+        <span class="mt-1 block text-xs text-grey-deep leading-snug">Modal besar: kaos pemenang, destinasi wisata, foto clickable lightbox, cashback.</span>
       </button>
     </div>
 
@@ -252,7 +252,7 @@
         </p>
         <div class="mt-6">
           <button type="button" @click="activeModal = null"
-                  class="w-full rounded-sm bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
+                  class="w-full rounded-xl bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
             Mengerti
           </button>
         </div>
@@ -271,11 +271,11 @@
         </p>
         <div class="mt-6 flex items-center gap-3">
           <button type="button" @click="activeModal = null"
-                  class="flex-1 rounded-sm border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
+                  class="flex-1 rounded-xl border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
             Edit Waktu
           </button>
           <button type="button" @click="alert('Polling berhasil dipost!'); activeModal = null"
-                  class="flex-1 rounded-sm bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
+                  class="flex-1 rounded-xl bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
             Tetap Post
           </button>
         </div>
@@ -294,11 +294,11 @@
         </p>
         <div class="mt-6 flex items-center gap-3">
           <button type="button" @click="activeModal = null"
-                  class="flex-1 rounded-sm border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
+                  class="flex-1 rounded-xl border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
             Batal
           </button>
           <button type="button" @click="alert('Polling dihentikan! Status berubah menjadi Selesai.'); activeModal = null"
-                  class="flex-1 rounded-sm bg-danger py-2 text-xs font-semibold text-white shadow-menu hover:bg-red-700 transition-all">
+                  class="flex-1 rounded-xl bg-danger py-2 text-xs font-semibold text-white shadow-menu hover:bg-red-700 transition-all">
             Ya, Hentikan
           </button>
         </div>
@@ -317,11 +317,11 @@
         </p>
         <div class="mt-6 flex items-center gap-3">
           <button type="button" @click="activeModal = null"
-                  class="flex-1 rounded-sm border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
+                  class="flex-1 rounded-xl border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
             Batal
           </button>
           <button type="button" @click="alert('Draft berhasil dihapus!'); activeModal = null"
-                  class="flex-1 rounded-sm bg-danger py-2 text-xs font-semibold text-white shadow-menu hover:bg-red-700 transition-all">
+                  class="flex-1 rounded-xl bg-danger py-2 text-xs font-semibold text-white shadow-menu hover:bg-red-700 transition-all">
             Ya, Hapus
           </button>
         </div>
@@ -340,11 +340,11 @@
         </p>
         <div class="mt-6 flex items-center gap-3">
           <button type="button" @click="activeModal = null"
-                  class="flex-1 rounded-sm border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
+                  class="flex-1 rounded-xl border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
             Batal
           </button>
           <button type="button" @click="alert('Arsip berhasil dihapus!'); activeModal = null"
-                  class="flex-1 rounded-sm bg-danger py-2 text-xs font-semibold text-white shadow-menu hover:bg-red-700 transition-all">
+                  class="flex-1 rounded-xl bg-danger py-2 text-xs font-semibold text-white shadow-menu hover:bg-red-700 transition-all">
             Ya, Hapus
           </button>
         </div>
@@ -361,8 +361,8 @@
             <h2 class="mt-1 text-2xl font-bold text-black" x-text="sampleHistory.title"></h2>
           </div>
           <button type="button" @click="activeModal = null"
-                  class="flex h-8 w-8 items-center justify-center rounded-full text-grey-2 hover:bg-gray-100 hover:text-black transition-colors cursor-pointer">
-            <x-solar-close-circle-linear class="h-6 w-6" />
+                  class="flex h-8 w-8 items-center justify-center rounded-full text-grey-2 hover:bg-gray-100 hover:text-danger transition-colors cursor-pointer">
+            <x-solar-close-circle-linear class="h-5 w-5" />
           </button>
         </div>
 
@@ -425,7 +425,7 @@
                 </div>
               </div>
               <div class="mt-4 rounded-xl bg-gray-50 p-3 border border-gray-100">
-                <span class="text-[11px] font-semibold text-grey-deep">Kategori Pilihan:</span>
+                <span class="text-xs font-semibold text-grey-deep">Kategori Pilihan:</span>
                 <p class="mt-0.5 text-xs font-bold text-primary-1">Pilihan Teratas Civitas DTEDI</p>
               </div>
             </div>
@@ -472,26 +472,26 @@
                 <div class="mt-4 space-y-2.5 text-xs">
                   <div class="flex justify-between items-start">
                     <div>
-                      <span class="text-[11px] text-grey-deep">Lokasi</span>
+                      <span class="text-xs text-grey-deep">Lokasi</span>
                       <p class="font-medium text-black mt-0.5" x-text="sampleHistory.wisata.lokasi"></p>
                     </div>
-                    <span class="text-[11px] text-primary-1 font-semibold" x-text="'Dikunjungi: ' + sampleHistory.wisata.dikunjungi"></span>
+                    <span class="text-xs text-primary-1 font-semibold" x-text="'Dikunjungi: ' + sampleHistory.wisata.dikunjungi"></span>
                   </div>
                   <div class="grid grid-cols-2 gap-4 pt-1">
                     <div>
-                      <span class="text-[11px] text-grey-deep">Jarak</span>
+                      <span class="text-xs text-grey-deep">Jarak</span>
                       <p class="font-bold text-black mt-0.5" x-text="sampleHistory.wisata.jarak"></p>
                     </div>
                     <div>
-                      <span class="text-[11px] text-grey-deep">Lama Perjalanan</span>
+                      <span class="text-xs text-grey-deep">Lama Perjalanan</span>
                       <p class="font-bold text-black mt-0.5" x-text="sampleHistory.wisata.durasi"></p>
                     </div>
                   </div>
                   <div class="pt-1">
-                    <span class="text-[11px] text-grey-deep">Benefit:</span>
+                    <span class="text-xs text-grey-deep">Benefit:</span>
                     <div class="mt-1.5 flex flex-wrap gap-1.5">
                       <template x-for="(ben, bIdx) in sampleHistory.wisata.benefits" :key="bIdx">
-                        <span class="rounded-md border border-grey-1 bg-white px-2 py-0.5 text-[10px] font-medium text-grey-deep" x-text="ben"></span>
+                        <span class="rounded-md border border-grey-1 bg-white px-2 py-0.5 text-xs font-medium text-grey-deep" x-text="ben"></span>
                       </template>
                     </div>
                   </div>
@@ -512,7 +512,7 @@
       <div class="relative p-2 bg-black/90 rounded-2xl flex flex-col items-center">
         <button type="button" @click="previewImage = null"
                 class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors cursor-pointer">
-          <x-solar-close-circle-linear class="h-6 w-6" />
+          <x-solar-close-circle-linear class="h-5 w-5" />
         </button>
         <div class="w-full max-h-[80vh] flex items-center justify-center overflow-hidden rounded-xl p-2">
           <img :src="previewImage" alt="Preview Foto" class="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl">
@@ -523,7 +523,7 @@
 
   {{-- ===== Quick Cheat Sheet ===== --}}
   <x-card class="p-6 border border-gray-200 shadow-sm bg-gray-50">
-    <h2 class="text-sm font-bold text-black">📋 Ringkasan Query Parameter</h2>
+    <h2 class="text-sm font-bold text-black"> Ringkasan Query Parameter</h2>
     <div class="mt-3 overflow-x-auto">
       <table class="w-full text-xs border-separate border-spacing-y-1">
         <thead>
@@ -534,30 +534,30 @@
           </tr>
         </thead>
         <tbody>
-          <tr class="bg-white rounded-sm">
+          <tr class="bg-white rounded-xl">
             <td class="py-2 px-3 font-mono text-primary-1">?empty=1</td>
             <td class="py-2 px-3">Semua data kosong → lihat empty state</td>
-            <td class="py-2 px-3 font-mono text-[11px]">/admin/polling/arsip?empty=1</td>
+            <td class="py-2 px-3 font-mono text-xs">/admin/polling/arsip?empty=1</td>
           </tr>
-          <tr class="bg-white rounded-sm">
+          <tr class="bg-white rounded-xl">
             <td class="py-2 px-3 font-mono text-primary-1">?active=0</td>
             <td class="py-2 px-3">Hapus polling Aktif → test publish draft</td>
-            <td class="py-2 px-3 font-mono text-[11px]">/admin/polling/arsip?active=0</td>
+            <td class="py-2 px-3 font-mono text-xs">/admin/polling/arsip?active=0</td>
           </tr>
-          <tr class="bg-white rounded-sm">
+          <tr class="bg-white rounded-xl">
             <td class="py-2 px-3 font-mono text-primary-1">?state=draft</td>
             <td class="py-2 px-3">Filter hanya status Draft</td>
-            <td class="py-2 px-3 font-mono text-[11px]">/admin/polling/arsip?state=draft</td>
+            <td class="py-2 px-3 font-mono text-xs">/admin/polling/arsip?state=draft</td>
           </tr>
-          <tr class="bg-white rounded-sm">
+          <tr class="bg-white rounded-xl">
             <td class="py-2 px-3 font-mono text-primary-1">?state=selesai</td>
             <td class="py-2 px-3">Filter hanya status Selesai</td>
-            <td class="py-2 px-3 font-mono text-[11px]">/admin/polling/arsip?state=selesai</td>
+            <td class="py-2 px-3 font-mono text-xs">/admin/polling/arsip?state=selesai</td>
           </tr>
-          <tr class="bg-white rounded-sm">
+          <tr class="bg-white rounded-xl">
             <td class="py-2 px-3 font-mono text-primary-1">?state=aktif</td>
             <td class="py-2 px-3">Filter hanya status Aktif</td>
-            <td class="py-2 px-3 font-mono text-[11px]">/admin/polling/arsip?state=aktif</td>
+            <td class="py-2 px-3 font-mono text-xs">/admin/polling/arsip?state=aktif</td>
           </tr>
         </tbody>
       </table>

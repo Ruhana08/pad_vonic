@@ -30,17 +30,17 @@
     $opts[$opt] = (string)$opt;
   }
 
-  $btnBase = 'flex h-9 items-center rounded-sm bg-white px-5 text-xs font-semibold text-primary-1 shadow-menu transition-all';
-  $pillBase = 'flex h-9 items-center rounded-sm border border-primary-1 bg-white px-3.5 text-xs font-semibold text-primary-1 shadow-xs';
+  $btnBase = 'flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary-1 shadow-menu transition-all';
+  $pillBase = 'flex h-10 items-center rounded-xl border border-primary-1 bg-white px-4 text-sm font-semibold text-primary-1 shadow-xs';
 @endphp
 
-<div {{ $attributes->class('flex flex-wrap items-center justify-between gap-3') }}>
+<div {{ $attributes->merge(['class' => 'w-full flex items-center justify-between gap-3']) }}>
 
   {{-- Sisi Kiri: Tampilkan + Dropdown [10, 25, 50, 100] (Tanpa kata "Pilih...") --}}
   <div class="flex items-center gap-2">
     @if ($alpineModel)
       {{-- Mode Alpine.js (Client-side) --}}
-      <span class="flex h-9 items-center justify-center rounded-sm bg-white px-5 text-xs font-medium text-primary-1 shadow-menu">
+      <span class="flex h-10 items-center justify-center rounded-xl bg-white px-5 text-sm font-semibold text-primary-1 shadow-menu">
         Tampilkan
       </span>
       <x-dropdown-select :x-model.number="$alpineModel"
@@ -58,7 +58,7 @@
           @endif
         @endforeach
 
-        <span class="flex h-9 items-center justify-center rounded-sm bg-white px-5 text-xs font-medium text-primary-1 shadow-menu">
+        <span class="flex h-10 items-center justify-center rounded-xl bg-white px-5 text-sm font-semibold text-primary-1 shadow-menu">
           Tampilkan
         </span>
         <x-dropdown-select :name="$paramName"
@@ -71,15 +71,16 @@
     @endif
   </div>
 
-  {{-- Sisi Kanan: Sebelumnya | 1/1 atau 0/0 | Selanjutnya --}}
+  {{-- Sisi Kanan: < | 1/1 atau 0/0 | > --}}
   <div class="flex items-center gap-2">
     @if ($alpineModel && $alpineTotalPages)
       {{-- Mode Alpine.js --}}
       <button type="button"
+              aria-label="Sebelumnya"
               class="{{ $btnBase }} hover:bg-primary-3/30 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
               :disabled="{{ $isDisabled ? 'true' : ($alpinePage . ' <= 1') }}"
               @click="{{ $alpinePrev }}">
-        Sebelumnya
+        <x-solar-alt-arrow-left-linear class="h-4 w-4" />
       </button>
 
       <span class="{{ $pillBase }} {{ $isDisabled ? 'opacity-40' : '' }}"
@@ -92,29 +93,31 @@
       </span>
 
       <button type="button"
+              aria-label="Selanjutnya"
               class="{{ $btnBase }} hover:bg-primary-3/30 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
               :disabled="{{ $isDisabled ? 'true' : ($alpinePage . ' >= ' . $alpineTotalPages) }}"
               @click="{{ $alpineNext }}">
-        Selanjutnya
+        <x-solar-alt-arrow-right-linear class="h-4 w-4" />
       </button>
     @else
       {{-- Mode Laravel LengthAwarePaginator --}}
       @if ($isDisabled)
         {{-- Disabled State Total: Tidak ada yang aktif --}}
-        <span class="{{ $btnBase }} opacity-40 pointer-events-none">
-          Sebelumnya
+        <span class="{{ $btnBase }} opacity-40 pointer-events-none" aria-hidden="true">
+          <x-solar-alt-arrow-left-linear class="h-4 w-4" />
         </span>
         <span class="{{ $pillBase }} opacity-40">
           0/0
         </span>
-        <span class="{{ $btnBase }} opacity-40 pointer-events-none">
-          Selanjutnya
+        <span class="{{ $btnBase }} opacity-40 pointer-events-none" aria-hidden="true">
+          <x-solar-alt-arrow-right-linear class="h-4 w-4" />
         </span>
       @else
         {{-- Normal Paginator --}}
         <a href="{{ $isPaginator ? ($paginator->previousPageUrl() ?? '#') : '#' }}"
+           aria-label="Sebelumnya"
            class="{{ $btnBase }} {{ ($isPaginator && $paginator->onFirstPage()) ? 'opacity-40 pointer-events-none' : 'hover:bg-primary-3/30 cursor-pointer' }}">
-          Sebelumnya
+          <x-solar-alt-arrow-left-linear class="h-4 w-4" />
         </a>
 
         <span class="{{ $pillBase }}">
@@ -122,8 +125,9 @@
         </span>
 
         <a href="{{ $isPaginator ? ($paginator->nextPageUrl() ?? '#') : '#' }}"
+           aria-label="Selanjutnya"
            class="{{ $btnBase }} {{ ($isPaginator && $paginator->hasMorePages()) ? 'hover:bg-primary-3/30 cursor-pointer' : 'opacity-40 pointer-events-none' }}">
-          Selanjutnya
+          <x-solar-alt-arrow-right-linear class="h-4 w-4" />
         </a>
       @endif
     @endif

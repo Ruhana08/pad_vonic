@@ -3,18 +3,25 @@
         x-init="scrolled = (window.scrollY > 16);
                 window.addEventListener('scroll', () => { scrolled = (window.scrollY > 16) }, { passive: true })"
         :class="scrolled
-          ? 'fixed inset-x-0 top-0 z-30 flex h-[72px] items-center justify-between bg-white/95 backdrop-blur-md px-8 shadow-nav border-b border-gray-100 transition-all duration-300'
-          : 'fixed left-4 right-4 top-4 z-30 flex h-[80px] items-center justify-between rounded-2xl bg-white px-6 shadow-nav transition-all duration-300'">
+          ? 'fixed inset-x-0 top-0 z-30 flex h-[72px] items-center justify-between bg-white/95 backdrop-blur-md px-4 sm:px-8 shadow-nav border-b border-gray-100 transition-all duration-300'
+          : 'fixed left-3 right-3 sm:left-4 sm:right-4 top-3 sm:top-4 z-30 flex h-[72px] sm:h-[80px] items-center justify-between rounded-2xl bg-white px-4 sm:px-6 shadow-nav transition-all duration-300'">
 
-  <!-- Kiri: Logo UGM, Divider Biru, Logo Vonic, dan Judul Admin Area -->
-  <div class="flex items-center gap-4">
-    <div class="flex items-center gap-4">
-      <img src="{{ asset('images/logo-ugm.webp') }}" alt="UGM" class="h-10 w-auto" onerror="this.style.display='none'">
-      <div class="h-9 w-px bg-primary-1"></div>
-      <img src="{{ asset('images/logo-vonic-b.webp') }}" alt="Vonic" class="h-8 w-auto" onerror="this.style.display='none'">
+  <!-- Kiri: Hamburger Mobile + Logo UGM, Divider Biru, Logo Vonic, dan Judul Admin Area -->
+  <div class="flex items-center gap-2.5 sm:gap-4">
+    <button type="button"
+            @click="sidebarOpen = !sidebarOpen"
+            aria-label="Buka Menu"
+            class="flex h-10 w-10 items-center justify-center rounded-sm bg-white text-primary-1 shadow-control hover:bg-primary-3/30 lg:hidden cursor-pointer">
+      <x-solar-hamburger-menu-linear class="h-5 w-5" />
+    </button>
+
+    <div class="flex items-center gap-2.5 sm:gap-4">
+      <img src="{{ asset('images/logo-ugm.webp') }}" alt="UGM" class="h-8 sm:h-10 w-auto" onerror="this.style.display='none'">
+      <div class="h-7 sm:h-9 w-px bg-primary-1"></div>
+      <img src="{{ asset('images/logo-vonic-b.webp') }}" alt="Vonic" class="h-6 sm:h-8 w-auto" onerror="this.style.display='none'">
     </div>
 
-    <div class="flex flex-col font-sans text-lg font-bold leading-tight text-primary-1">
+    <div class="hidden sm:flex flex-col font-sans text-lg font-bold leading-tight text-primary-1">
       <span>Admin</span>
       <span>Area</span>
     </div>
@@ -23,99 +30,81 @@
   <!-- Kanan: Notifikasi dan Dropdown Profil -->
   <div class="flex items-center gap-3">
 
-    <!-- Dropdown Notifikasi -->
+    <!-- Dropdown Notifikasi (Model disamakan dengan User + wired API) -->
     <div x-data="{
            openNotif: false,
-           hasUnread: true,
-           filter: 'semua', // 'semua' | 'voting' | 'sistem'
-           notifications: [
-             {
-               id: 1,
-               type: 'voting',
-               icon: 'solar-check-circle-bold',
-               iconColor: 'text-success',
-               iconBg: 'bg-success-soft',
-               title: 'Suara Baru Diterima',
-               message: 'Dr. Budi Santoso, M.Kom telah mengirimkan suara untuk Piknik DTEDI 2026.',
-               time: '5 menit yang lalu',
-               read: false,
-               link: '{{ route('admin.polling.aktif') }}#aktivitas-terbaru'
-             },
-             {
-               id: 2,
-               type: 'voting',
-               icon: 'solar-chart-2-bold',
-               iconColor: 'text-primary-1',
-               iconBg: 'bg-primary-3',
-               title: 'Partisipasi Capai 80%',
-               message: 'Pemungutan suara Piknik DTEDI telah mencapai 279 pemilih.',
-               time: '1 jam yang lalu',
-               read: false,
-               link: '{{ route('admin.polling.aktif') }}'
-             },
-             {
-               id: 3,
-               type: 'sistem',
-               icon: 'solar-clock-circle-bold',
-               iconColor: 'text-warning',
-               iconBg: 'bg-amber-100',
-               title: 'Polling Segera Berakhir',
-               message: 'Voting tersisa 3 hari lagi. Ditutup Jumat, 16 Okt 2026 pukul 18.00 WIB.',
-               time: '2 jam yang lalu',
-               read: true,
-               link: '{{ route('admin.polling.aktif') }}'
-             },
-             {
-               id: 4,
-               type: 'sistem',
-               icon: 'solar-user-check-bold',
-               iconColor: 'text-primary-1',
-               iconBg: 'bg-primary-3',
-               title: 'Login Admin Terdeteksi',
-               message: 'Akun Anda berhasil masuk dari Chrome (Windows) pada 08:30 WIB.',
-               time: 'Hari ini, 08:30',
-               read: true,
-               link: '{{ route('admin.profil') }}'
-             },
-             {
-               id: 5,
-               type: 'sistem',
-               icon: 'solar-file-download-bold',
-               iconColor: 'text-secondary-1',
-               iconBg: 'bg-blue-100',
-               title: 'Import CSV Selesai',
-               message: 'Data 60 sivitas akademika berhasil diperbarui ke dalam sistem.',
-               time: 'Kemarin, 14:20',
-               read: true,
-               link: '{{ route('admin.akun.index') }}'
+           loadingNotif: false,
+           notifications: [],
+           unreadCount: 0,
+           init() {
+             this.fetchNotifications();
+           },
+           async fetchNotifications() {
+             const token = localStorage.getItem('vonic_token');
+             if (!token) return;
+             this.loadingNotif = true;
+             try {
+               const res = await fetch('/api/notifikasi?limit=5', {
+                 headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
+               });
+               if (res.ok) {
+                 const json = await res.json();
+                 if (json?.success) {
+                   this.notifications = Array.isArray(json.data) ? json.data : [];
+                   this.unreadCount = Number(json.unread_count ?? this.notifications.filter(n => !n.read).length);
+                 }
+               }
+             } catch (e) {
+               this.notifications = [];
+               this.unreadCount = 0;
+             } finally {
+               this.loadingNotif = false;
              }
-           ],
-           get filteredNotifications() {
-             if (this.filter === 'semua') return this.notifications;
-             return this.notifications.filter(n => n.type === this.filter);
            },
-           get unreadCount() {
-             return this.notifications.filter(n => !n.read).length;
+           async markAsRead(notif) {
+             if (!notif.read) {
+               notif.read = true;
+               this.unreadCount = Math.max(0, this.unreadCount - 1);
+               const token = localStorage.getItem('vonic_token');
+               if (token) {
+                 fetch('/api/notifikasi/' + notif.id + '/read', {
+                   method: 'POST',
+                   headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
+                 }).catch(() => {});
+               }
+             }
+             if (notif.link) {
+               window.location.href = notif.link;
+             }
            },
-           markAllAsRead() {
+           async markAllAsRead() {
              this.notifications.forEach(n => n.read = true);
-             this.hasUnread = false;
+             this.unreadCount = 0;
+             const token = localStorage.getItem('vonic_token');
+             if (token) {
+               fetch('/api/notifikasi/read-all', {
+                 method: 'POST',
+                 headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
+               }).catch(() => {});
+             }
            }
          }"
          @click.outside="openNotif = false"
          @keydown.escape.window="openNotif = false"
          class="relative">
 
-      <!-- Tombol Trigger Notifikasi (Radius & shadow identik tombol profil) -->
+      <!-- Tombol Trigger Notifikasi (Dot biru polos tanpa animasi) -->
       <button type="button"
-              @click="openNotif = !openNotif"
+              @click="openNotif = !openNotif; if (openNotif) fetchNotifications();"
               :aria-expanded="openNotif"
               aria-label="Notifikasi"
-              class="flex h-12 w-12 items-center justify-center rounded-sm bg-white text-primary-1 shadow-control transition-all hover:bg-primary-3/30 cursor-pointer">
+              class="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-sm bg-white text-primary-1 shadow-control transition-all hover:bg-primary-3/30 cursor-pointer">
         <x-solar-bell-linear class="h-5 w-5" />
+        <span x-show="unreadCount > 0" x-cloak
+              class="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-primary-1"></span>
       </button>
 
-      <!-- Dropdown Menu Notifikasi -->
+      <!-- Dropdown Menu Notifikasi (Clean & Simplified seperti User) -->
       <div x-show="openNotif" x-cloak
            x-transition:enter="transition ease-out duration-150"
            x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
@@ -123,95 +112,50 @@
            x-transition:leave="transition ease-in duration-100"
            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
            x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
-           class="absolute right-0 top-full z-50 mt-2 w-80 sm:w-96 rounded-xl border border-primary-1/20 bg-white p-3 shadow-2xl">
+           class="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-2rem)] sm:w-88 rounded-2xl border border-grey-1 bg-white p-4 shadow-xl">
 
         <!-- Header Panel Notifikasi -->
-        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div class="flex items-center justify-between pb-3 border-b border-grey-1">
           <span class="text-sm font-bold text-black">Notifikasi</span>
           <button type="button"
+                  x-show="unreadCount > 0"
                   @click="markAllAsRead()"
-                  class="text-[11px] font-semibold text-primary-1 hover:underline cursor-pointer">
-            Tandai semua dibaca
+                  class="text-[11px] font-medium text-grey-2 hover:text-primary-1 transition-colors cursor-pointer">
+            Tandai dibaca
           </button>
         </div>
 
-        <!-- Filter Tab Notifikasi: Semua | Voting | Sistem -->
-        <div class="flex items-center gap-1.5 py-2 border-b border-gray-100">
-          <button type="button"
-                  @click="filter = 'semua'"
-                  :class="filter === 'semua' ? 'bg-primary-1 text-white' : 'bg-gray-100 text-grey-deep hover:bg-gray-200'"
-                  class="rounded-full px-3 py-1 text-[11px] font-semibold transition-colors cursor-pointer">
-            Semua
-          </button>
-          <button type="button"
-                  @click="filter = 'voting'"
-                  :class="filter === 'voting' ? 'bg-primary-1 text-white' : 'bg-gray-100 text-grey-deep hover:bg-gray-200'"
-                  class="rounded-full px-3 py-1 text-[11px] font-semibold transition-colors cursor-pointer">
-            🗳️ Voting
-          </button>
-          <button type="button"
-                  @click="filter = 'sistem'"
-                  :class="filter === 'sistem' ? 'bg-primary-1 text-white' : 'bg-gray-100 text-grey-deep hover:bg-gray-200'"
-                  class="rounded-full px-3 py-1 text-[11px] font-semibold transition-colors cursor-pointer">
-            ⚙️ Sistem
-          </button>
-        </div>
+        <!-- Daftar Notifikasi Sederhana -->
+        <div class="mt-2 max-h-80 overflow-y-auto divide-y divide-gray-100">
+          <div x-show="loadingNotif && notifications.length === 0" x-cloak class="py-8 text-center text-xs text-grey-2">
+            Memuat notifikasi...
+          </div>
 
-        <!-- Daftar Notifikasi -->
-        <div class="mt-2 max-h-80 overflow-y-auto space-y-1 divide-y divide-gray-50">
-          <template x-for="notif in filteredNotifications" :key="notif.id">
-            <a :href="notif.link"
-               @click="notif.read = true"
-               class="flex items-start gap-3 p-2.5 rounded-lg transition-colors hover:bg-primary-3/30"
-               :class="notif.read ? 'bg-white' : 'bg-primary-3/20'">
-              
-              <!-- Icon Notifikasi -->
-              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full mt-0.5"
-                   :class="notif.iconBg">
-                <template x-if="notif.type === 'voting'">
-                  <x-solar-cup-star-bold class="h-4 w-4 text-primary-1" />
-                </template>
-                <template x-if="notif.type === 'sistem' && notif.icon.includes('clock')">
-                  <x-solar-clock-circle-bold class="h-4 w-4 text-warning" />
-                </template>
-                <template x-if="notif.type === 'sistem' && notif.icon.includes('user')">
-                  <x-solar-user-check-bold class="h-4 w-4 text-primary-1" />
-                </template>
-                <template x-if="notif.type === 'sistem' && notif.icon.includes('download')">
-                  <x-solar-file-download-bold class="h-4 w-4 text-secondary-1" />
-                </template>
+          <div x-show="!loadingNotif && notifications.length === 0" x-cloak class="py-8 text-center text-xs text-grey-deep">
+            <x-solar-bell-linear class="mx-auto h-7 w-7 text-grey-2 mb-2 opacity-60" />
+            Belum ada notifikasi saat ini.
+          </div>
+
+          <template x-for="notif in notifications" :key="notif.id">
+            <a :href="notif.link || '#'"
+               @click.prevent="markAsRead(notif)"
+               class="block py-2.5 px-3 rounded-xl transition-colors hover:bg-gray-50"
+               :class="notif.read ? 'opacity-70' : 'bg-primary-3/20'">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-xs font-bold text-black truncate" x-text="notif.title"></p>
+                <span class="text-[10px] text-grey-2 shrink-0" x-text="notif.time"></span>
               </div>
-
-              <!-- Konten Teks -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between gap-1">
-                  <p class="text-xs font-bold text-black truncate" x-text="notif.title"></p>
-                  <span class="text-[10px] text-grey-2 shrink-0" x-text="notif.time"></span>
-                </div>
-                <p class="text-[11px] text-grey-deep leading-relaxed mt-0.5 line-clamp-2" x-text="notif.message"></p>
-              </div>
-
-              <!-- Dot status belum dibaca -->
-              <template x-if="!notif.read">
-                <span class="h-2 w-2 rounded-full bg-primary-1 shrink-0 mt-1.5"></span>
-              </template>
+              <p class="text-[11px] text-grey-deep leading-relaxed mt-1 line-clamp-2" x-text="notif.message"></p>
             </a>
-          </template>
-
-          <!-- Tampilan Jika Kosong -->
-          <template x-if="filteredNotifications.length === 0">
-            <div class="py-8 text-center text-xs text-grey-deep">
-              <x-solar-bell-linear class="mx-auto h-8 w-8 text-grey-2 mb-2 opacity-50" />
-              Tidak ada notifikasi dalam kategori ini.
-            </div>
           </template>
         </div>
 
         <!-- Footer Notifikasi -->
-        <div class="mt-3 pt-2.5 border-t border-gray-100 text-center">
-          <a href="{{ route('admin.polling.aktif') }}#aktivitas-terbaru"
-             class="text-xs font-semibold text-primary-1 hover:underline">
-            Lihat Semua Aktivitas Voting &rarr;
+        <div class="mt-2 pt-2.5 border-t border-grey-1 text-center">
+          <a href="{{ route('admin.notifikasi') }}"
+             class="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-1 hover:underline">
+            <x-solar-arrow-right-linear class="h-3.5 w-3.5" />
+            <span>Lihat semua notifikasi</span>
           </a>
         </div>
 
@@ -229,11 +173,11 @@
       <button type="button"
               @click="open = !open"
               :aria-expanded="open"
-              class="flex h-12 items-center gap-3 rounded-sm bg-white px-3.5 shadow-control transition-all hover:bg-primary-3/30">
+              class="flex h-10 sm:h-12 items-center gap-2 sm:gap-3 rounded-sm bg-white px-2.5 sm:px-3.5 shadow-control transition-all hover:bg-primary-3/30 cursor-pointer">
         <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-1 text-white">
           <x-solar-user-bold class="h-4 w-4" />
         </span>
-        <span class="whitespace-nowrap text-sm font-medium tracking-wide text-black">
+        <span class="hidden sm:inline whitespace-nowrap text-sm font-medium tracking-wide text-black">
           {{ Auth::check() ? Auth::user()->name : 'Melisa D' }}
         </span>
         <x-solar-alt-arrow-down-linear
@@ -249,19 +193,21 @@
            x-transition:leave="transition ease-in duration-100"
            x-transition:leave-start="opacity-100 translate-y-0"
            x-transition:leave-end="opacity-0 -translate-y-1"
-           class="absolute inset-x-0 top-full z-40 pt-2">
+           class="absolute right-0 top-full z-40 min-w-[160px] pt-2">
 
-        <div class="flex flex-col gap-2 rounded-xl border border-gray-100 bg-white p-2 shadow-lg">
+        <div class="flex flex-col gap-1 rounded-2xl border border-grey-1 bg-white p-2 shadow-lg">
           <a href="{{ route('admin.profil') }}"
-             class="flex h-10 items-center rounded-lg px-3 text-sm font-medium text-gray-700 transition-colors hover:bg-primary-3 hover:text-primary-1">
-            Profile
+             class="flex h-10 items-center rounded-xl px-3 text-xs font-semibold text-gray-700 transition-colors hover:bg-primary-3/40 hover:text-primary-1">
+            <x-solar-user-linear class="mr-2 h-4 w-4" />
+            <span>Profile</span>
           </a>
 
           <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit"
-                    class="flex h-10 w-full items-center rounded-lg px-3 text-sm font-medium text-danger transition-colors hover:bg-rose-50 cursor-pointer">
-              Log Out
+                    class="flex h-10 w-full items-center rounded-xl px-3 text-xs font-semibold text-danger transition-colors hover:bg-rose-50 cursor-pointer">
+              <x-solar-logout-2-linear class="mr-2 h-4 w-4" />
+              <span>Log Out</span>
             </button>
           </form>
         </div>

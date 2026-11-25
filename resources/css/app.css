@@ -81,11 +81,11 @@ table thead th {
   padding-bottom: 0.875rem !important;
   padding-left: 0.875rem !important;  /* px-3.5 */
   padding-right: 0.875rem !important;
-  font-size: 0.6875rem !important;    /* 11px */
+  font-size: 0.75rem !important;      /* 12px / text-xs */
   font-weight: 700 !important;        /* font-bold */
   letter-spacing: 0.05em !important;  /* tracking-wider */
   text-transform: uppercase !important;
-  line-height: 1rem !important;
+  line-height: 1.125rem !important;
   text-align: center !important;      /* Semua judul rata tengah */
 }
 
@@ -95,8 +95,8 @@ table tbody tr:not(.no-hover) td {
   padding-bottom: 0.875rem !important;
   padding-left: 0.875rem !important;  /* px-3.5 */
   padding-right: 0.875rem !important;
-  font-size: 0.75rem !important;      /* 12px / text-xs */
-  line-height: 1.25rem !important;
+  font-size: 0.875rem !important;     /* 14px / text-sm */
+  line-height: 1.375rem !important;
   text-transform: none !important;    /* Bebas penulisan tanpa paksaan */
 }
 
@@ -140,4 +140,265 @@ table tbody tr:not(.no-hover):hover td {
 table tbody tr.no-hover,
 table tbody tr.no-hover:hover {
   background-color: transparent !important;
+}
+
+/* ==========================================================================
+   CARD STANDARDIZATION (Shadow, Radius, Border)
+   ========================================================================== */
+.card-panel,
+.card-showcase,
+.card-hero-polling,
+.card-empty-state {
+  background-color: #ffffff;
+  border-radius: var(--radius-card, 16px);
+  border: 1px solid #EEF2F7;
+  box-shadow: var(--shadow-type-3, 0 4px 27.7px 0 rgba(0, 0, 0, 0.04), 0 3px 6px 0 rgba(0, 0, 0, 0.10));
+}
+
+.card-hero-faq {
+  border-radius: var(--radius-lg, 24px);
+  background-color: var(--color-primary-1);
+  color: #ffffff;
+  box-shadow: var(--shadow-type-1);
+}
+
+.card-stat,
+.card-info-box {
+  background-color: #ffffff;
+  border-radius: var(--radius-md, 14px);
+  border: 1px solid #E5EAF2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.card-choice {
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid var(--color-grey-1);
+  padding: 1.125rem 1.25rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.card-choice:hover {
+  border-color: var(--color-primary-2);
+}
+.card-choice.is-active,
+.card-choice.active {
+  border-color: var(--color-primary-1);
+  background-color: rgba(234, 242, 255, 0.45);
+  outline: 2px solid var(--color-primary-1);
+}
+
+.card-stepper {
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid var(--color-grey-1);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.card-stepper.is-active,
+.card-stepper.active {
+  border-color: var(--color-primary-1);
+  background-color: rgba(234, 242, 255, 0.35);
+  outline: 2px solid var(--color-primary-1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
+/* Gradient Utility - Main-Blue (Figma System) */
+.bg-gradient-main-blue {
+  background: linear-gradient(90deg, #053788 0%, #196BEF 100%) !important;
+}
+
+/* ==========================================================================
+   VONIC 5-BUTTON DESIGN SYSTEM UTILITIES
+   State baku dan terintegrasi untuk seluruh tombol di aplikasi VONIC.
+   ========================================================================== */
+
+/* 1. Gradient CTA Button */
+.btn-gradient {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem; /* rounded-xl (12px) */
+  background-image: linear-gradient(90deg, var(--color-secondary-1) 0%, var(--color-primary-1) 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: var(--shadow-primary-glow);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  border: none;
+}
+.btn-gradient:hover {
+  opacity: 0.95;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25);
+}
+.btn-gradient:active {
+  opacity: 0.90;
+  transform: scale(0.98);
+}
+.btn-gradient:disabled,
+.btn-gradient.disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 2. Primary Solid Button */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: var(--color-primary-1);
+  color: #ffffff;
+  border: 1px solid var(--color-primary-1);
+  font-weight: 600;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-4);
+  border-color: var(--color-primary-4);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.btn-primary:active {
+  background-color: var(--color-secondary-1);
+  border-color: var(--color-secondary-1);
+  transform: scale(0.98);
+}
+.btn-primary:disabled,
+.btn-primary.disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 3. Secondary Outline Button */
+.btn-secondary,
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: #ffffff;
+  border: 1px solid var(--color-grey-1);
+  color: var(--color-grey-dark);
+  font-weight: 600;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.btn-secondary:hover,
+.btn-outline:hover {
+  border-color: var(--color-primary-1);
+  background-color: rgba(234, 242, 255, 0.4);
+  color: var(--color-primary-1);
+}
+.btn-secondary:active,
+.btn-outline:active {
+  background-color: rgba(234, 242, 255, 0.7);
+  transform: scale(0.98);
+}
+.btn-secondary:disabled,
+.btn-secondary.disabled,
+.btn-outline:disabled,
+.btn-outline.disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 4. Danger Action Button */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: #fff1f2; /* rose-50 */
+  border: 1px solid rgba(254, 35, 35, 0.25);
+  color: var(--color-danger);
+  font-weight: 600;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.btn-danger:hover {
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #ffffff;
+}
+.btn-danger:active {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+  color: #ffffff;
+  transform: scale(0.98);
+}
+.btn-danger:disabled,
+.btn-danger.disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 5. Square Action Icon Button (Tabel & Quick Action) */
+.btn-icon {
+  display: inline-flex;
+  height: 2rem; /* 32px */
+  width: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb; /* gray-200 */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.btn-icon:hover {
+  border-color: var(--color-primary-1);
+  background-color: rgba(234, 242, 255, 0.4);
+}
+.btn-icon:active {
+  transform: scale(0.95);
+}
+.btn-icon-danger {
+  color: var(--color-danger);
+}
+.btn-icon-danger:hover {
+  border-color: var(--color-danger);
+  background-color: #fff1f2;
+}
+
+/* Batas maksimal 3 baris untuk teks panjang di dalam sel tabel */
+table tbody tr:not(.no-hover) td > *:not(div):not(span):not(a):not(button),
+table tbody tr:not(.no-hover) td > a {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Scrollbar tipis & rapi untuk kontainer tabel horizontal scroll */
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1;
+  border-radius: 9999px;
+}
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background-color: #94A3B8;
 }

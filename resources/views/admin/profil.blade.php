@@ -4,21 +4,6 @@
 @section('page_title', 'Profil akun')
 @section('max_width', 'max-w-[1360px]')
 
-@section('header_actions')
-  <a href="{{ url()->previous() === url()->current() ? route('admin.dashboard') : url()->previous() }}"
-     class="flex items-center gap-2 text-xs font-semibold text-primary-1 hover:underline">
-    <x-solar-arrow-left-linear class="h-4 w-4" />
-    <span>Kembali</span>
-  </a>
-
-  <button type="button"
-          @click="activeView = 'tambah_akun'"
-          class="inline-flex items-center gap-2 rounded-sm border border-grey-1 bg-white px-4 py-2 text-xs font-semibold text-primary-1 shadow-xs hover:border-primary-1 hover:bg-primary-3/30 transition-all">
-    <x-solar-user-plus-linear class="h-4 w-4 text-primary-1" />
-    <span>Tambahkan akun</span>
-  </button>
-@endsection
-
 @section('content')
 <div x-data="{
   currentProfile: {
@@ -42,6 +27,14 @@
   showCurrentPw: false,
   showNewPw: false,
   showConfirmPw: false,
+  deleteLogTarget: null,
+  hiddenLogs: [],
+  confirmDeleteLog() {
+    if (this.deleteLogTarget) {
+      this.hiddenLogs.push(this.deleteLogTarget);
+      this.deleteLogTarget = null;
+    }
+  },
   handlePhotoUpload(e) {
     const f = e.target.files[0];
     if (f) {
@@ -69,9 +62,26 @@
        VIEW 1: IDENTITAS (Halaman Utama Profil & Log Aktivitas)
        ============================================================ --}}
   <div x-show="activeView === 'identitas'" x-cloak>
-    <div>
-      <h1 class="text-3xl font-bold tracking-tight text-[#082450]">Identitas</h1>
-      <p class="mt-1.5 text-xs text-grey-2">Kelola informasi profil dan pantau aktivitas akun Anda.</p>
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-[#082450]">Identitas</h1>
+        <p class="mt-1.5 text-xs text-grey-2">Kelola informasi profil dan pantau aktivitas akun Anda.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="{{ url()->previous() === url()->current() ? route('admin.dashboard') : url()->previous() }}"
+           class="btn-secondary h-10 px-4 text-xs font-semibold">
+          <x-solar-arrow-left-linear class="h-4 w-4" />
+          <span>Kembali</span>
+        </a>
+
+        <button type="button"
+                @click="activeView = 'tambah_akun'"
+                class="btn-secondary h-10 px-4 text-xs font-semibold">
+          <x-solar-user-plus-linear class="h-4 w-4 text-primary-1" />
+          <span>Tambahkan akun</span>
+        </button>
+      </div>
     </div>
 
     <div class="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[330px_1fr]">
@@ -79,21 +89,24 @@
       {{-- Kolom Kiri: Profil Saya Card & Sesi Akun --}}
       <div class="space-y-5">
         {{-- Card Profil Saya --}}
-        <div class="rounded-2xl border border-transparent bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-grey-1 bg-white p-6 shadow-type-1">
           <div class="flex items-center justify-between">
             <h2 class="text-base font-bold text-black">Profil saya</h2>
             <x-solar-user-linear class="h-5 w-5 text-primary-1" />
           </div>
 
-          {{-- Foto Profil Pantai / Formal --}}
-          <div class="mt-4 aspect-[16/10] w-full overflow-hidden rounded-xl border border-grey-1 bg-gradient-to-tr from-sky-200 to-blue-400">
-            <template x-if="currentProfile.photo">
-              <img :src="currentProfile.photo" alt="Foto Profil" class="h-full w-full object-cover">
-            </template>
-            <template x-if="!currentProfile.photo">
-              <div class="relative h-full w-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80');">
-              </div>
-            </template>
+          {{-- Foto Profil Lingkaran (Konsisten dengan Profil User) --}}
+          <div class="mt-5 flex justify-center">
+            <div class="h-24 w-24 overflow-hidden rounded-full border-4 border-primary-1/20 bg-gray-100 shadow-sm">
+              <template x-if="currentProfile.photo">
+                <img :src="currentProfile.photo" alt="Foto Profil" class="h-full w-full object-cover">
+              </template>
+              <template x-if="!currentProfile.photo">
+                <div class="flex h-full w-full items-center justify-center bg-primary-3">
+                  <x-solar-user-bold class="h-10 w-10 text-primary-1" />
+                </div>
+              </template>
+            </div>
           </div>
 
           {{-- Data Detail User --}}
@@ -104,7 +117,7 @@
                 <x-solar-user-linear class="h-4 w-4" />
               </div>
               <div class="min-w-0">
-                <p class="text-[11px] text-grey-2">Nama</p>
+                <p class="text-xs text-grey-2">Nama</p>
                 <p class="truncate text-xs font-semibold text-black" x-text="currentProfile.name"></p>
               </div>
             </div>
@@ -115,7 +128,7 @@
                 <x-solar-letter-linear class="h-4 w-4" />
               </div>
               <div class="min-w-0">
-                <p class="text-[11px] text-grey-2">Email</p>
+                <p class="text-xs text-grey-2">Email</p>
                 <p class="truncate text-xs font-semibold text-black" x-text="currentProfile.email"></p>
               </div>
             </div>
@@ -126,7 +139,7 @@
                 <x-solar-lock-linear class="h-4 w-4" />
               </div>
               <div>
-                <p class="text-[11px] text-grey-2">Password</p>
+                <p class="text-xs text-grey-2">Password</p>
                 <p class="text-xs font-semibold tracking-widest text-black">****</p>
               </div>
             </div>
@@ -135,22 +148,22 @@
           {{-- Tombol Edit Profile --}}
           <button type="button"
                   @click="activeView = 'edit_profil'"
-                  class="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-sm bg-primary-1 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
+                  class="btn-primary mt-6 h-11 w-full text-xs">
             <x-solar-pen-new-square-linear class="h-4 w-4" />
             <span>Edit Profile</span>
           </button>
         </div>
 
         {{-- Sesi Akun Card --}}
-        <div class="flex items-center justify-between rounded-2xl border border-transparent bg-white p-5 shadow-sm">
+        <div class="card-panel flex items-center justify-between p-5">
           <div>
             <h3 class="text-xs font-bold text-black">Sesi akun</h3>
-            <p class="mt-0.5 text-[11px] text-grey-2">Keluar dari akun Anda.</p>
+            <p class="mt-0.5 text-xs text-grey-2">Keluar dari akun Anda.</p>
           </div>
           <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit"
-                    class="flex items-center gap-2 rounded-sm border border-danger/30 bg-[#FFECEC] px-4 py-2 text-xs font-semibold text-danger hover:bg-danger-soft transition-all cursor-pointer">
+                    class="btn-danger h-9 px-4 text-xs">
               <x-solar-logout-2-linear class="h-3.5 w-3.5" />
               <span>Log Out</span>
             </button>
@@ -159,7 +172,7 @@
       </div>
 
       {{-- Kolom Kanan: Log Aktivitas Table Card --}}
-      <div class="rounded-2xl border border-transparent bg-white p-6 shadow-sm">
+      <div class="rounded-2xl border border-grey-1 bg-white p-6 shadow-type-1">
         <div class="flex items-start justify-between">
           <div>
             <h2 class="text-lg font-bold text-black">Log Aktivitas</h2>
@@ -181,10 +194,10 @@
             ['label' => 'AKSI', 'width' => '96px'],
           ]" minWidth="700px" headerBg="bg-secondary-1">
             @forelse ($logs as $log)
-              <tr class="transition-colors duration-150 hover:bg-[#F3F7FF] bg-white">
+              <tr x-show="!hiddenLogs.includes('{{ $log['id'] }}')" class="transition-colors duration-150 hover:bg-[#F3F7FF] bg-white">
                 {{-- No. --}}
                 <td class="border-b border-gray-100 py-3 px-3 text-left">
-                  <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 bg-white text-[11px] font-semibold text-black">
+                  <span class="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-grey-1 bg-white text-xs font-semibold text-black">
                     {{ str_pad($logs->firstItem() + $loop->index, 2, '0', STR_PAD_LEFT) }}
                   </span>
                 </td>
@@ -200,7 +213,7 @@
                 </td>
 
                 {{-- Admin --}}
-                <td class="border-b border-gray-100 py-3 px-4 text-left uppercase tracking-tight text-black text-[11px]">
+                <td class="border-b border-gray-100 py-3 px-4 text-left uppercase tracking-tight text-black text-xs">
                   {{ $log['admin'] }}
                 </td>
 
@@ -209,13 +222,11 @@
                   {{ $log['time'] }}
                 </td>
 
-                {{-- Aksi: Rollback / Pulihkan & Hapus --}}
+                {{-- Aksi: Hapus Log --}}
                 <td class="border-b border-gray-100 py-3 px-3 text-left">
                   <div class="flex items-center gap-1.5">
-                    <x-action-button type="rollback" label="Rollback / Kembalikan aktivitas ini"
-                                     onclick="alert('Aktivitas {{ $log['id'] }} berhasil di-rollback/dikembalikan!')" />
                     <x-action-button type="delete" label="Hapus log ini"
-                                     onclick="alert('Log {{ $log['id'] }} berhasil dihapus!')" />
+                                     @click="deleteLogTarget = '{{ $log['id'] }}'" />
                   </div>
                 </td>
               </tr>
@@ -255,41 +266,44 @@
     <div class="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[330px_1fr]">
 
       {{-- Sisi Kiri: Foto Profil Card --}}
-      <div class="rounded-2xl border border-transparent bg-white p-6 shadow-sm">
+      <div class="rounded-2xl border border-grey-1 bg-white p-6 shadow-type-1">
         <div class="flex items-center justify-between">
           <h2 class="text-base font-bold text-black">Foto profil</h2>
           <x-solar-user-linear class="h-5 w-5 text-primary-1" />
         </div>
 
-        <div class="mt-4 aspect-[16/10] w-full overflow-hidden rounded-xl border border-grey-1 bg-gradient-to-tr from-sky-200 to-blue-400">
-          <template x-if="editForm.photo_preview">
-            <img :src="editForm.photo_preview" alt="Foto Profil" class="h-full w-full object-cover">
-          </template>
-          <template x-if="!editForm.photo_preview && currentProfile.photo">
-            <img :src="currentProfile.photo" alt="Foto Profil" class="h-full w-full object-cover">
-          </template>
-          <template x-if="!editForm.photo_preview && !currentProfile.photo">
-            <div class="relative h-full w-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80');">
+        <div class="mt-6 flex flex-col items-center">
+          <div class="relative">
+            <div class="h-24 w-24 overflow-hidden rounded-full border-4 border-primary-1/20 bg-gray-100 shadow-sm">
+              <template x-if="editForm.photo_preview || currentProfile.photo">
+                <img :src="editForm.photo_preview || currentProfile.photo" alt="Foto Profil" class="h-full w-full object-cover">
+              </template>
+              <template x-if="!editForm.photo_preview && !currentProfile.photo">
+                <div class="flex h-full w-full items-center justify-center bg-primary-3">
+                  <x-solar-user-bold class="h-10 w-10 text-primary-1" />
+                </div>
+              </template>
             </div>
-          </template>
-        </div>
 
-        {{-- Tombol Ubah Foto --}}
-        <label class="mt-5 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-sm border border-grey-1 bg-white text-xs font-semibold text-primary-1 shadow-xs hover:border-primary-1 hover:bg-primary-3/30 transition-all">
-          <x-solar-pen-new-square-linear class="h-4 w-4" />
-          <span>Ubah foto</span>
-          <input type="file" accept="image/*" class="hidden" @change="handlePhotoUpload($event)">
-        </label>
-        <p class="mt-2 text-center text-[11px] text-grey-2">Format JPG atau PNG. Maksimal 2 MB.</p>
+            {{-- Tombol Ikon Kamera Ubah Foto (Konsisten dengan Profil User) --}}
+            <label class="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-primary-1 text-white shadow-sm transition-colors hover:bg-primary-4"
+                   title="Ubah Foto Profil">
+              <x-solar-camera-linear class="h-4 w-4" />
+              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="handlePhotoUpload($event)">
+            </label>
+          </div>
+          <p class="mt-2.5 text-center text-[11px] text-grey-2">Format JPG/PNG, maksimal 2 MB.</p>
+        </div>
 
         <div class="mt-6 border-t border-gray-100 pt-4">
           <p class="truncate text-xs font-bold text-black" x-text="editForm.name"></p>
-          <p class="truncate text-[11px] text-grey-2" x-text="editForm.email"></p>
+          <p class="truncate text-xs text-grey-2" x-text="editForm.email"></p>
         </div>
       </div>
 
       {{-- Sisi Kanan: Form Informasi Pribadi & Password Card --}}
-      <div class="rounded-2xl border border-transparent bg-white p-7 shadow-sm">
+      <form action="{{ route('admin.profil.update') }}" method="POST" class="rounded-2xl border border-transparent bg-white p-7 shadow-sm">
+        @csrf
         
         {{-- Section 1: Informasi Pribadi --}}
         <div class="flex items-start justify-between">
@@ -303,13 +317,13 @@
         <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label class="block text-xs font-semibold text-black mb-1.5">Nama</label>
-            <input type="text" x-model="editForm.name"
-                   class="h-11 w-full rounded-sm border border-grey-1 bg-white px-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
+            <input type="text" name="nama" x-model="editForm.name" required
+                   class="h-11 w-full rounded-xl border border-grey-1 bg-white px-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
           </div>
           <div>
             <label class="block text-xs font-semibold text-black mb-1.5">Email</label>
-            <input type="email" x-model="editForm.email"
-                   class="h-11 w-full rounded-sm border border-grey-1 bg-white px-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
+            <input type="email" name="email" x-model="editForm.email" required
+                   class="h-11 w-full rounded-xl border border-grey-1 bg-white px-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
           </div>
         </div>
 
@@ -330,11 +344,11 @@
               <div class="relative">
                 <input :type="showCurrentPw ? 'text' : 'password'" x-model="editForm.current_password"
                        placeholder="••••"
-                       class="h-11 w-full rounded-sm border border-grey-1 bg-white px-3.5 pr-10 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
+                       class="h-11 w-full rounded-xl border border-grey-1 bg-white px-3.5 pr-10 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
                 <button type="button" @click="showCurrentPw = !showCurrentPw"
                         class="absolute inset-y-0 right-3 flex items-center text-grey-2 hover:text-black">
-                  <x-solar-eye-linear x-show="!showCurrentPw" class="h-4 w-4" />
-                  <x-solar-eye-closed-linear x-show="showCurrentPw" class="h-4 w-4" />
+                  <x-solar-eye-closed-linear x-show="!showCurrentPw" class="h-4 w-4" />
+                  <x-solar-eye-linear x-show="showCurrentPw" class="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -346,14 +360,14 @@
                 <div class="relative">
                   <input :type="showNewPw ? 'text' : 'password'" x-model="editForm.password"
                          placeholder="••••••••"
-                         class="h-11 w-full rounded-sm border border-grey-1 bg-white px-3.5 pr-10 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
+                         class="h-11 w-full rounded-xl border border-grey-1 bg-white px-3.5 pr-10 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
                   <button type="button" @click="showNewPw = !showNewPw"
                           class="absolute inset-y-0 right-3 flex items-center text-grey-2 hover:text-black">
-                    <x-solar-eye-linear x-show="!showNewPw" class="h-4 w-4" />
-                    <x-solar-eye-closed-linear x-show="showNewPw" class="h-4 w-4" />
+                    <x-solar-eye-closed-linear x-show="!showNewPw" class="h-4 w-4" />
+                    <x-solar-eye-linear x-show="showNewPw" class="h-4 w-4" />
                   </button>
                 </div>
-                <p class="mt-1.5 text-[11px] text-grey-2">Gunakan minimal 8 karakter.</p>
+                <p class="mt-1.5 text-xs text-grey-2">Gunakan minimal 8 karakter.</p>
               </div>
 
               <div>
@@ -361,14 +375,14 @@
                 <div class="relative">
                   <input :type="showConfirmPw ? 'text' : 'password'" x-model="editForm.password_confirmation"
                          placeholder="••••••••"
-                         class="h-11 w-full rounded-sm border border-grey-1 bg-white px-3.5 pr-10 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
+                         class="h-11 w-full rounded-xl border border-grey-1 bg-white px-3.5 pr-10 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
                   <button type="button" @click="showConfirmPw = !showConfirmPw"
                           class="absolute inset-y-0 right-3 flex items-center text-grey-2 hover:text-black">
-                    <x-solar-eye-linear x-show="!showConfirmPw" class="h-4 w-4" />
-                    <x-solar-eye-closed-linear x-show="showConfirmPw" class="h-4 w-4" />
+                    <x-solar-eye-closed-linear x-show="!showConfirmPw" class="h-4 w-4" />
+                    <x-solar-eye-linear x-show="showConfirmPw" class="h-4 w-4" />
                   </button>
                 </div>
-                <p class="mt-1.5 text-[11px] text-grey-2">Masukkan kembali password baru Anda.</p>
+                <p class="mt-1.5 text-xs text-grey-2">Masukkan kembali password baru Anda.</p>
               </div>
             </div>
           </div>
@@ -379,7 +393,7 @@
           <x-solar-shield-check-linear class="h-5 w-5 shrink-0 text-primary-1 mt-0.5" />
           <div>
             <h4 class="text-xs font-bold text-black">Jaga kerahasiaan akun</h4>
-            <p class="text-[11px] text-grey-deep mt-0.5">Gunakan password yang unik dan jangan bagikan kepada siapa pun.</p>
+            <p class="text-xs text-grey-deep mt-0.5">Gunakan password yang unik dan jangan bagikan kepada siapa pun.</p>
           </div>
         </div>
 
@@ -387,36 +401,45 @@
         <div class="mt-8 flex justify-end items-center gap-3">
           <button type="button"
                   @click="activeView = 'identitas'"
-                  class="rounded-sm border border-grey-1 bg-white px-6 py-2.5 text-xs font-semibold text-grey-deep hover:bg-gray-50 transition-all">
+                  class="btn-secondary h-10 px-6 text-xs">
             Batal
           </button>
-          <button type="button"
-                  @click="saveProfile()"
-                  class="rounded-sm bg-primary-1 px-7 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
+          <button type="submit"
+                  class="btn-primary h-10 px-7 text-xs">
             Simpan perubahan
           </button>
         </div>
 
-      </div>
+      </form>
 
     </div>
   </div>
 
 
   {{-- ============================================================
-       VIEW 3: BUAT AKUN BARU / TAMBAHKAN AKUN
+       VIEW 3: BUAT AKUN BARU / DAFTARKAN ADMIN BARU
        ============================================================ --}}
   <div x-show="activeView === 'tambah_akun'" x-cloak>
-    <div>
-      <p class="text-xs font-bold uppercase tracking-wider text-primary-1">AKUN SAYA</p>
-      <h1 class="mt-1 text-3xl font-bold tracking-tight text-[#082450]">Buat Akun Baru</h1>
-      <p class="mt-1.5 text-xs text-grey-2">Masuk ke akun Vonic lain yang sudah terdaftar tanpa keluar dari akun saat ini.</p>
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="mt-1 text-3xl font-bold tracking-tight text-[#082450]">Daftarkan Admin Baru</h1>
+        <p class="mt-1.5 text-xs text-grey-2">Daftarkan akun administrator baru untuk membantu mengelola sistem polling Vonic DTEDI.</p>
+      </div>
+
+      <div>
+        <button type="button"
+                @click="activeView = 'identitas'"
+                class="btn-secondary h-10 px-4 text-xs font-semibold">
+          <x-solar-arrow-left-linear class="h-4 w-4" />
+          <span>Kembali</span>
+        </button>
+      </div>
     </div>
 
     <div class="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[330px_1fr]">
 
       {{-- Sisi Kiri: Akun Saat Ini Card --}}
-      <div class="rounded-2xl border border-transparent bg-white p-6 shadow-sm">
+      <div class="rounded-2xl border border-grey-1 bg-white p-6 shadow-type-1">
         <div class="flex items-center justify-between">
           <h2 class="text-base font-bold text-black">Akun saat ini</h2>
           <x-solar-user-linear class="h-5 w-5 text-primary-1" />
@@ -434,82 +457,120 @@
 
         <div class="mt-4">
           <p class="truncate text-xs font-bold text-black" x-text="currentProfile.name"></p>
-          <p class="truncate text-[11px] text-grey-2" x-text="currentProfile.email"></p>
+          <p class="truncate text-xs text-grey-2" x-text="currentProfile.email"></p>
         </div>
 
-        <div class="mt-4 flex items-center gap-1.5 text-[11px] font-semibold text-primary-1">
+        <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold text-primary-1">
           <x-solar-check-circle-bold class="h-4 w-4 text-primary-1" />
-          <span>Sedang digunakan</span>
+          <span>Admin Aktif</span>
         </div>
       </div>
 
-      {{-- Sisi Kanan: Form Tambahkan Akun Baru Card --}}
-      <div class="rounded-2xl border border-transparent bg-white p-8 shadow-sm">
-        <div class="flex items-start justify-between">
+      {{-- Sisi Kanan: Form Pendaftaran Admin Baru --}}
+      <div class="rounded-2xl border border-grey-1 bg-white p-8 shadow-sm">
+        <div class="flex items-start justify-between border-b border-gray-100 pb-4">
           <div>
-            <h2 class="text-base font-bold text-black">Tambahkan Akun Baru</h2>
-            <p class="mt-0.5 text-xs text-grey-2">Gunakan email dan password akun Vonic Anda.</p>
+            <h2 class="text-base font-bold text-black">Form Registrasi Admin</h2>
+            <p class="mt-0.5 text-xs text-grey-2">Isi identitas dan kredensial untuk admin baru DTEDI SV UGM.</p>
           </div>
           <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-3/60 text-primary-1">
             <x-solar-user-plus-linear class="h-5 w-5" />
           </div>
         </div>
 
-        <form @submit.prevent="submitAddAccount()" class="mt-8 space-y-5 max-w-xl mx-auto">
-          {{-- Email --}}
+        <form action="{{ route('admin.profil.admin.store') }}" method="POST" class="mt-6 space-y-4 max-w-xl mx-auto">
+          @csrf
+          
+          {{-- Nama Lengkap --}}
           <div>
-            <label class="block text-xs font-semibold text-black mb-1.5">Email</label>
+            <label class="block text-xs font-semibold text-black mb-1.5">Nama Lengkap Admin <span class="text-danger">*</span></label>
+            <div class="relative flex items-center">
+              <div class="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-grey-2">
+                <x-solar-user-linear class="h-4 w-4" />
+              </div>
+              <input type="text" name="nama" required
+                     placeholder="contoh: Dr. Ir. Budi Santoso, M.Eng."
+                     class="h-11 w-full rounded-xl border border-grey-1 bg-white pl-10 pr-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
+            </div>
+          </div>
+
+          {{-- Email Institusi --}}
+          <div>
+            <label class="block text-xs font-semibold text-black mb-1.5">Email Resmi UGM <span class="text-danger">*</span></label>
             <div class="relative flex items-center">
               <div class="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-grey-2">
                 <x-solar-letter-linear class="h-4 w-4" />
               </div>
-              <input type="email" x-model="addAccountForm.email" required
-                     placeholder="Masukkan email akun lain"
-                     class="h-11 w-full rounded-sm border border-grey-1 bg-white pl-10 pr-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
+              <input type="email" name="email" required
+                     placeholder="namaadmin@ugm.ac.id"
+                     class="h-11 w-full rounded-xl border border-grey-1 bg-white pl-10 pr-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
+            </div>
+            <p class="mt-1 text-xs text-grey-2">Wajib berakhiran @ugm.ac.id atau @mail.ugm.ac.id</p>
+          </div>
+
+          {{-- Unit Kerja --}}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-black mb-1.5">Unit Kerja</label>
+              <input type="text" name="unit_kerja" value="Departemen TEDIV"
+                     class="h-11 w-full rounded-xl border border-grey-1 bg-white px-3.5 text-xs text-black shadow-xs focus:border-primary-1 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-black mb-1.5">No. Telepon / WhatsApp</label>
+              <input type="text" name="no_telp" placeholder="08123456789"
+                     class="h-11 w-full rounded-xl border border-grey-1 bg-white px-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
             </div>
           </div>
 
-          {{-- Password --}}
+          {{-- Password Baru --}}
           <div>
-            <label class="block text-xs font-semibold text-black mb-1.5">Password</label>
+            <label class="block text-xs font-semibold text-black mb-1.5">Password Admin <span class="text-danger">*</span></label>
             <div class="relative flex items-center">
               <div class="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-grey-2">
                 <x-solar-lock-linear class="h-4 w-4" />
               </div>
-              <input :type="addAccountForm.showPassword ? 'text' : 'password'" x-model="addAccountForm.password" required
-                     placeholder="••••••••"
-                     class="h-11 w-full rounded-sm border border-grey-1 bg-white pl-10 pr-10 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
+              <input :type="addAccountForm.showPassword ? 'text' : 'password'" name="password" required
+                     placeholder="Minimal 8 karakter"
+                     class="h-11 w-full rounded-xl border border-grey-1 bg-white pl-10 pr-10 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
               <button type="button" @click="addAccountForm.showPassword = !addAccountForm.showPassword"
                       class="absolute inset-y-0 right-3.5 flex items-center text-grey-2 hover:text-black">
-                <x-solar-eye-linear x-show="!addAccountForm.showPassword" class="h-4 w-4" />
-                <x-solar-eye-closed-linear x-show="addAccountForm.showPassword" class="h-4 w-4" />
+                <x-solar-eye-closed-linear x-show="!addAccountForm.showPassword" class="h-4 w-4" />
+                <x-solar-eye-linear x-show="addAccountForm.showPassword" class="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          <div class="flex justify-end">
-            <a href="#" class="text-[11px] font-semibold text-primary-1 hover:underline">
-              Lupa password?
-            </a>
+          {{-- Konfirmasi Password --}}
+          <div>
+            <label class="block text-xs font-semibold text-black mb-1.5">Konfirmasi Password <span class="text-danger">*</span></label>
+            <div class="relative flex items-center">
+              <div class="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-grey-2">
+                <x-solar-lock-linear class="h-4 w-4" />
+              </div>
+              <input :type="addAccountForm.showPassword ? 'text' : 'password'" name="password_confirmation" required
+                     placeholder="Ulangi password di atas"
+                     class="h-11 w-full rounded-xl border border-grey-1 bg-white pl-10 pr-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
+            </div>
           </div>
 
           {{-- Tombol Submit & Batal --}}
-          <div class="pt-2 space-y-3">
+          <div class="pt-4 space-y-2.5">
             <button type="submit"
-                    class="h-11 w-full rounded-sm bg-primary-1 text-xs font-semibold text-white shadow-sm hover:bg-primary-4 transition-all">
-              Masuk & tambahkan akun
+                    class="btn-primary h-11 w-full text-sm font-semibold">
+              <x-solar-user-plus-linear class="h-4 w-4" />
+              <span>Daftarkan Akun Admin</span>
             </button>
 
             <button type="button"
                     @click="activeView = 'identitas'"
-                    class="h-11 w-full rounded-sm border border-grey-1 bg-white text-xs font-semibold text-grey-deep hover:bg-gray-50 transition-all">
+                    class="btn-secondary h-11 w-full text-sm">
               Batal
             </button>
           </div>
 
-          <div class="pt-4 flex items-center justify-center gap-2 text-[11px] text-grey-2">
-            <x-solar-lock-linear class="h-3.5 w-3.5" />
-            <span>Informasi masuk Anda dijaga kerahasiaannya.</span>
+          <div class="pt-3 flex items-center justify-center gap-2 text-xs text-grey-2">
+            <x-solar-shield-check-linear class="h-3.5 w-3.5 text-primary-1" />
+            <span>Kredensial admin baru terenkripsi secara aman di database Vonic.</span>
           </div>
         </form>
 
@@ -517,6 +578,29 @@
 
     </div>
   </div>
+
+  {{-- Modal Konfirmasi Hapus Log Aktivitas --}}
+  <x-modal show="Boolean(deleteLogTarget)" close="deleteLogTarget = null" maxWidth="sm">
+    <div class="p-6 text-center">
+      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-danger mb-3">
+        <x-solar-trash-bin-trash-linear class="h-6 w-6" />
+      </div>
+      <h3 class="text-base font-bold text-black">Hapus Log Aktivitas?</h3>
+      <p class="mt-1.5 text-xs text-grey-deep leading-relaxed">
+        Apakah Anda yakin ingin menghapus catatan log <strong class="text-black" x-text="deleteLogTarget"></strong> dari tampilan riwayat?
+      </p>
+      <div class="mt-5 flex items-center justify-center gap-2 pt-2">
+        <button type="button" @click="deleteLogTarget = null"
+                class="btn-secondary h-9 px-4 text-xs font-semibold">
+          Batal
+        </button>
+        <button type="button" @click="confirmDeleteLog()"
+                class="btn-danger h-9 px-5 text-xs font-semibold">
+          Ya, Hapus
+        </button>
+      </div>
+    </div>
+  </x-modal>
 
 </div>
 @endsection

@@ -91,7 +91,7 @@
         <img src="{{ asset('images/logo-vonic-w.webp') }}" alt="Vonic" class="h-4 sm:h-5 w-auto" />
         <span class="text-base sm:text-lg font-bold tracking-[1.5px]">Vonic</span>
       </div>
-      <span class="text-[11px] font-medium tracking-wide opacity-80">&copy; 2026 DTEDI SV UGM</span>
+      <span class="text-xs font-medium tracking-wide opacity-80">&copy; 2026 DTEDI SV UGM</span>
     </div>
   </footer>
 

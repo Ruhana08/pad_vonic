@@ -99,7 +99,7 @@
       {{-- Message Body --}}
       <div class="flex-1 min-w-0 pr-2">
         <div class="flex items-center gap-2">
-          <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider {{ $styles['badge'] }}">
+          <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wider {{ $styles['badge'] }}">
             {{ $styles['title'] }}
           </span>
         </div>

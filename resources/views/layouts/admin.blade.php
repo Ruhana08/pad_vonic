@@ -42,7 +42,7 @@
   <style>[x-cloak] { display: none !important; }</style>
 </head>
 
-<body class="flex min-h-screen flex-col bg-[#FAFAFA] font-sans text-black antialiased">
+<body x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false" class="flex min-h-screen flex-col overflow-x-hidden bg-[#FAFAFA] font-sans text-black antialiased">
 
   <x-flash-message />
 
@@ -50,11 +50,11 @@
   @include('layouts.partials.sidebar')
 
   <!--
-    Margin kiri = sidebar total width (224px) + gap ke konten (16px) = 240px
+    Margin kiri desktop = sidebar total width (224px) + gap ke konten (16px) = 240px
     Padding atas = jarak atas navbar (16px) + tinggi navbar (80px) + gap ke konten (32px) = 128px
     Padding bawah = ruang napas konten sebelum footer = 48px
   -->
-  <main class="ml-[240px] flex-1 pb-[48px] pr-4 pt-[128px]">
+  <main class="ml-0 lg:ml-[240px] min-w-0 flex-1 px-4 lg:pl-0 lg:pr-4 pb-[48px] pt-[112px] lg:pt-[128px]">
     @yield('content')
   </main>
 

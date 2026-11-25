@@ -40,7 +40,16 @@ class AuthController extends Controller
         $request->validate([
             'name'                  => 'required|string|max:100',
             'email'                 => 'required|email|ends_with:@ugm.ac.id,@mail.ugm.ac.id|max:150',
-            'password'              => 'required|string|min:8|same:password_confirmation',
+            'password'              => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/[A-Z]/',
+                'regex:/[a-z]/',
+                'regex:/[0-9]/',
+                'regex:/[^A-Za-z0-9]/',
+                'same:password_confirmation',
+            ],
             'password_confirmation' => 'required|string',
         ], [
             'name.required'                  => 'Nama lengkap wajib diisi.',
@@ -48,6 +57,7 @@ class AuthController extends Controller
             'email.ends_with'                => 'Email harus menggunakan domain resmi UGM (@ugm.ac.id atau @mail.ugm.ac.id).',
             'password.required'              => 'Kata sandi wajib diisi.',
             'password.min'                   => 'Kata sandi minimal berjumlah 8 karakter.',
+            'password.regex'                 => 'Kata sandi harus mengandung huruf besar, huruf kecil, angka, dan karakter spesial.',
             'password.same'                  => 'Konfirmasi kata sandi tidak cocok dengan kata sandi.',
             'password_confirmation.required' => 'Ulangi kata sandi wajib diisi.',
         ]);

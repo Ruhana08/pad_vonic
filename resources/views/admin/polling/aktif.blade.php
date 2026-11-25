@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-  $th = 'py-3.5 px-3 text-center text-[11px] font-bold text-white tracking-wider';
+  $th = 'py-3.5 px-3 text-center text-xs font-bold text-white tracking-wider';
   $td = 'py-3 px-3 text-center text-xs text-black';
 @endphp
 
@@ -24,14 +24,14 @@
         <template x-if="!isAnnounced">
           <button type="button"
                   @click="modalAnnounce = true"
-                  class="inline-flex items-center gap-2 rounded-sm bg-gradient-to-r from-primary-1 to-secondary-1 px-5 py-2.5 text-xs font-semibold text-white shadow-primary-glow hover:opacity-95 transition-all cursor-pointer">
+                  class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-1 to-secondary-1 px-5 py-2.5 text-xs font-semibold text-white shadow-primary-glow hover:opacity-95 transition-all cursor-pointer">
             <x-solar-cup-star-linear class="h-4 w-4" />
             <span>Umumkan Hasil Voting</span>
           </button>
         </template>
 
         <template x-if="isAnnounced">
-          <span class="inline-flex items-center gap-2 rounded-sm bg-success-soft border border-success/40 px-4 py-2 text-xs font-bold text-success">
+          <span class="inline-flex items-center gap-2 rounded-xl bg-success-soft border border-success/40 px-4 py-2 text-xs font-bold text-success">
             <x-solar-check-circle-bold class="h-4 w-4" />
             <span>Hasil Telah Diumumkan</span>
           </span>
@@ -51,25 +51,25 @@
         {{-- 3 Box: Partisipasi, Suara Masuk, Belum Memilih --}}
         <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {{-- 1. Partisipasi --}}
-          <div class="rounded-xl border border-primary-1 bg-white p-4">
+          <x-card variant="stat" class="p-5">
             <p class="text-xs font-semibold text-black">Partisipasi</p>
             <p class="mt-2 text-3xl font-bold text-primary-1">{{ $totalVote['percent'] }}%</p>
-            <p class="mt-2 text-[11px] text-grey-2">{{ $totalVote['received'] }} suara diterima</p>
-          </div>
+            <p class="mt-2 text-xs text-grey-2">{{ $totalVote['received'] }} suara diterima</p>
+          </x-card>
 
           {{-- 2. Suara Masuk --}}
-          <div class="rounded-xl border border-primary-1 bg-white p-4">
+          <x-card variant="stat" class="p-5">
             <p class="text-xs font-semibold text-black">Suara Masuk</p>
             <p class="mt-2 text-3xl font-bold text-primary-1">{{ $totalVote['received'] }}</p>
-            <p class="mt-2 text-[11px] text-grey-2">Dari {{ $totalVote['received'] + $totalVote['pending'] }} peserta</p>
-          </div>
+            <p class="mt-2 text-xs text-grey-2">Dari {{ $totalVote['received'] + $totalVote['pending'] }} peserta</p>
+          </x-card>
 
           {{-- 3. Belum Memilih --}}
-          <div class="rounded-xl border border-primary-1 bg-white p-4">
+          <x-card variant="stat" class="p-5">
             <p class="text-xs font-semibold text-black">Belum Memilih</p>
             <p class="mt-2 text-3xl font-bold text-danger">{{ $totalVote['pending'] }}</p>
-            <p class="mt-2 text-[11px] text-grey-2">{{ round(($totalVote['pending'] / max(1, $totalVote['received'] + $totalVote['pending'])) * 100) }}% peserta belum memilih</p>
-          </div>
+            <p class="mt-2 text-xs text-grey-2">{{ round(($totalVote['pending'] / max(1, $totalVote['received'] + $totalVote['pending'])) * 100) }}% peserta belum memilih</p>
+          </x-card>
         </div>
       </x-card>
 
@@ -87,7 +87,7 @@
         </div>
 
         <div class="mt-4 border-t border-grey-1/30 pt-3">
-          <p class="text-[10px] text-grey-2 uppercase tracking-wider font-semibold">Penutupan:</p>
+          <p class="text-xs text-grey-2 uppercase tracking-wider font-semibold">Penutupan:</p>
           <p class="mt-0.5 text-xs font-bold text-black">
             @if (($deadline[0] ?? '-') === '-' || ($countdown['days'] == 0 && $countdown['hours'] == 0 && $countdown['minutes'] == 0))
               <span class="text-grey-deep">Tanggal Tidak Aktif</span>
@@ -101,7 +101,7 @@
   </div>
 
   {{-- Card Mandiri Rekapitulasi Suara (Border Stroke Biru Paling Luar Sesuai Figma) --}}
-  <x-card id="rekapitulasi-suara" class="p-6 border-2 border-primary-1"
+  <x-card id="rekapitulasi-suara" class="p-6"
           x-data="{
             expandedCats: {},
             toggleCat(key) {
@@ -115,13 +115,13 @@
       <h3 class="text-xl font-bold text-black">Rekapitulasi Suara</h3>
       <div class="flex flex-wrap gap-2">
         <a href="{{ route('admin.polling.aktif', ['kategori' => 'semua']) }}"
-           class="rounded-sm px-5 py-2 text-xs font-semibold transition-all
+           class="rounded-xl px-5 py-2 text-xs font-semibold transition-all
                   {{ $kategori === 'semua' ? 'bg-primary-1 text-white shadow-sm' : 'bg-white text-grey-deep border border-grey-1 hover:bg-gray-50' }}">
           Semua kategori
         </a>
         @foreach (['peserta' => 'Peserta', 'wisata' => 'Tempat wisata', 'kaos' => 'Desain kaos'] as $key => $label)
           <a href="{{ route('admin.polling.aktif', ['kategori' => $key]) }}"
-             class="rounded-sm px-5 py-2 text-xs font-semibold transition-all
+             class="rounded-xl px-5 py-2 text-xs font-semibold transition-all
                     {{ $kategori === $key ? 'bg-primary-1 text-white shadow-sm' : 'bg-white text-grey-deep border border-grey-1 hover:bg-gray-50' }}">
             {{ $label }}
           </a>
@@ -133,13 +133,13 @@
       <table class="w-full min-w-[850px] border-separate border-spacing-0 text-xs">
         {{-- Header Kolom Ringan (Teks Biru) --}}
         <thead>
-          <tr class="text-[11px] font-bold text-primary-1 text-center">
-            <th class="py-3 px-4 text-center w-14">No.</th>
-            <th class="py-3 px-4 text-center">Pilihan</th>
-            <th class="py-3 px-4 text-center">Dosen</th>
-            <th class="py-3 px-4 text-center">Tendik</th>
-            <th class="py-3 px-4 text-center">Total suara</th>
-            <th class="py-3 px-4 text-center">Proporsi</th>
+          <tr class="text-xs font-bold text-primary-1 text-center">
+            <th class="py-3 px-4 text-center w-px whitespace-nowrap">No.</th>
+            <th class="py-3 px-4 text-center min-w-[240px]">Pilihan</th>
+            <th class="py-3 px-4 text-center w-px whitespace-nowrap">Dosen</th>
+            <th class="py-3 px-4 text-center w-px whitespace-nowrap">Tendik</th>
+            <th class="py-3 px-4 text-center w-px whitespace-nowrap">Total suara</th>
+            <th class="py-3 px-4 text-center min-w-[160px]">Proporsi</th>
           </tr>
         </thead>
 
@@ -152,7 +152,7 @@
             {{-- Banner Pembatas Kategori (Sub-judul Kategori: Bebas Hover) --}}
             <tr class="no-hover">
               <td colspan="6" class="pt-3 pb-1 !bg-transparent">
-                <div class="flex items-center justify-between rounded-sm bg-[#EAF2FF] px-4 py-2.5">
+                <div class="flex items-center justify-between rounded-xl bg-[#EAF2FF] px-4 py-2.5">
                   <span class="text-xs font-bold text-black">{{ $cat['label'] }}</span>
                   
                   {{-- Jika opsi lebih dari 5: Ada tombol toggle Lihat Semua / Tutup --}}
@@ -185,7 +185,7 @@
                 <td class="py-3.5 px-4 text-left font-semibold text-black">
                   <span>{{ $opt['name'] }}</span>
                   @if ($loop->first)
-                    <span class="ml-2 inline-flex items-center rounded bg-primary-1 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                    <span class="ml-2 inline-flex items-center rounded bg-primary-1 px-1.5 py-0.5 text-xs font-bold text-white">
                       Terbanyak
                     </span>
                   @endif
@@ -219,17 +219,17 @@
   </x-card>
 
   {{-- Aktivitas Terbaru & Pengelolaan Kaos Card dengan Border Stroke Biru Sesuai Desain Figma --}}
-  <x-card id="aktivitas-terbaru" class="mt-4 p-6 border-2 border-primary-1">
+  <x-card id="aktivitas-terbaru" class="mt-4 p-6">
     <div class="flex flex-wrap items-center justify-between gap-3 border-b-2 border-gray-100 pb-3">
       <div>
         <h3 class="text-xl font-bold text-black">Aktivitas Terbaru</h3>
         <p class="text-xs text-grey-deep mt-1">Data suara masuk dan rincian ukuran pakaian keluarga peserta.</p>
       </div>
 
-      {{-- Tombol Aksi Unduh Data Kaos (Sesuai Gaya Desain Tombol Figma: rounded-sm shadow-menu/primary-glow) --}}
+      {{-- Tombol Aksi Unduh Data Kaos (Sesuai Gaya Desain Tombol Figma: rounded-xl shadow-menu/primary-glow) --}}
       <div class="flex flex-wrap items-center gap-2">
         <a href="{{ route('admin.polling.aktif.export-kaos') }}"
-           class="inline-flex items-center gap-2 rounded-sm bg-primary-1 px-4 py-2.5 text-xs font-semibold text-white shadow-primary-glow hover:bg-primary-4 transition-all cursor-pointer">
+           class="inline-flex items-center gap-2 rounded-xl bg-primary-1 px-4 py-2.5 text-xs font-semibold text-white shadow-primary-glow hover:bg-primary-4 transition-all cursor-pointer">
           <x-solar-download-square-linear class="h-4 w-4" />
           <span>Unduh Data Ukuran Kaos (CSV)</span>
         </a>
@@ -240,17 +240,17 @@
 
     {{-- Tabel Aktivitas dengan Header Biru Gelap (bg-secondary-1) Sesuai Permintaan --}}
     <div class="mt-4 overflow-x-auto">
-      <table class="w-full min-w-[950px] border-separate border-spacing-y-2 text-xs">
+      <table class="w-full min-w-[1100px] border-separate border-spacing-y-2 text-xs">
         <thead>
-          <tr class="bg-secondary-1 text-white text-[11px] font-bold tracking-wider text-center">
-            <th class="rounded-l-sm py-3 px-3 text-center w-14">NO.</th>
-            <th class="py-3 px-4 text-center">DOSEN</th>
-            <th class="py-3 px-4 text-center">EMAIL</th>
-            <th class="py-3 px-3 text-center">PESERTA</th>
-            <th class="py-3 px-3 text-center">TEMPAT WISATA</th>
-            <th class="py-3 px-4 text-center">DESAIN KAOS</th>
-            <th class="py-3 px-4 text-center">UKURAN</th>
-            <th class="rounded-r-sm py-3 px-3 text-center w-28">STATUS</th>
+          <tr class="bg-secondary-1 text-white text-xs font-bold tracking-wider text-center">
+            <th class="rounded-l-sm py-3 px-3 text-center w-px whitespace-nowrap">NO.</th>
+            <th class="py-3 px-4 text-center min-w-[180px]">DOSEN</th>
+            <th class="py-3 px-4 text-center min-w-[200px]">EMAIL</th>
+            <th class="py-3 px-3 text-center w-px whitespace-nowrap">PESERTA</th>
+            <th class="py-3 px-3 text-center min-w-[180px]">TEMPAT WISATA</th>
+            <th class="py-3 px-4 text-center min-w-[160px]">DESAIN KAOS</th>
+            <th class="py-3 px-4 text-center w-px whitespace-nowrap">UKURAN</th>
+            <th class="rounded-r-sm py-3 px-3 text-center w-px whitespace-nowrap">STATUS</th>
           </tr>
         </thead>
         <tbody>
@@ -258,7 +258,7 @@
             <tr class="transition-colors duration-150 hover:bg-[#F3F7FF] bg-white">
               {{-- No. --}}
               <td class="border-b border-gray-100 py-3 px-3 text-left">
-                <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs">
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-grey-1 bg-white text-xs font-semibold text-black shadow-xs">
                   {{ str_pad($activities->firstItem() + $loop->index, 2, '0', STR_PAD_LEFT) }}
                 </span>
               </td>
@@ -269,7 +269,7 @@
               </td>
 
               {{-- Email --}}
-              <td class="border-b border-gray-100 py-3 px-4 text-[11px] text-grey-deep text-left">
+              <td class="border-b border-gray-100 py-3 px-4 text-xs text-grey-deep text-left">
                 {{ $a['email'] }}
               </td>
 
@@ -293,7 +293,7 @@
                 <div class="flex flex-wrap items-center justify-start gap-2">
                   @foreach ($a['kaos_items'] as $item)
                     <div class="inline-flex items-center gap-1.5 bg-transparent py-0.5">
-                      <span class="inline-flex h-7 min-w-[28px] px-1.5 items-center justify-center rounded-sm border border-primary-1 text-xs font-bold text-primary-1 bg-white shadow-xs">
+                      <span class="inline-flex h-7 min-w-[28px] px-1.5 items-center justify-center rounded-xl border border-primary-1 text-xs font-bold text-primary-1 bg-white shadow-xs">
                         {{ $item['size'] }}
                       </span>
                       <span class="text-xs font-semibold text-black">
@@ -306,7 +306,7 @@
 
               {{-- Status Pill --}}
               <td class="border-b border-gray-100 py-3 px-3 text-left">
-                <span class="inline-flex h-7 w-24 items-center justify-center rounded-full bg-success-soft text-[11px] font-semibold text-success">
+                <span class="inline-flex h-7 w-24 items-center justify-center rounded-full bg-success-soft text-xs font-semibold text-success">
                   {{ $a['status'] }}
                 </span>
               </td>
@@ -334,11 +334,11 @@
           <h3 class="text-lg font-bold text-black">Ringkasan Total Ukuran Kaos</h3>
           <p class="text-xs text-grey-2">Total kebutuhan kaos per ukuran untuk vendor konveksi.</p>
         </div>
-        <button type="button" @click="modalRekap = false" class="text-grey-2 hover:text-black text-xl font-bold leading-none">&times;</button>
+        <button type="button" @click="modalRekap = false" aria-label="Tutup" class="shrink-0 rounded-lg p-1.5 text-grey-2 hover:text-danger hover:bg-red-50 transition-colors cursor-pointer"><x-solar-close-circle-linear class="h-5 w-5" /></button>
       </div>
 
       <div class="mt-4">
-        <table class="w-full text-xs border border-grey-1 rounded-sm overflow-hidden text-left">
+        <table class="w-full text-xs border border-grey-1 rounded-xl overflow-hidden text-left">
           <thead>
             <tr class="bg-secondary-1 text-white text-left">
               <th class="py-2.5 px-4 text-left font-semibold">UKURAN KAOS</th>
@@ -362,7 +362,7 @@
 
       <div class="mt-5 flex justify-end gap-2">
         <a href="{{ route('admin.polling.aktif.export-kaos', ['type' => 'vendor']) }}"
-           class="rounded-sm bg-primary-1 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-4">
+           class="rounded-xl bg-primary-1 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-4">
           Unduh Rekap Vendor (CSV)
         </a>
       </div>
@@ -383,7 +383,7 @@
             <p class="text-xs text-grey-deep mt-0.5">Tetapkan dan umumkan pemenang dari 3 kategori ke seluruh sivitas DTEDI.</p>
           </div>
         </div>
-        <button type="button" @click="modalAnnounce = false" class="text-grey-2 hover:text-black text-2xl font-bold leading-none">&times;</button>
+        <button type="button" @click="modalAnnounce = false" aria-label="Tutup" class="shrink-0 rounded-lg p-1.5 text-grey-2 hover:text-danger hover:bg-red-50 transition-colors cursor-pointer"><x-solar-close-circle-linear class="h-5 w-5" /></button>
       </div>
 
       {{-- Informasi Rangkuman Pemenang Tiap Kategori --}}
@@ -392,38 +392,38 @@
 
         <div class="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
           {{-- Kategori 1: Peserta --}}
-          <div class="rounded-xl border-2 border-primary-1 bg-primary-3/30 p-4 shadow-xs">
-            <span class="rounded-sm bg-primary-1 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
+          <div class="rounded-xl bg-primary-3/30 p-4 shadow-xs">
+            <span class="rounded-xl bg-primary-1 px-2 py-0.5 text-xs font-bold text-white uppercase tracking-wider">
               Kategori 1: Peserta
             </span>
-            <h4 class="mt-3 text-sm font-bold text-black">Dosen dan Tendik Dipisah</h4>
+            <h4 class="mt-3 text-sm font-bold text-black">{{ $winners['peserta']['name'] ?? 'Belum ada suara' }}</h4>
             <div class="mt-3 flex items-center justify-between text-xs border-t border-primary-2/30 pt-2">
               <span class="text-grey-deep">Perolehan</span>
-              <span class="font-bold text-primary-1">63% (138 suara)</span>
+              <span class="font-bold text-primary-1">{{ ($winners['peserta']['percent'] ?? 0) }}% ({{ ($winners['peserta']['votes'] ?? 0) }} suara)</span>
             </div>
           </div>
 
           {{-- Kategori 2: Tempat Wisata --}}
-          <div class="rounded-xl border-2 border-primary-1 bg-primary-3/30 p-4 shadow-xs">
-            <span class="rounded-sm bg-primary-1 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
+          <div class="rounded-xl bg-primary-3/30 p-4 shadow-xs">
+            <span class="rounded-xl bg-primary-1 px-2 py-0.5 text-xs font-bold text-white uppercase tracking-wider">
               Kategori 2: Wisata
             </span>
-            <h4 class="mt-3 text-sm font-bold text-black">Pantai Kartini, Jepara</h4>
+            <h4 class="mt-3 text-sm font-bold text-black">{{ $winners['wisata']['name'] ?? 'Belum ada suara' }}</h4>
             <div class="mt-3 flex items-center justify-between text-xs border-t border-primary-2/30 pt-2">
               <span class="text-grey-deep">Perolehan</span>
-              <span class="font-bold text-primary-1">40% (88 suara)</span>
+              <span class="font-bold text-primary-1">{{ ($winners['wisata']['percent'] ?? 0) }}% ({{ ($winners['wisata']['votes'] ?? 0) }} suara)</span>
             </div>
           </div>
 
           {{-- Kategori 3: Desain Kaos --}}
-          <div class="rounded-xl border-2 border-primary-1 bg-primary-3/30 p-4 shadow-xs">
-            <span class="rounded-sm bg-primary-1 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
+          <div class="rounded-xl bg-primary-3/30 p-4 shadow-xs">
+            <span class="rounded-xl bg-primary-1 px-2 py-0.5 text-xs font-bold text-white uppercase tracking-wider">
               Kategori 3: Kaos
             </span>
-            <h4 class="mt-3 text-sm font-bold text-black">Navy Polo Gathering</h4>
+            <h4 class="mt-3 text-sm font-bold text-black">{{ $winners['kaos']['name'] ?? 'Belum ada suara' }}</h4>
             <div class="mt-3 flex items-center justify-between text-xs border-t border-primary-2/30 pt-2">
               <span class="text-grey-deep">Perolehan</span>
-              <span class="font-bold text-primary-1">57% (125 suara)</span>
+              <span class="font-bold text-primary-1">{{ ($winners['kaos']['percent'] ?? 0) }}% ({{ ($winners['kaos']['votes'] ?? 0) }} suara)</span>
             </div>
           </div>
         </div>
@@ -434,7 +434,7 @@
         <x-solar-danger-circle-bold class="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
         <div class="text-xs text-amber-900">
           <p class="font-bold">Konfirmasi Publikasi Pengumuman</p>
-          <p class="mt-0.5 text-[11px] leading-relaxed text-amber-800">
+          <p class="mt-0.5 text-xs leading-relaxed text-amber-800">
             Setelah diumumkan, sesi polling akan otomatis ditutup dan dikunci. Seluruh sivitas akan menerima notifikasi pengumuman hasil resmi, dan rekaman kegiatan akan dipindahkan ke arsip.
           </p>
         </div>
@@ -443,16 +443,18 @@
       {{-- Tombol Aksi Batal & Konfirmasi --}}
       <div class="mt-7 flex items-center justify-end gap-3 pt-3 border-t border-grey-1">
         <button type="button" @click="modalAnnounce = false"
-                class="rounded-sm border border-grey-1 bg-white px-5 py-2.5 text-xs font-semibold text-grey-deep hover:bg-gray-50 transition-all cursor-pointer">
+                class="rounded-xl border border-grey-1 bg-white px-5 py-2.5 text-xs font-semibold text-grey-deep hover:bg-gray-50 transition-all cursor-pointer">
           Batal
         </button>
 
-        <button type="button"
-                @click="isAnnounced = true; modalAnnounce = false; alert('Hasil resmi voting berhasil diumumkan ke seluruh sivitas DTEDI!');"
-                class="inline-flex items-center gap-2 rounded-sm bg-gradient-to-r from-primary-1 to-secondary-1 px-6 py-2.5 text-xs font-semibold text-white shadow-primary-glow hover:opacity-95 transition-all cursor-pointer">
-          <x-solar-check-circle-bold class="h-4 w-4" />
-          <span>Konfirmasi & Umumkan Sekarang</span>
-        </button>
+        <form method="POST" action="{{ route('admin.polling.aktif.announce') }}">
+          @csrf
+          <button type="submit"
+                  class="btn-gradient px-6 py-2.5 text-xs font-semibold">
+            <x-solar-check-circle-bold class="h-4 w-4" />
+            <span>Konfirmasi & Umumkan Sekarang</span>
+          </button>
+        </form>
       </div>
     </div>
   </x-modal>

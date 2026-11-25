@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class AkunController extends Controller
 {
@@ -14,43 +14,56 @@ class AkunController extends Controller
 
         $perPage = (int) $request->query('per_page', 10);
         $perPage = in_array($perPage, [10, 25, 50]) ? $perPage : 10;
-        $page = max(1, (int) $request->query('page', 1));
 
-        // ===== STATE CONTROL =====
-        // ?empty=1 → Tabel akun kosong (test empty state)
-        $isEmpty = $request->boolean('empty');
+        // Daftar unit kerja resmi DTEDI SV UGM
+        $units = [
+            'Teknologi Rekayasa Perangkat Lunak',
+            'Teknologi Rekayasa Internet',
+            'Teknologi Rekayasa Instrumentasi dan Kontrol',
+            'Teknologi Rekayasa Elektro',
+            'Akademik',
+            'Kemahasiswaan',
+            'Sarana dan Prasarana',
+        ];
 
-        $units = ['TRIK', 'TEKNO', 'TEDI', 'ADMIN'];
+        // Query dari tabel users
+        $query = User::query();
 
-        if ($isEmpty) {
-            $filtered = collect();
-        } else {
-            // Data dummy: nanti ganti dengan query database
-            $all = collect(range(1, 60))->map(fn($i) => [
-                'id'     => '12Q67Hab' . $i,
-                'name'   => $tab === 'dosen' ? 'Melisa Danuar, S.T' : 'Budi Santoso, S.Kom',
-                'email'  => $tab === 'dosen' ? 'melisadanuar@mail.ugm.ac.id' : 'budisantoso@mail.ugm.ac.id',
-                'unit'   => $units[$i % count($units)],
-                'phone'  => '+623897702722',
-                'status' => $i % 4 === 0 ? 'Nonaktif' : 'Aktif',
-            ]);
+        // Filter tab kategori (dosen / tendik)
+        $query->where('kategori', $tab);
 
-            $filtered = $all
-                ->when($request->filled('nama'), fn($c) => $c->filter(
-                    fn($a) => str_contains(strtolower($a['name']), strtolower($request->nama))
-                ))
-                ->when($request->filled('unit'), fn($c) => $c->where('unit', $request->unit))
-                ->when($request->filled('status'), fn($c) => $c->where('status', $request->status))
-                ->values();
+        // Filter pencarian nama
+        if ($request->filled('nama')) {
+            $keyword = '%' . strtolower(trim($request->nama)) . '%';
+            $query->whereRaw('LOWER(nama) LIKE ?', [$keyword]);
         }
 
-        $accounts = new LengthAwarePaginator(
-            $filtered->forPage($page, $perPage)->values(),
-            $filtered->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        // Filter unit kerja
+        if ($request->filled('unit')) {
+            $query->where('unit_kerja', $request->unit);
+        }
+
+        // State empty testing support: ?empty=1
+        if ($request->boolean('empty')) {
+            $query->whereRaw('1 = 0');
+        }
+
+        $users = $query->orderBy('id_user', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        // Transform ke format yang diharapkan view
+        $accounts = $users->through(function ($u) {
+            return [
+                'id'     => $u->nip ?? ('USER-' . $u->id_user),
+                'id_user'=> $u->id_user,
+                'name'   => $u->nama,
+                'email'  => $u->email,
+                'unit'   => $u->unit_kerja ?? '—',
+                'phone'  => $u->no_telp ?? '—',
+                'status' => 'Aktif',
+            ];
+        });
 
         return view('admin.akun.index', [
             'tab'      => $tab,
@@ -63,23 +76,30 @@ class AkunController extends Controller
     {
         $request->validate([
             'role'   => 'required|in:dosen,tendik',
-            'id'     => 'required|string|max:50',
             'name'   => 'required|string|max:150',
-            'email'  => 'required|email|max:150',
+            'email'  => 'required|email|max:150|unique:users,email',
             'unit'   => 'required|string|max:100',
-            'phone'  => 'required|string|max:30',
-            'status' => 'required|in:Aktif,Nonaktif',
+            'phone'  => 'nullable|string|max:30',
         ], [
-            'id.required'    => 'Nomor identitas (NIP/NIU) wajib diisi.',
             'name.required'  => 'Nama lengkap sivitas wajib diisi.',
             'email.required' => 'Email resmi wajib diisi.',
             'email.email'    => 'Format email tidak valid.',
+            'email.unique'   => 'Email ini sudah terdaftar di sistem.',
             'unit.required'  => 'Unit kerja wajib dipilih.',
-            'phone.required' => 'Nomor telepon/WhatsApp wajib diisi.',
+        ]);
+
+        User::create([
+            'nip'        => $request->filled('id') ? $request->id : null,
+            'nama'       => $request->name,
+            'email'      => strtolower(trim($request->email)),
+            'unit_kerja' => $request->unit,
+            'no_telp'    => $request->phone,
+            'kategori'   => $request->role,
+            'role'       => 'user',
         ]);
 
         return redirect()->route('admin.akun.index', ['tab' => $request->role])
-            ->with('success', 'Akun ' . ($request->role === 'dosen' ? 'Dosen' : 'Tendik') . ' berhasil ditambahkan.');
+            ->with('success', 'Akun ' . ($request->role === 'dosen' ? 'Dosen' : 'Tendik') . ' berhasil ditambahkan ke database.');
     }
 
     public function importCsv(Request $request)
@@ -92,13 +112,58 @@ class AkunController extends Controller
             'csv_file.max'      => 'Ukuran file CSV maksimal 5MB.',
         ]);
 
+        $file = $request->file('csv_file');
+        $handle = fopen($file->getRealPath(), 'r');
+        $header = fgetcsv($handle, 1000, ',');
+
+        $count = 0;
+        if ($header) {
+            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                if (count($row) >= 3) {
+                    $nip      = trim($row[0] ?? '');
+                    $nama     = trim($row[1] ?? '');
+                    $email    = strtolower(trim($row[2] ?? ''));
+                    $unit     = trim($row[3] ?? 'Teknologi Rekayasa Perangkat Lunak');
+                    $noTelp   = trim($row[4] ?? '');
+                    $kategori = strtolower(trim($row[5] ?? 'dosen'));
+                    if (!in_array($kategori, ['dosen', 'tendik'])) $kategori = 'dosen';
+
+                    if ($nip && $nama && $email) {
+                        User::updateOrCreate(
+                            ['nip' => $nip],
+                            [
+                                'nama'       => $nama,
+                                'email'      => $email,
+                                'unit_kerja' => $unit,
+                                'no_telp'    => $noTelp ?: '-',
+                                'kategori'   => $kategori,
+                                'role'       => 'user',
+                            ]
+                        );
+                        $count++;
+                    }
+                }
+            }
+        }
+        fclose($handle);
+
         return redirect()->route('admin.akun.index')
-            ->with('success', 'Berhasil mengimpor data akun sivitas dari file CSV.');
+            ->with('success', 'Berhasil mengimpor ' . $count . ' data akun sivitas dari file CSV ke database.');
     }
 
     public function destroy($id)
     {
+        $numericId = str_starts_with((string) $id, 'USER-') ? substr((string) $id, 5) : $id;
+        $user = User::where('nip', $id)
+            ->orWhere('id_user', $numericId)
+            ->first();
+
+        if ($user) {
+            \App\Models\Partisipasi::where('id_user', $user->id_user)->delete();
+            $user->delete();
+        }
+
         return redirect()->route('admin.akun.index')
-            ->with('success', 'Akun sivitas berhasil dihapus dari sistem.');
+            ->with('success', 'Akun sivitas dan data partisipasinya berhasil dihapus dari sistem.');
     }
 }

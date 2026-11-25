@@ -103,7 +103,7 @@
       <template x-for="opt in options" :key="opt.value">
         <button type="button"
                 @click="select(opt.value, opt.label)"
-                class="flex h-8 w-full items-center px-3.5 text-xs font-semibold text-left transition-colors cursor-pointer"
+                class="flex h-9 w-full items-center px-3.5 text-sm font-semibold text-left transition-colors cursor-pointer"
                 :class="selectedVal == opt.value
                   ? 'bg-primary-1 text-white'
                   : 'bg-white text-primary-1 hover:bg-primary-3/50'">

@@ -1,9 +1,9 @@
 @extends('layouts.auth')
 
-@section('title', 'Log In Admin')
+@section('title', request()->is('admin/*') ? 'Log In Admin' : 'Log In')
 
 @section('content')
-<div class="w-full max-w-[550px] rounded-[24px] bg-white p-[28px] shadow-[0px_11px_20px_0px_rgba(0,0,0,0.09),0px_3px_6px_0px_rgba(0,0,0,0.1)] border border-gray-100 flex flex-col gap-[20px]"
+<div class="w-full max-w-[550px] rounded-[24px] bg-white p-6 sm:p-7 shadow-[0px_11px_20px_0px_rgba(0,0,0,0.09),0px_3px_6px_0px_rgba(0,0,0,0.1)] border border-gray-100 flex flex-col gap-4"
      x-data="{
        step: 'login', // 'login' | 'otp'
        email: '',
@@ -11,6 +11,9 @@
        otpDigits: ['', '', '', '', '', ''],
        timer: 60,
        timerInterval: null,
+       loading: false,
+       errorMessage: '',
+       successMessage: '',
 
        startTimer() {
          this.timer = 60;
@@ -24,13 +27,40 @@
          }, 1000);
        },
 
-       submitLogin() {
-         this.step = 'otp';
-         this.startTimer();
-         this.$nextTick(() => {
-           const firstInput = document.getElementById('otp-0');
-           if (firstInput) firstInput.focus();
-         });
+       async submitLogin() {
+         this.loading = true;
+         this.errorMessage = '';
+         this.successMessage = '';
+
+         try {
+           const res = await fetch('/api/request-otp', {
+             method: 'POST',
+             headers: {
+               'Content-Type': 'application/json',
+               'Accept': 'application/json',
+               'X-CSRF-TOKEN': '{{ csrf_token() }}'
+             },
+             body: JSON.stringify({ email: this.email })
+           });
+
+           const data = await res.json();
+
+           if (res.ok && data.success) {
+             this.step = 'otp';
+             this.successMessage = data.message || 'OTP berhasil dikirim ke email admin.';
+             this.startTimer();
+             this.$nextTick(() => {
+               const firstInput = document.getElementById('otp-0');
+               if (firstInput) firstInput.focus();
+             });
+           } else {
+             this.errorMessage = data.message || 'Gagal mengirim OTP. Pastikan email terdaftar.';
+           }
+         } catch (err) {
+           this.errorMessage = 'Terjadi kesalahan jaringan atau server.';
+         } finally {
+           this.loading = false;
+         }
        },
 
        handleOtpInput(e, index) {
@@ -51,80 +81,137 @@
          }
        },
 
-       resendOtp() {
-         if (this.timer === 0) {
-           this.startTimer();
+       async resendOtp() {
+         if (this.timer > 0) return;
+         this.loading = true;
+         this.errorMessage = '';
+         this.successMessage = '';
+
+         try {
+           const res = await fetch('/api/request-otp', {
+             method: 'POST',
+             headers: {
+               'Content-Type': 'application/json',
+               'Accept': 'application/json',
+               'X-CSRF-TOKEN': '{{ csrf_token() }}'
+             },
+             body: JSON.stringify({ email: this.email })
+           });
+
+           const data = await res.json();
+           if (res.ok && data.success) {
+             this.otpDigits = ['', '', '', '', '', ''];
+             this.successMessage = 'Kode OTP baru berhasil dikirim ke email Anda!';
+             this.startTimer();
+             this.$nextTick(() => {
+               const firstInput = document.getElementById('otp-0');
+               if (firstInput) firstInput.focus();
+             });
+           } else {
+             this.errorMessage = data.message || 'Gagal mengirim ulang OTP.';
+           }
+         } catch (e) {
+           this.errorMessage = 'Koneksi gagal atau pengiriman email sedang diproses.';
+         } finally {
+           this.loading = false;
+         }
+       },
+
+       async verifyOtpSubmit() {
+         const otpStr = this.otpDigits.join('');
+         if (otpStr.length !== 6) {
+           this.errorMessage = 'Silakan isi lengkap 6 digit kode OTP.';
+           return;
+         }
+
+         this.loading = true;
+         this.errorMessage = '';
+         this.successMessage = '';
+
+         try {
+           const res = await fetch('/api/verify-otp', {
+             method: 'POST',
+             headers: {
+               'Content-Type': 'application/json',
+               'Accept': 'application/json',
+               'X-CSRF-TOKEN': '{{ csrf_token() }}'
+             },
+             body: JSON.stringify({
+               email: this.email,
+               otp: otpStr
+             })
+           });
+
+           const data = await res.json();
+
+           if (res.ok && data.success) {
+             if (data.data?.token) {
+               localStorage.setItem('auth_token', data.data.token);
+             }
+             this.successMessage = 'Verifikasi berhasil! Mengalihkan ke dashboard...';
+             setTimeout(() => {
+               window.location.href = '{{ route('admin.dashboard') }}';
+             }, 800);
+           } else {
+             this.errorMessage = data.message || 'Kode OTP tidak cocok atau kedaluwarsa.';
+           }
+         } catch (err) {
+           this.errorMessage = 'Terjadi kesalahan sistem saat memverifikasi OTP.';
+         } finally {
+           this.loading = false;
          }
        }
      }">
 
   {{-- Brand Logos Atas Sesuai Figma --}}
-  <div class="flex items-center justify-center gap-[20px] h-[50px]">
+  <div class="flex items-center justify-center gap-10">
     <div class="flex flex-col items-center">
-      <img src="{{ asset('images/logo-vonic-b.webp') }}" alt="Vonic" class="h-[32px] w-[40px] object-contain" />
-      <span class="text-[12px] font-bold text-[#196bef] tracking-[0.96px]">Vonic</span>
+      <img src="{{ asset('images/logo-vonic-b.webp') }}" alt="Vonic" class="h-10 w-auto object-contain" />
+      <span class="mt-1 text-sm font-bold text-primary-1 tracking-wider">Vonic</span>
     </div>
-    <div class="h-[40px] w-[40px]">
+    <div class="h-12 w-12 flex items-center justify-center">
       <img src="{{ asset('images/logo-ugm.webp') }}" alt="UGM" class="h-full w-full object-contain" />
     </div>
   </div>
 
+  {{-- Alert Pesan Sukses / Error --}}
+  <template x-if="errorMessage">
+    <div class="p-3 text-xs font-medium text-danger bg-rose-50 border border-rose-200 rounded-lg" x-text="errorMessage"></div>
+  </template>
+  <template x-if="successMessage">
+    <div class="p-3 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg" x-text="successMessage"></div>
+  </template>
+
   {{-- ==================== STEP 1: FORM LOGIN ==================== --}}
   <div x-show="step === 'login'" x-transition class="space-y-[16px]">
     <div>
-      <h2 class="text-[22px] font-semibold text-[#191919] leading-[1.3]">Log In Admin</h2>
+      <h2 class="text-[22px] font-semibold text-[#191919] leading-[1.3]">{{ request()->is('admin/*') ? 'Log In Admin' : 'Masuk ke Vonic' }}</h2>
       <p class="text-[14px] text-[#6d6d6d] leading-[1.6] mt-0.5 tracking-[0.14px]">
-        Selamat datang kembali Admin Vonic
+        Silahkan masukkan email institusi Anda. Kode OTP verifikasi akan dikirimkan ke email.
       </p>
     </div>
 
-    <form @submit.prevent="submitLogin()" class="space-y-[14px]">
-      <p class="text-[12px] font-bold text-primary-1">Masuk ke Akun</p>
-
-      {{-- Input Username / Email --}}
+    <form @submit.prevent="submitLogin()" class="space-y-[12px]">
+      {{-- Input Username / Email Institusi --}}
       <div class="space-y-[6px]">
+        <label class="block text-[12px] font-medium text-[#525252]">Email Institusi</label>
         <div class="flex items-center h-[44px] px-[12px] gap-[12px] rounded-[8px] border border-[#c4c4c4] bg-white focus-within:border-primary-1 focus-within:ring-1 focus-within:ring-primary-1">
-          <x-solar-user-linear class="h-5 w-5 text-[#acacac] shrink-0" />
-          <input type="text"
+          <x-solar-letter-linear class="h-5 w-5 text-[#acacac] shrink-0" />
+          <input type="email"
                  x-model="email"
                  required
-                 placeholder="Username atau Email Institusi"
+                 placeholder="{{ request()->is('admin/*') ? 'admin@ugm.ac.id' : 'nama@ugm.ac.id' }}"
                  class="w-full text-[14px] text-[#191919] placeholder:text-[#acacac] focus:outline-none" />
         </div>
       </div>
 
-      {{-- Input Password --}}
-      <div class="space-y-[6px]">
-        <div class="flex items-center h-[44px] px-[12px] gap-[12px] rounded-[8px] border border-[#c4c4c4] bg-white focus-within:border-primary-1 focus-within:ring-1 focus-within:ring-primary-1">
-          <x-solar-lock-keyhole-linear class="h-5 w-5 text-[#acacac] shrink-0" />
-          <input :type="showPassword ? 'text' : 'password'"
-                 required
-                 placeholder="Password"
-                 class="w-full text-[14px] text-[#191919] placeholder:text-[#acacac] focus:outline-none" />
-          <button type="button"
-                  @click="showPassword = !showPassword"
-                  class="text-[#acacac] hover:text-[#525252] focus:outline-none">
-            <template x-if="!showPassword">
-              <x-solar-eye-linear class="h-4 w-4" />
-            </template>
-            <template x-if="showPassword">
-              <x-solar-eye-closed-linear class="h-4 w-4" />
-            </template>
-          </button>
-        </div>
-        <div class="text-right">
-          <a href="#" class="text-[12px] font-medium text-[#6d6d6d] hover:text-primary-1 transition-colors">
-            Lupa kata sandi?
-          </a>
-        </div>
-      </div>
-
-      {{-- Tombol Login (Warna #196BEF / Gradient Sesuai Figma) --}}
+      {{-- Tombol Login (Gradient Main-Blue Konsisten) --}}
       <div class="pt-[6px]">
         <button type="submit"
-                class="w-full h-[54px] px-[16px] flex items-center justify-center gap-[12px] rounded-[8px] bg-primary-1 text-white text-[14px] font-medium shadow-md hover:bg-primary-4 transition-all cursor-pointer">
-          <span>Log In</span>
-          <x-solar-arrow-right-linear class="h-5 w-5" />
+                :disabled="loading"
+                class="w-full h-[52px] px-[16px] flex items-center justify-center gap-[12px] rounded-[12px] bg-gradient-main-blue text-white text-[14px] font-semibold shadow-primary-glow hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50">
+          <x-solar-login-2-linear class="h-5 w-5 shrink-0" />
+          <span x-text="loading ? 'Mengirim OTP...' : 'Login & Kirim OTP'"></span>
         </button>
       </div>
 
@@ -151,7 +238,7 @@
       <p class="text-[13px] font-bold text-primary-1 mt-0.5" x-text="email || 'admin@ugm.ac.id'"></p>
     </div>
 
-    <form action="{{ route('admin.dashboard') }}" method="GET" class="space-y-5">
+    <form @submit.prevent="verifyOtpSubmit()" class="space-y-5">
       {{-- 6 Kotak Input OTP --}}
       <div class="flex items-center justify-between gap-2">
         <template x-for="(digit, idx) in otpDigits" :key="idx">
@@ -173,7 +260,8 @@
         <template x-if="timer === 0">
           <button type="button"
                   @click="resendOtp()"
-                  class="font-bold text-primary-1 hover:underline cursor-pointer">
+                  :disabled="loading"
+                  class="font-bold text-primary-1 hover:underline cursor-pointer disabled:opacity-50">
             Kirim Ulang Kode OTP
           </button>
         </template>
@@ -181,16 +269,15 @@
 
       {{-- Tombol Konfirmasi Verifikasi --}}
       <button type="submit"
-              class="w-full h-[50px] flex items-center justify-center gap-2 rounded-[8px] bg-primary-1 text-[14px] font-medium text-white shadow-md hover:bg-primary-4 transition-all cursor-pointer">
+              :disabled="loading"
+              class="w-full h-[52px] flex items-center justify-center gap-2.5 rounded-[12px] bg-gradient-main-blue text-[14px] font-semibold text-white shadow-primary-glow hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50">
         <x-solar-check-circle-linear class="h-5 w-5" />
-        <span>Verifikasi & Masuk Dashboard</span>
+        <span x-text="loading ? 'Memverifikasi...' : 'Verifikasi & Masuk Dashboard'"></span>
       </button>
 
-      <div class="text-center">
-        <button type="button"
-                @click="step = 'login'"
-                class="text-xs font-semibold text-grey-2 hover:text-black transition-colors">
-          &larr; Ganti Akun / Kembali
+      <div class="text-center pt-1">
+        <button type="button" @click="step = 'login'; errorMessage = ''; successMessage = '';" class="text-xs text-grey-deep hover:text-primary-1 hover:underline cursor-pointer">
+          ← Kembali ke halaman login
         </button>
       </div>
     </form>

@@ -12,7 +12,8 @@ class PollingController extends Controller
     {
         $periode = PeriodePolling::with([
             'paketWisata.galeri',
-            'desainKaos.galeri'
+            'desainKaos.galeri',
+            'partisipasi',
         ])
             ->orderBy('tanggal_mulai', 'desc')
             ->get();
@@ -28,7 +29,8 @@ class PollingController extends Controller
     {
         $periode = PeriodePolling::with([
             'paketWisata.galeri',
-            'desainKaos.galeri'
+            'desainKaos.galeri',
+            'partisipasi',
         ])->find($id);
 
         if (!$periode) {
@@ -62,7 +64,8 @@ class PollingController extends Controller
     {
         $periode = PeriodePolling::with([
             'paketWisata.galeri',
-            'desainKaos.galeri'
+            'desainKaos.galeri',
+            'partisipasi',
         ])->find($id);
 
         if (!$periode) {
@@ -177,11 +180,13 @@ class PollingController extends Controller
         }
 
         $partisipasi = \App\Models\Partisipasi::create([
-            'id_user' => $request->user()->id_user,
-            'id_periode' => $id,
-            'id_paket' => $request->id_paket,
-            'id_kaos' => $request->id_kaos,
-            'waktu_submit' => now(),
+            'id_user'          => $request->user()->id_user,
+            'id_periode'       => $id,
+            'id_paket'         => $request->id_paket,
+            'id_kaos'          => $request->id_kaos,
+            'id_ukuran'        => $request->ukuran[0]['id_ukuran'],
+            'pilihan_kelompok' => $request->input('pilihan_kelompok', 'dipisah'),
+            'waktu_submit'     => now(),
         ]);
 
         foreach ($request->ukuran as $item) {

@@ -59,4 +59,9 @@ class PeriodePolling extends Model
             'id_kaos'
         );
     }
+
+    public function partisipasi()
+    {
+        return $this->hasMany(Partisipasi::class, 'id_periode', 'id_periode');
+    }
 }

@@ -44,4 +44,9 @@ class Partisipasi extends Model
     {
         return $this->hasMany(DetailUkuranVote::class, 'id_vote', 'id_vote');
     }
+
+    public function ukuranKaos()
+    {
+        return $this->belongsTo(UkuranKaos::class, 'id_ukuran', 'id_ukuran');
+    }
 }

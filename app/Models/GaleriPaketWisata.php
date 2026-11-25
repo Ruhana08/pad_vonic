@@ -21,7 +21,13 @@ class GaleriPaketWisata extends Model
 
     public function getFotoUrlAttribute()
     {
-        return $this->foto ? url('storage/' . $this->foto) : null;
+        if (!$this->foto) {
+            return null;
+        }
+        if (str_starts_with($this->foto, 'http://') || str_starts_with($this->foto, 'https://') || str_starts_with($this->foto, '/')) {
+            return $this->foto;
+        }
+        return url('storage/' . $this->foto);
     }
 
     public function paketWisata()

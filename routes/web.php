@@ -23,14 +23,47 @@ Route::get('/test-google', function () {
     return view('test-google');
 });
 
+// Halaman User / Sivitas
+Route::get('/home', function () {
+    $semua = \App\Models\PeriodePolling::with(['paketWisata.galeri', 'desainKaos.galeri', 'partisipasi'])
+        ->orderBy('tanggal_mulai', 'desc')
+        ->get();
+
+    $pollingAktif = $semua->firstWhere('status', 'aktif');
+    $riwayatList  = $semua->where('status', 'selesai')->take(3)->values();
+
+    return view('home', compact('pollingAktif', 'riwayatList'));
+})->name('home');
+
+Route::get('/riwayat', function () {
+    return view('riwayat');
+})->name('riwayat');
+
+Route::get('/voting', function () {
+    return view('voting');
+})->name('voting');
+
+Route::get('/profile', function () {
+    return view('profile');
+})->name('profile');
+
+Route::get('/notifikasi', function () {
+    return view('notifikasi');
+})->name('notifikasi');
+
 Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::redirect('/', '/admin/dashboard');
 
     Route::get('/polling/aktif', [PollingAktifController::class, 'index'])->name('polling.aktif');
+    Route::get('/polling/detail/{id?}', [PollingAktifController::class, 'detail'])->name('polling.detail');
     Route::post('/polling/aktif/announce', [PollingAktifController::class, 'announce'])->name('polling.aktif.announce');
     Route::get('/polling/aktif/export-kaos', [PollingAktifController::class, 'exportKaos'])->name('polling.aktif.export-kaos');
     Route::get('/polling/arsip', [PollingArsipController::class, 'index'])->name('polling.arsip');
+    Route::post('/polling/{id}/publish', [PollingArsipController::class, 'publish'])->name('polling.publish');
+    Route::delete('/polling/{id}', [PollingArsipController::class, 'destroy'])->name('polling.destroy');
+    Route::get('/polling/{id}', fn () => redirect()->route('admin.polling.arsip'))->whereNumber('id');
     Route::get('/polling/create', [PollingController::class, 'create'])->name('polling.create');
     Route::post('/polling', [PollingController::class, 'store'])->name('polling.store');
     Route::get('/profil', [ProfilController::class, 'index'])->name('profil');
@@ -41,5 +74,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/akun/store', [AkunController::class, 'store'])->name('akun.store');
     Route::post('/akun/import-csv', [AkunController::class, 'importCsv'])->name('akun.import-csv');
     Route::delete('/akun/{id}', [AkunController::class, 'destroy'])->name('akun.destroy');
+    Route::view('/notifikasi', 'admin.notifikasi')->name('notifikasi');
     Route::view('/preview', 'admin.preview')->name('preview');
 });

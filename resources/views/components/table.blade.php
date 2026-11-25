@@ -10,7 +10,7 @@
   <table class="w-full border-separate border-spacing-y-2 text-xs" style="min-width: {{ $minWidth }};">
     {{-- Header Tabel (Judul Kolom Center) --}}
     <thead>
-      <tr class="{{ $headerBg }} text-white text-[11px] font-bold tracking-wider">
+      <tr class="{{ $headerBg }} text-white text-xs font-bold tracking-wider">
         @if (isset($header))
           {{ $header }}
         @else

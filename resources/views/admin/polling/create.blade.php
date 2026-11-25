@@ -2,92 +2,17 @@
 
 @section('title', 'Form Pembuatan Polling')
 @section('page_title', 'Form Pembuatan Polling')
-
-@section('header_actions')
-  <a href="{{ url()->previous() === url()->current() ? route('admin.polling.arsip') : url()->previous() }}"
-     class="flex items-center gap-2 text-xs font-semibold text-primary-1 hover:underline">
-    <x-solar-arrow-left-linear class="h-4 w-4" />
-    <span>Kembali</span>
-  </a>
-@endsection
+@section('max_width', 'max-w-[1400px]')
 
 @section('content')
 @php
-  $input  = 'w-full rounded-sm bg-white px-4 py-2.5 text-sm text-black shadow-type-3 placeholder:text-grey-2 focus:outline-none focus:ring-2 focus:ring-primary-1';
-  $label  = 'block text-sm font-semibold text-primary-1';
-  $ghost  = 'rounded-button border border-grey-1 bg-white px-4 py-2 text-xs font-semibold text-grey-2 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40';
-  $prim   = 'rounded-button bg-primary-1 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-4';
-  $outl   = 'rounded-button border border-primary-1 bg-white px-5 py-2.5 text-sm font-semibold text-primary-1 hover:bg-primary-3';
-  $cancel = 'rounded-button px-5 py-2.5 text-sm font-semibold text-danger hover:bg-danger-soft/40';
-  $panel  = 'rounded-md bg-primary-3 p-5';
-  $tab    = 'rounded-button px-8 py-2.5 text-sm font-semibold text-primary-1';
-
-  $wisataCategories = [
-    '__custom__' => '+ Tambahkan lainnya (ketik sendiri)',
-    'Wisata Pantai & Bahari' => 'Wisata Pantai & Bahari',
-    'Wisata Pegunungan & Dataran Tinggi' => 'Wisata Pegunungan & Dataran Tinggi',
-    'Wisata Air Terjun (Curug)' => 'Wisata Air Terjun (Curug)',
-    'Taman Hiburan (Theme Park)' => 'Taman Hiburan (Theme Park)',
-    'Wisata Air (Waterpark)' => 'Wisata Air (Waterpark)',
-    'Wisata Sejarah & Cagar Budaya' => 'Wisata Sejarah & Cagar Budaya',
-    'Wisata Kuliner' => 'Wisata Kuliner',
-    'Wisata Belanja (Shopping Tourism)' => 'Wisata Belanja (Shopping Tourism)',
-    'Wisata Desa Adat' => 'Wisata Desa Adat',
-    'Wisata Edukasi & Museum' => 'Wisata Edukasi & Museum',
-    'Wisata Satwa & Konservasi' => 'Wisata Satwa & Konservasi',
-    'Wisata Agro (Agrowisata)' => 'Wisata Agro (Agrowisata)',
-    'Wisata Petualangan (Adventure)' => 'Wisata Petualangan (Adventure)',
-    'Wisata Religi' => 'Wisata Religi',
-    'Wisata Kebugaran (Wellness Tourism)' => 'Wisata Kebugaran (Wellness Tourism)',
-  ];
+  $input  = 'w-full rounded-xl bg-white px-4 py-2.5 text-xs text-black border border-grey-1 shadow-xs placeholder:text-grey-2 focus:outline-none focus:border-primary-1';
+  $label  = 'block text-xs font-semibold text-black mb-1.5';
 @endphp
 
-<link rel="stylesheet" href="{{ asset('vendor/quill.snow.css') }}">
-<script src="{{ asset('vendor/quill.js') }}"></script>
 
-<style>
-  .ql-toolbar.ql-snow { border: 0; border-bottom: 1px solid #DBDBDB; }
-  .ql-container.ql-snow { border: 0; font-family: inherit; font-size: .875rem; }
-  .ql-editor { min-height: 110px; }
-</style>
 
 <script>
-  window.initPollQuill = () => {
-    if (typeof Quill === 'undefined') return;
-    document.querySelectorAll('[data-editor]').forEach(el => {
-      if (el.__quill_mounted) return;
-      el.__quill_mounted = true;
-      const path = el.dataset.path;
-      const initial = el.dataset.initial || '';
-      const q = new Quill(el, {
-        theme: 'snow',
-        placeholder: el.dataset.placeholder || '',
-        modules: {
-          toolbar: [
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ list: 'ordered' }, { list: 'bullet' }],
-            [{ header: [2, 3, false] }],
-            [{ color: [] }, { background: [] }],
-            ['link'],
-            ['clean'],
-          ],
-        },
-      });
-      if (initial) q.clipboard.dangerouslyPasteHTML(initial);
-      q.on('text-change', () => {
-        const val = q.getText().trim() === '' ? '' : q.root.innerHTML;
-        if (path && window.__pollFormScope) {
-          const parts = path.split('.');
-          let target = window.__pollFormScope;
-          for (let i = 0; i < parts.length - 1; i++) {
-            target = target[parts[i]];
-          }
-          target[parts[parts.length - 1]] = val;
-        }
-      });
-    });
-  };
-
   const registerPollForm = () => {
     if (typeof Alpine === 'undefined') return;
     Alpine.data('pollForm', () => ({
@@ -98,10 +23,21 @@
       dirty: false,
       leaving: false,
       modal: null,
+      customSizeInput: '',
       allSizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'],
-      
+
+      indonesiaProvinces: [
+        'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Kepulauan Riau', 'Jambi', 'Sumatera Selatan', 'Kepulauan Bangka Belitung', 'Bengkulu', 'Lampung',
+        'DKI Jakarta', 'Jawa Barat', 'Banten', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur',
+        'Bali', 'Nusa Tenggara Barat', 'Nusa Tenggara Timur',
+        'Kalimantan Barat', 'Kalimantan Tengah', 'Kalimantan Selatan', 'Kalimantan Timur', 'Kalimantan Utara',
+        'Sulawesi Utara', 'Gorontalo', 'Sulawesi Tengah', 'Sulawesi Barat', 'Sulawesi Selatan', 'Sulawesi Tenggara',
+        'Maluku', 'Maluku Utara',
+        'Papua', 'Papua Barat', 'Papua Selatan', 'Papua Tengah', 'Papua Pegunungan', 'Papua Barat Daya'
+      ],
+
       wisataCategories: [
-        { value: '__custom__', label: '+ Tambahkan lainnya (ketik sendiri)' },
+        { value: '__custom__', label: '+ Tambahkan kategori lainnya (ketik manual)' },
         { value: 'Wisata Pantai & Bahari', label: 'Wisata Pantai & Bahari' },
         { value: 'Wisata Pegunungan & Dataran Tinggi', label: 'Wisata Pegunungan & Dataran Tinggi' },
         { value: 'Wisata Air Terjun (Curug)', label: 'Wisata Air Terjun (Curug)' },
@@ -131,102 +67,30 @@
         }
       },
 
-      // Memory / Master Data Tempat Wisata Tersimpan (Katalog)
-      wisataLibrary: [
-        {
-          id: 1,
-          name: 'Pantai Kartini',
-          label: 'Pantai',
-          lokasi: 'Pantai Kartini, Jepara, Jawa Tengah.',
-          jarak: 120,
-          lama: '2 Hari',
-          biaya: 500000,
-          rating: 4.8,
-          dikunjungi: 2,
-          benefits: ['Bis', 'Makan', 'Minum', 'Kamar 2 hari.'],
-          description: 'Wisata pantai eksotis dengan pemandangan sunset dan wahana kura-kura raksasa.',
-          tags: ['Pantai', 'Jepara', 'Keluarga']
-        },
-        {
-          id: 2,
-          name: 'Karimunjawa',
-          label: 'Pantai',
-          lokasi: 'Kepulauan Karimunjawa, Jepara, Jawa Tengah.',
-          jarak: 180,
-          lama: '3 Hari',
-          biaya: 850000,
-          rating: 4.9,
-          dikunjungi: 1,
-          benefits: ['Kapal Express', 'Snorkeling', 'Penginapan AC', 'Makan 6x', 'Dokumentasi Underwater'],
-          description: 'Surga bawah laut dan gugusan pulau tropis yang memukau.',
-          tags: ['Snorkeling', 'Kepulauan', 'Eksotis']
-        },
-        {
-          id: 3,
-          name: 'Candi Borobudur & VW Safari',
-          label: 'Budaya',
-          lokasi: 'Borobudur, Magelang, Jawa Tengah.',
-          jarak: 45,
-          lama: '1 Hari',
-          biaya: 350000,
-          rating: 4.7,
-          dikunjungi: 0,
-          benefits: ['VW Safari Trip', 'Tiket Masuk Borobudur', 'Makan Siang Resto Lokal', 'Snack Box'],
-          description: 'Keliling desa wisata menikmati pemandangan alam dan sejarah candi megah.',
-          tags: ['Budaya', 'Edukasi', 'Magelang']
-        },
-        {
-          id: 4,
-          name: 'Kebun Teh Kemuning & Lawu Park',
-          label: 'Gunung',
-          lokasi: 'Karanganyar, Lereng Gunung Lawu, Jawa Tengah.',
-          jarak: 95,
-          lama: '1 Hari',
-          biaya: 300000,
-          rating: 4.6,
-          dikunjungi: 1,
-          benefits: ['Jeep Tour', 'Makan Siang Kebun', 'Tiket Semua Wahana', 'Pemandu'],
-          description: 'Hawa dingin pegunungan asri dengan hamparan kebun teh dan wahana outdoor.',
-          tags: ['Gunung', 'Alam', 'Dingin']
-        }
-      ],
+      // Katalog Riwayat Destinasi (Dinamis dari DB paket_wisata)
+      wisataLibrary: @json($wisataLibrary ?? []),
 
+      // Kondisi Awal Bersih & Netral (Default Kosong)
       form: {
         identity: {
-          title: '', description: '',
+          title: '',
+          description: '',
           start: { time: '08:00', date: '' },
-          end:   { time: '08:00', date: '' },
+          end:   { time: '18:00', date: '' },
         },
         peserta: {
           question: '',
+          description: '',
           options: [
-            { uid: 1, label: '' },
-            { uid: 2, label: '' }
+            { uid: 1, label: '' }
           ]
         },
         wisata: {
           question: '',
+          description: '',
           options: [
             {
-              uid: 3,
-              name: 'Pantai Kartini',
-              label: 'Wisata Pantai & Bahari',
-              isCustom: false,
-              openDropdown: false,
-              lokasi: 'Pantai Kartini, Jepara, Jawa Tengah.',
-              jarak: 120,
-              lama: '2 Hari',
-              biaya: 500000,
-              rating: 4.8,
-              dikunjungi: 2,
-              benefits: ['Bis', 'Makan', 'Minum', 'Kamar 2 hari.'],
-              benefitInput: '',
-              description: '',
-              tags: ['Pantai', 'Jepara'],
-              tagInput: ''
-            },
-            {
-              uid: 4,
+              uid: 2,
               name: '',
               label: '',
               isCustom: false,
@@ -241,23 +105,37 @@
               benefitInput: '',
               description: '',
               tags: [],
-              tagInput: ''
-            },
+              tagInput: '',
+              photos: [
+                { preview: '' },
+                { preview: '' },
+                { preview: '' }
+              ]
+            }
           ],
         },
         kaos: {
           question: '',
-          chart_mode: 'manual', // 'manual' (tabel angka) atau 'image' (upload gambar)
+          description: '',
+          chart_mode: 'manual',
           chart_image_preview: '',
-          sizes: ['S', 'M', 'L', 'XL'],
+          allow_custom_user_size: false,
+          sizes: [],
           chart: {
             XS: { chest: '', length: '' }, S: { chest: '', length: '' }, M: { chest: '', length: '' },
             L: { chest: '', length: '' }, XL: { chest: '', length: '' }, XXL: { chest: '', length: '' },
             '3XL': { chest: '', length: '' },
           },
           options: [
-            { uid: 5, name: '', preview: '' },
-            { uid: 6, name: '', preview: '' },
+            {
+              uid: 3,
+              name: '',
+              photos: [
+                { preview: '' },
+                { preview: '' },
+                { preview: '' }
+              ]
+            }
           ],
         },
       },
@@ -268,53 +146,64 @@
         window.addEventListener('beforeunload', (e) => {
           if (this.dirty && !this.leaving) { e.preventDefault(); e.returnValue = ''; }
         });
-        this.$nextTick(() => window.initPollQuill && window.initPollQuill());
       },
 
       payload() {
         return JSON.stringify(this.form, (k, v) => (k === 'preview' || k === 'tagInput' || k === 'benefitInput' || k === 'chart_image_preview') ? undefined : v);
       },
 
-      // Dinamis Opsi Peserta (bisa berapapun)
+      // Dinamis Opsi Peserta
       addPeserta() {
         this.form.peserta.options.push({ uid: ++this.uid, label: '' });
       },
       removePeserta(i) {
-        if (this.form.peserta.options.length > 2) {
+        if (this.form.peserta.options.length > 1) {
           this.form.peserta.options.splice(i, 1);
+        } else {
+          this.form.peserta.options[0].label = '';
         }
       },
 
-      // Wisata Dinamis & Memory
+      // Wisata Dinamis & Riwayat
       showWisataMemory: false,
-      selectedLibraryIds: [1], // id 1 (Pantai Kartini) default terpilih
+      selectedLibraryIds: [],
 
       toggleLibraryItem(libItem) {
         const idx = this.selectedLibraryIds.indexOf(libItem.id);
         if (idx > -1) {
-          // Uncheck: hapus dari selected dan hapus opsi dari form jika ada
           this.selectedLibraryIds.splice(idx, 1);
           const optIdx = this.form.wisata.options.findIndex(o => o.memoryId === libItem.id);
-          if (optIdx > -1 && this.form.wisata.options.length > 2) {
+          if (optIdx > -1 && this.form.wisata.options.length > 1) {
             this.form.wisata.options.splice(optIdx, 1);
           } else if (optIdx > -1) {
-            // Jika sisa 2, kosongkan datanya saja
-            this.form.wisata.options[optIdx].name = '';
-            this.form.wisata.options[optIdx].memoryId = null;
+            this.clearWisataOption(this.form.wisata.options[optIdx]);
           }
         } else {
-          // Check: tambahkan ke selected dan masukkan ke form opsi
           this.selectedLibraryIds.push(libItem.id);
-          // Cari apakah ada slot opsi kosong
-          let targetOpt = this.form.wisata.options.find(o => !o.name);
+          let targetOpt = this.form.wisata.options.find(o => !o.name && !o.memoryId);
           if (!targetOpt) {
-            // Jika semua opsi terisi, otomatis tambah opsi baru
             this.addWisata();
             targetOpt = this.form.wisata.options[this.form.wisata.options.length - 1];
           }
           this.applyFromLibrary(targetOpt, libItem);
           targetOpt.memoryId = libItem.id;
         }
+      },
+
+      clearWisataOption(opt) {
+        opt.name = '';
+        opt.label = '';
+        opt.lokasi = '';
+        opt.jarak = '';
+        opt.lama = '';
+        opt.biaya = '';
+        opt.rating = '';
+        opt.dikunjungi = 0;
+        opt.benefits = [];
+        opt.description = '';
+        opt.tags = [];
+        opt.memoryId = null;
+        opt.photos = [{ preview: '' }, { preview: '' }, { preview: '' }];
       },
 
       addWisata() {
@@ -335,12 +224,24 @@
           benefitInput: '',
           description: '',
           tags: [],
-          tagInput: ''
+          tagInput: '',
+          photos: [
+            { preview: '' },
+            { preview: '' },
+            { preview: '' }
+          ]
         });
       },
       removeWisata(i) {
-        if (this.form.wisata.options.length > 2) {
+        const opt = this.form.wisata.options[i];
+        if (opt.memoryId) {
+          const lIdx = this.selectedLibraryIds.indexOf(opt.memoryId);
+          if (lIdx > -1) this.selectedLibraryIds.splice(lIdx, 1);
+        }
+        if (this.form.wisata.options.length > 1) {
           this.form.wisata.options.splice(i, 1);
+        } else {
+          this.clearWisataOption(this.form.wisata.options[0]);
         }
       },
       applyFromLibrary(opt, libItem) {
@@ -371,44 +272,97 @@
         o.benefits.splice(idx, 1);
       },
 
-      // Kaos Dinamis & Chart Toggle
+      // Foto Wisata (Maks 3 per destinasi)
+      pickWisataPhoto(o, pIdx, e) {
+        const f = e.target.files[0];
+        if (f) {
+          o.photos[pIdx].preview = URL.createObjectURL(f);
+        }
+      },
+      removeWisataPhoto(o, pIdx) {
+        o.photos[pIdx].preview = '';
+      },
+
+      // Kaos Dinamis & Foto (Maks 3 per desain)
       get activeSizes() { return this.allSizes.filter(s => this.form.kaos.sizes.includes(s)) },
       toggleSize(s) {
         const a = this.form.kaos.sizes;
         this.form.kaos.sizes = a.includes(s) ? a.filter(x => x !== s) : [...a, s];
       },
-      addKaos() { this.form.kaos.options.push({ uid: ++this.uid, name: '', preview: '' }) },
-      removeKaos(i) { if (this.form.kaos.options.length > 2) this.form.kaos.options.splice(i, 1) },
-      pickImage(o, e) {
+      addCustomSize() {
+        const val = this.customSizeInput.trim().toUpperCase();
+        if (val && !this.allSizes.includes(val)) {
+          this.allSizes.push(val);
+          this.form.kaos.sizes.push(val);
+          this.form.kaos.chart[val] = { chest: '', length: '' };
+        }
+        this.customSizeInput = '';
+      },
+      addKaos() {
+        this.form.kaos.options.push({
+          uid: ++this.uid,
+          name: '',
+          photos: [
+            { preview: '' },
+            { preview: '' },
+            { preview: '' }
+          ]
+        });
+      },
+      removeKaos(i) {
+        if (this.form.kaos.options.length > 1) {
+          this.form.kaos.options.splice(i, 1);
+        } else {
+          this.form.kaos.options[0].name = '';
+          this.form.kaos.options[0].photos = [{ preview: '' }, { preview: '' }, { preview: '' }];
+        }
+      },
+      pickKaosPhoto(o, pIdx, e) {
         const f = e.target.files[0];
-        o.preview = f ? URL.createObjectURL(f) : '';
+        if (f) {
+          o.photos[pIdx].preview = URL.createObjectURL(f);
+        }
+      },
+      removeKaosPhoto(o, pIdx) {
+        o.photos[pIdx].preview = '';
       },
       pickChartImage(e) {
         const f = e.target.files[0];
         this.form.kaos.chart_image_preview = f ? URL.createObjectURL(f) : '';
       },
 
-      // Validasi
+      // Validasi Form
       validate(mode) {
         const f = this.form, e = [];
-        if (!f.identity.title.trim()) e.push({ step: 1, msg: 'Judul voting wajib diisi.' });
+        if (!f.identity.title.trim()) e.push({ step: 1, msg: 'Judul kegiatan voting wajib diisi.' });
         if (mode === 'draft') return e;
 
-        if (!f.identity.start.date || !f.identity.end.date) e.push({ step: 1, msg: 'Tanggal mulai dan selesai wajib diisi.' });
-        else if (f.identity.end.date < f.identity.start.date) e.push({ step: 1, msg: 'Tanggal selesai tidak boleh sebelum tanggal mulai.' });
+        if (!f.identity.start.date || !f.identity.end.date) {
+          e.push({ step: 1, msg: 'Tanggal mulai dan tanggal selesai voting wajib ditentukan.' });
+        } else if (f.identity.end.date < f.identity.start.date) {
+          e.push({ step: 1, msg: 'Tanggal selesai tidak boleh mendahului tanggal mulai.' });
+        }
         
         // Validasi Peserta
-        if (!f.peserta.question) e.push({ step: 2, msg: 'Pertanyaan kategori Peserta wajib diisi.' });
-        if (f.peserta.options.some(o => !o.label.trim())) e.push({ step: 2, msg: 'Semua pilihan kategori Peserta wajib diisi.' });
+        if (!f.peserta.question.trim()) e.push({ step: 2, msg: 'Pertanyaan untuk kategori Rombongan Peserta wajib diisi.' });
+        if (f.peserta.options.filter(o => o.label.trim()).length < 1) {
+          e.push({ step: 2, msg: 'Tentukan minimal 1 opsi untuk kategori Rombongan Peserta.' });
+        }
         
         // Validasi Wisata
-        if (!f.wisata.question) e.push({ step: 2, msg: 'Pertanyaan kategori Tempat Wisata wajib diisi.' });
-        if (f.wisata.options.some(o => !o.name.trim())) e.push({ step: 2, msg: 'Semua opsi Tempat Wisata wajib punya nama.' });
+        if (!f.wisata.question.trim()) e.push({ step: 2, msg: 'Pertanyaan untuk kategori Tempat Wisata wajib diisi.' });
+        if (f.wisata.options.filter(o => o.name.trim()).length < 1) {
+          e.push({ step: 2, msg: 'Tentukan minimal 1 opsi destinasi wisata.' });
+        }
         
         // Validasi Kaos
-        if (!f.kaos.question) e.push({ step: 2, msg: 'Pertanyaan kategori Desain Kaos wajib diisi.' });
-        if (f.kaos.chart_mode === 'manual' && f.kaos.sizes.length === 0) e.push({ step: 2, msg: 'Pilih minimal satu ukuran kaos untuk tabel size chart.' });
-        if (f.kaos.options.some(o => !o.name.trim())) e.push({ step: 2, msg: 'Semua desain kaos wajib punya nama.' });
+        if (!f.kaos.question.trim()) e.push({ step: 2, msg: 'Pertanyaan untuk kategori Desain Kaos wajib diisi.' });
+        if (f.kaos.chart_mode === 'manual' && f.kaos.sizes.length === 0) {
+          e.push({ step: 2, msg: 'Pilih minimal satu ukuran kaos untuk tabel size chart.' });
+        }
+        if (f.kaos.options.filter(o => o.name.trim()).length < 1) {
+          e.push({ step: 2, msg: 'Tentukan minimal 1 pilihan desain kaos.' });
+        }
         return e;
       },
 
@@ -426,8 +380,86 @@
       },
 
       askCancel() {
-        if (!this.dirty) return this.confirmCancel();
         this.modal = 'cancel';
+      },
+      resetForm() {
+        this.modal = 'reset';
+      },
+      confirmResetForm() {
+        this.modal = null;
+        this.form = {
+          identity: {
+            title: '',
+            description: '',
+            start: { time: '08:00', date: '' },
+            end:   { time: '18:00', date: '' },
+          },
+          peserta: {
+            question: '',
+            description: '',
+            options: [
+              { uid: ++this.uid, label: '' }
+            ]
+          },
+          wisata: {
+            question: '',
+            description: '',
+            options: [
+              {
+                uid: ++this.uid,
+                name: '',
+                label: '',
+                isCustom: false,
+                openDropdown: false,
+                lokasi: '',
+                provinsi: '',
+                jarak: '',
+                lama: '',
+                biaya: '',
+                rating: '',
+                dikunjungi: 0,
+                benefits: [],
+                benefitInput: '',
+                description: '',
+                tags: [],
+                tagInput: '',
+                photos: [
+                  { preview: '' },
+                  { preview: '' },
+                  { preview: '' }
+                ]
+              }
+            ],
+          },
+          kaos: {
+            question: '',
+            description: '',
+            chart_mode: 'manual',
+            chart_image_preview: '',
+            allow_custom_user_size: false,
+            sizes: [],
+            chart: {
+              XS: { chest: '', length: '' }, S: { chest: '', length: '' }, M: { chest: '', length: '' },
+              L: { chest: '', length: '' }, XL: { chest: '', length: '' }, XXL: { chest: '', length: '' },
+              '3XL': { chest: '', length: '' },
+            },
+            options: [
+              {
+                uid: ++this.uid,
+                name: '',
+                photos: [
+                  { preview: '' },
+                  { preview: '' },
+                  { preview: '' }
+                ]
+              }
+            ],
+          },
+        };
+        this.selectedLibraryIds = [];
+        this.step = 1;
+        this.dirty = false;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       },
       confirmCancel() {
         this.leaving = true;
@@ -452,12 +484,7 @@
   }
 
   document.addEventListener('turbo:load', () => {
-    if (window.Alpine) {
-      registerPollForm();
-    }
-    setTimeout(() => {
-      window.initPollQuill && window.initPollQuill();
-    }, 50);
+    if (window.Alpine) registerPollForm();
   });
 </script>
 
@@ -468,535 +495,822 @@
   <input type="hidden" name="payload" x-bind:value="payload()">
   <input type="hidden" name="action" x-bind:value="action">
 
-  <x-card variant="paper" class="p-6">
+  {{-- Layout Grid: Sisi Kiri Form Utama, Sisi Kanan Action Sidebar Sticky --}}
+  <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1fr_280px]">
 
-    {{-- Tab tahap + aksi --}}
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex gap-3">
-        <button type="button" class="{{ $tab }}" x-on:click="step = 1"
-                x-bind:class="step === 1 ? 'border border-primary-1 bg-white' : 'bg-white shadow-type-3'">Tahap 1</button>
-        <button type="button" class="{{ $tab }}" x-on:click="step = 2"
-                x-bind:class="step === 2 ? 'border border-primary-1 bg-white' : 'bg-white shadow-type-3'">Tahap 2</button>
+    {{-- ============================================================
+         KOLOM KIRI: FORM UTAMA
+         ============================================================ --}}
+    <div class="space-y-6">
+
+      {{-- Header Konten & Segmentasi Step --}}
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-black">Form Pembuatan Polling</h1>
+          <p class="mt-0.5 text-xs text-grey-2">Susun identitas voting, jadwal pelaksanaan, dan kategori pilihan suara.</p>
+        </div>
+
+        {{-- Segmented Controller Step 1 & Step 2 --}}
+        <div class="inline-flex rounded-xl bg-gray-100 p-1 border border-grey-1 shadow-xs shrink-0">
+          <button type="button"
+                  @click="step = 1"
+                  :class="step === 1 ? 'bg-primary-1 text-white shadow-sm font-bold' : 'text-grey-deep hover:text-black font-semibold'"
+                  class="flex h-9 items-center gap-2 rounded-lg px-4 text-xs transition-all cursor-pointer">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full text-xs"
+                  :class="step === 1 ? 'bg-white/20 text-white' : 'bg-gray-200 text-grey-deep'">1</span>
+            <span>Identitas Polling</span>
+          </button>
+
+          <button type="button"
+                  @click="step = 2"
+                  :class="step === 2 ? 'bg-primary-1 text-white shadow-sm font-bold' : 'text-grey-deep hover:text-black font-semibold'"
+                  class="flex h-9 items-center gap-2 rounded-lg px-4 text-xs transition-all cursor-pointer">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full text-xs"
+                  :class="step === 2 ? 'bg-white/20 text-white' : 'bg-gray-200 text-grey-deep'">2</span>
+            <span>Kategori & Opsi</span>
+          </button>
+        </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2">
-        <button type="button" class="{{ $cancel }}" x-on:click="askCancel()">Batalkan</button>
-        <button type="button" class="{{ $outl }}" x-on:click="submit('draft')">Simpan Draft</button>
-        <button type="button" class="{{ $prim }} shadow-type-1" x-on:click="askPublish()">Post Polling</button>
-      </div>
-    </div>
-
-    {{-- Error server --}}
-    @if ($errors->any())
-      <div class="mt-4 rounded-sm bg-danger-soft p-4 text-xs text-black">
-        <ul class="list-inside list-disc">
-          @foreach ($errors->all() as $err) <li>{{ $err }}</li> @endforeach
+      {{-- Alert Error --}}
+      @if ($errors->any())
+        <div class="rounded-xl border border-danger/30 bg-red-50 p-4 text-xs text-danger shadow-xs">
+          <p class="font-bold mb-1">Periksa isian form:</p>
+          <ul class="list-inside list-disc space-y-0.5">
+            @foreach ($errors->all() as $err) <li>{{ $err }}</li> @endforeach
+          </ul>
+        </div>
+      @endif
+      <div x-show="errors.length" x-cloak class="rounded-xl border border-danger/30 bg-red-50 p-4 text-xs text-danger shadow-xs">
+        <p class="font-bold mb-1">Periksa isian berikut sebelum melanjutkan:</p>
+        <ul class="list-inside list-disc space-y-0.5">
+          <template x-for="e in errors"><li x-text="e.msg"></li></template>
         </ul>
       </div>
-    @endif
-    {{-- Error klien --}}
-    <div x-show="errors.length" x-cloak class="mt-4 rounded-sm bg-danger-soft p-4 text-xs text-black">
-      <ul class="list-inside list-disc">
-        <template x-for="e in errors"><li x-text="e.msg"></li></template>
-      </ul>
-    </div>
 
-    {{-- ================= TAHAP 1: IDENTITAS ================= --}}
-    <div x-show="step === 1" x-cloak class="mt-5 {{ $panel }}">
-      <h2 class="text-2xl font-bold text-primary-1">Identitas Voting</h2>
-      <p class="mt-1 text-xs text-black">Informasi utama mengenai topik pemilihan dan pedoman pemilih.</p>
-
-      <div class="mt-6 space-y-5">
-        <div>
-          <label class="{{ $label }}">Judul Voting</label>
-          <input type="text" x-model="form.identity.title" class="mt-2 {{ $input }}"
-                 placeholder="Piknik & Gathering Tahunan DTEDI SV UGM 2026">
-        </div>
-
-        <div>
-          <label class="{{ $label }}">Deskripsi</label>
-          <div class="mt-2">
-            <x-rich-editor path="form.identity.description" placeholder="Jelaskan tujuan voting ini..." />
+      {{-- ============================================================
+           TAHAP 1: IDENTITAS & WAKTU POLLING
+           ============================================================ --}}
+      <div x-show="step === 1" x-cloak class="space-y-6">
+        <x-card variant="panel" class="p-7">
+          <div class="border-b border-grey-1 pb-4">
+            <h2 class="text-base font-bold text-black">Informasi Umum Polling</h2>
+            <p class="mt-0.5 text-xs text-grey-2">Tentukan judul kegiatan, petunjuk pemilih, dan rentang waktu pelaksanaan.</p>
           </div>
-        </div>
 
-        <div>
-          <label class="{{ $label }}">Durasi Voting</label>
-          <div class="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2">
-            @foreach (['start' => 'Mulai', 'end' => 'Selesai'] as $key => $title)
-              <div class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-                <div class="flex items-center gap-2">
-                  <span class="flex h-5 w-5 items-center justify-center rounded-full bg-primary-3 text-primary-1 text-[10px] font-bold">
-                    {{ $loop->iteration }}
-                  </span>
-                  <p class="text-xs font-bold uppercase tracking-wider text-primary-1">Waktu {{ $title }} Voting</p>
-                </div>
-                <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div>
-                    <label class="block text-[11px] font-medium text-grey-2 mb-1">Jam (WIB)</label>
-                    <x-timepicker ::value="form.identity.{{ $key }}.time"
-                                  @input="form.identity.{{ $key }}.time = $event.detail" />
+          <div class="mt-6 space-y-5">
+            {{-- Judul Kegiatan --}}
+            <div>
+              <label class="{{ $label }}">Judul Kegiatan Polling</label>
+              <input type="text" x-model="form.identity.title" class="{{ $input }}"
+                     placeholder="Tuliskan judul kegiatan (contoh: Piknik & Gathering Tahunan DTEDI SV UGM)">
+              <p class="mt-1 text-xs text-grey-2">*Judul ini akan menjadi nama utama pada kartu voting dan pengumuman.</p>
+            </div>
+
+            {{-- Deskripsi Panduan --}}
+            <div>
+              <label class="{{ $label }}">Deskripsi & Petunjuk Pemilih <span class="text-grey-2 font-normal">(opsional)</span></label>
+              <textarea x-model="form.identity.description" rows="3" class="{{ $input }} resize-none"
+                        placeholder="Tuliskan latar belakang kegiatan, ketentuan pemilihan, atau catatan penting..."></textarea>
+            </div>
+
+            {{-- Durasi Pelaksanaan --}}
+            <div class="pt-2">
+              <label class="{{ $label }}">Jadwal & Batas Waktu Pelaksanaan</label>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {{-- Waktu Mulai --}}
+                <div class="rounded-xl border border-grey-1 bg-gray-50/60 p-4">
+                  <div class="flex items-center gap-2 text-xs font-bold text-primary-1 mb-3">
+                    <x-solar-calendar-linear class="h-4 w-4" />
+                    <span>Waktu Mulai Voting</span>
                   </div>
-                  <div>
-                    <label class="block text-[11px] font-medium text-grey-2 mb-1">Tanggal</label>
-                    <x-datepicker ::value="form.identity.{{ $key }}.date"
-                                  @input="form.identity.{{ $key }}.date = $event.detail" />
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <span class="block text-xs text-grey-deep mb-1">Tanggal Mulai</span>
+                      <input type="date" x-model="form.identity.start.date" class="{{ $input }}">
+                    </div>
+                    <div>
+                      <span class="block text-xs text-grey-deep mb-1">Jam (WIB)</span>
+                      <input type="time" x-model="form.identity.start.time" class="{{ $input }}">
+                    </div>
+                  </div>
+                </div>
+
+                {{-- Waktu Selesai --}}
+                <div class="rounded-xl border border-grey-1 bg-gray-50/60 p-4">
+                  <div class="flex items-center gap-2 text-xs font-bold text-danger mb-3">
+                    <x-solar-clock-circle-linear class="h-4 w-4" />
+                    <span>Batas Akhir / Penutupan</span>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <span class="block text-xs text-grey-deep mb-1">Tanggal Selesai</span>
+                      <input type="date" x-model="form.identity.end.date" class="{{ $input }}">
+                    </div>
+                    <div>
+                      <span class="block text-xs text-grey-deep mb-1">Jam (WIB)</span>
+                      <input type="time" x-model="form.identity.end.time" class="{{ $input }}">
+                    </div>
                   </div>
                 </div>
               </div>
-            @endforeach
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-6 flex justify-end">
-        <button type="button" class="{{ $prim }}" x-on:click="step = 2">Lanjut ke Tahap 2</button>
-      </div>
-    </div>
-
-    {{-- ================= TAHAP 2: BUAT POLLING ================= --}}
-    <div x-show="step === 2" x-cloak class="mt-5 space-y-6">
-
-      {{-- 1. Kategori Peserta (Dibuat Dinamis) --}}
-      <section class="{{ $panel }}">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-xl font-bold text-primary-1">1. Rombongan Peserta</h2>
-            <p class="mt-1 text-xs text-black">Opsi peserta dinamis (bisa ditambah berapapun sesuai kebutuhan kegiatan).</p>
-          </div>
-          <button type="button" class="{{ $ghost }}" x-on:click="addPeserta()">+ Tambah Pilihan</button>
-        </div>
-
-        <label class="{{ $label }} mt-5">Pertanyaan</label>
-        <div class="mt-2">
-          <x-rich-editor path="form.peserta.question" placeholder="Tulis pertanyaan untuk kategori Peserta..." />
-        </div>
-
-        <label class="{{ $label }} mt-5">Pilihan Opsi</label>
-        <div class="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
-          <template x-for="(o, i) in form.peserta.options" x-bind:key="o.uid">
-            <div class="flex items-center gap-2">
-              <span class="flex size-9 shrink-0 items-center justify-center rounded-sm border border-primary-1 bg-white text-xs font-semibold text-primary-1"
-                    x-text="i + 1"></span>
-              <input type="text" x-model="o.label" class="{{ $input }}"
-                     x-bind:placeholder="'Opsi ' + (i + 1) + ' (misal: Dosen & Tendik dipisah)'">
-              <button type="button" class="text-danger p-2 hover:bg-danger-soft/30 rounded-sm disabled:opacity-20"
-                      x-bind:disabled="form.peserta.options.length <= 2"
-                      x-on:click="removePeserta(i)" title="Hapus opsi">&times;</button>
             </div>
-          </template>
-        </div>
-      </section>
 
-      {{-- 2. Kategori Tempat Wisata (Lengkap dengan Memory Library + Field Gambar) --}}
-      <section class="{{ $panel }}">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="text-xl font-bold text-primary-1">2. Tempat Wisata</h2>
-            <p class="mt-1 text-xs text-black">Kelola opsi destinasi wisata. Pilih destinasi dari riwayat kegiatan lalu atau buat opsi baru.</p>
           </div>
-          <div class="flex items-center gap-2">
-            {{-- Tombol Buka Panel Riwayat / Memory --}}
-            <button type="button"
-                    x-on:click="showWisataMemory = !showWisataMemory"
-                    class="inline-flex items-center gap-2 rounded-sm border border-primary-1 bg-white px-3.5 py-2 text-xs font-semibold text-primary-1 shadow-xs hover:bg-primary-3/30 transition-all cursor-pointer">
-              <x-solar-history-linear class="h-4 w-4" />
-              <span x-text="showWisataMemory ? 'Tutup Riwayat Destinasi' : 'Pilih dari Riwayat Destinasi'"></span>
-              <x-solar-alt-arrow-down-linear class="h-3.5 w-3.5 transition-transform duration-200"
-                                             ::class="showWisataMemory ? 'rotate-180' : ''" />
+
+          {{-- Navigasi Lanjut ke Tahap 2 --}}
+          <div class="mt-8 flex justify-end border-t border-grey-1 pt-4">
+            <button type="button" @click="step = 2" class="btn-primary h-10 px-6 text-xs font-semibold">
+              <x-solar-arrow-right-linear class="h-4 w-4" />
+              <span>Lanjut ke Kategori & Opsi</span>
             </button>
-
-            <button type="button" class="{{ $ghost }}" x-on:click="addWisata()">+ Tambah Opsi Manual</button>
           </div>
-        </div>
+        </x-card>
+      </div>
 
-        {{-- SPACE / DRAWER TERBUKA UNTUK MEMILIH RIWAYAT / MEMORY DESTINASI --}}
-        <div x-show="showWisataMemory" x-cloak
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 -translate-y-2 max-h-0"
-             x-transition:enter-end="opacity-100 translate-y-0 max-h-[1000px]"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 translate-y-0 max-h-[1000px]"
-             x-transition:leave-end="opacity-0 -translate-y-2 max-h-0"
-             class="mt-5 overflow-hidden rounded-xl border-2 border-dashed border-primary-2 bg-primary-3/30 p-5">
+      {{-- ============================================================
+           TAHAP 2: KATEGORI & OPSI JAWABAN
+           ============================================================ --}}
+      <div x-show="step === 2" x-cloak class="space-y-6">
 
-          <div class="flex items-center justify-between border-b border-primary-2/40 pb-3">
+        {{-- 1. KATEGORI ROMBONGAN PESERTA --}}
+        <x-card variant="panel" class="p-6">
+          <div class="border-b border-grey-1 pb-3">
+            <span class="text-xs font-bold text-primary-1 uppercase tracking-wider">Kategori 1</span>
+            <h2 class="text-base font-bold text-black mt-0.5">Rombongan Peserta</h2>
+            <p class="text-xs text-grey-2 mt-0.5">Pengelompokan keberangkatan rombongan kegiatan.</p>
+          </div>
+
+          {{-- Pertanyaan & Deskripsi --}}
+          <div class="mt-5 space-y-4">
             <div>
-              <h3 class="text-sm font-bold text-primary-1">Riwayat & Arsip Destinasi Wisata</h3>
-              <p class="text-xs text-grey-deep">Centang destinasi yang ingin disertakan. Destinasi yang dicentang akan otomatis muncul di form opsi bawah untuk diedit.</p>
+              <label class="{{ $label }}">Pertanyaan Kategori</label>
+              <input type="text" x-model="form.peserta.question" class="{{ $input }}"
+                     placeholder="Tuliskan pertanyaan (contoh: Bagaimana preferensi pembagian rombongan keberangkatan?)">
             </div>
-            <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-primary-1 shadow-xs border border-primary-1">
-              <span x-text="selectedLibraryIds.length"></span> Terpilih
-            </span>
+
+            <div>
+              <label class="{{ $label }}">Deskripsi & Info Tambahan <span class="text-grey-2 font-normal">(opsional)</span></label>
+              <textarea x-model="form.peserta.description" rows="3" class="{{ $input }} resize-none"
+                        placeholder="Tambahkan petunjuk khusus atau penjelasan detail jika ada..."></textarea>
+            </div>
           </div>
 
-          {{-- Grid Card Destinasi Riwayat dengan Checkbox --}}
-          <div class="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-            <template x-for="item in wisataLibrary" :key="item.id">
-              <div @click="toggleLibraryItem(item)"
-                   class="relative rounded-xl border bg-white p-4 shadow-sm transition-all cursor-pointer select-none"
-                   :class="selectedLibraryIds.includes(item.id)
-                     ? 'border-primary-1 ring-2 ring-primary-1 bg-primary-3/10'
-                     : 'border-grey-1 hover:border-primary-2'">
-                
-                {{-- Header Item: Checkbox & Kategori Badge --}}
-                <div class="flex items-center justify-between">
-                  <span class="rounded-sm bg-primary-3 px-2 py-0.5 text-[10px] font-bold text-primary-1" x-text="item.label"></span>
+          {{-- Daftar Opsi Jawaban --}}
+          <div class="mt-6 border-t border-grey-1 pt-5">
+            <label class="{{ $label }}">Pilihan Opsi Jawaban</label>
+            <div class="space-y-3">
+              <template x-for="(o, i) in form.peserta.options" :key="o.uid">
+                <div class="flex items-center gap-2.5">
+                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary-1 bg-primary-3/20 text-xs font-bold text-primary-1"
+                        x-text="i + 1"></span>
+                  <input type="text" x-model="o.label" class="{{ $input }} h-10"
+                         :placeholder="'Tuliskan opsi jawaban ke-' + (i + 1) + ' (contoh: Dosen & Tendik dipisah)'">
                   
-                  {{-- Checkbox Lingkaran/Kotak Centang --}}
-                  <div class="flex h-5 w-5 items-center justify-center rounded-sm border transition-all"
-                       :class="selectedLibraryIds.includes(item.id)
-                         ? 'border-primary-1 bg-primary-1 text-white'
-                         : 'border-grey-1 bg-white'">
-                    <template x-if="selectedLibraryIds.includes(item.id)">
-                      <x-solar-check-read-linear class="h-3.5 w-3.5" />
-                    </template>
-                  </div>
+                  {{-- Tombol Hapus Konsisten Icon Silang X --}}
+                  <template x-if="o.label.trim() !== '' || form.peserta.options.length > 1">
+                    <button type="button" @click="removePeserta(i)"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-grey-1 text-grey-2 hover:border-danger hover:text-danger hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Hapus opsi ini">
+                      <x-solar-close-circle-linear class="h-4 w-4" />
+                    </button>
+                  </template>
                 </div>
+              </template>
+            </div>
 
-                {{-- Nama & Lokasi --}}
-                <h4 class="mt-2 text-xs font-bold text-black truncate" x-text="item.name"></h4>
-                <p class="mt-0.5 text-[11px] text-grey-2 line-clamp-1" x-text="item.lokasi"></p>
+            {{-- Tombol Tambah Opsi CUKUP DI BAWAH --}}
+            <div class="mt-3">
+              <button type="button" @click="addPeserta()"
+                      class="btn-secondary h-9 px-4 text-xs font-semibold">
+                <x-solar-add-circle-linear class="h-4 w-4 text-primary-1" />
+                <span>+ Tambah Opsi Peserta</span>
+              </button>
+            </div>
+          </div>
+        </x-card>
 
-                {{-- Meta Info: Rating & Cashback --}}
-                <div class="mt-3 flex items-center justify-between border-t border-gray-100 pt-2 text-[11px]">
-                  <span class="font-semibold text-amber-500" x-text="'★ ' + item.rating"></span>
-                  <div class="text-right">
-                    <span class="text-[9px] text-grey-deep block">Cashback</span>
+        {{-- 2. KATEGORI TEMPAT WISATA --}}
+        <x-card variant="panel" class="p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-grey-1 pb-3">
+            <div>
+              <span class="text-xs font-bold text-primary-1 uppercase tracking-wider">Kategori 2</span>
+              <h2 class="text-base font-bold text-black mt-0.5">Destinasi Tempat Wisata</h2>
+              <p class="text-xs text-grey-2 mt-0.5">Pilihan tujuan wisata dan rincian fasilitas kegiatan.</p>
+            </div>
+
+            {{-- Drawer Trigger: Pilih dari Riwayat Destinasi --}}
+            <div>
+              <button type="button"
+                      @click="showWisataMemory = !showWisataMemory"
+                      class="btn-secondary h-9 px-3.5 text-xs font-semibold">
+                <x-solar-history-linear class="h-4 w-4 text-primary-1" />
+                <span x-text="showWisataMemory ? 'Tutup Pilihan Riwayat' : 'Pilih dari Riwayat Destinasi'"></span>
+                <x-solar-alt-arrow-down-linear class="h-3.5 w-3.5 transition-transform duration-200"
+                                               ::class="showWisataMemory ? 'rotate-180' : ''" />
+              </button>
+            </div>
+          </div>
+
+          {{-- DRAWER RIWAYAT DESTINASI --}}
+          <div x-show="showWisataMemory" x-cloak
+               x-transition:enter="transition ease-out duration-250"
+               x-transition:enter-start="opacity-0 -translate-y-2"
+               x-transition:enter-end="opacity-100 translate-y-0"
+               class="mt-4 rounded-2xl border border-primary-1 bg-primary-3/15 p-5">
+            <div class="flex items-center justify-between border-b border-primary-1/20 pb-2.5">
+              <div>
+                <h4 class="text-xs font-bold text-primary-1">Katalog Riwayat Destinasi Sebelumnya</h4>
+                <p class="text-xs text-grey-deep">Centang destinasi untuk menyalin rinciannya langsung ke form opsi pilihan.</p>
+              </div>
+              <span class="rounded-full bg-white px-2.5 py-0.5 text-xs font-bold text-primary-1 border border-primary-1 shadow-xs"
+                    x-text="selectedLibraryIds.length + ' Dipilih'"></span>
+            </div>
+
+            <div class="mt-3.5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <template x-for="item in wisataLibrary" :key="item.id">
+                <div @click="toggleLibraryItem(item)"
+                     class="flex flex-col justify-between rounded-xl border bg-white p-3.5 shadow-xs transition-all cursor-pointer select-none"
+                     :class="selectedLibraryIds.includes(item.id)
+                       ? 'border-primary-1 ring-2 ring-primary-1 bg-primary-3/20'
+                       : 'border-grey-1 hover:border-primary-1'">
+                  
+                  <div>
+                    <div class="flex items-center justify-between gap-1">
+                      <span class="rounded-md bg-primary-3/60 px-2 py-0.5 text-xs font-bold text-primary-1 truncate" x-text="item.label"></span>
+                      <div class="flex h-4 w-4 shrink-0 items-center justify-center rounded-md border"
+                           :class="selectedLibraryIds.includes(item.id) ? 'border-primary-1 bg-primary-1 text-white' : 'border-grey-1 bg-white'">
+                        <template x-if="selectedLibraryIds.includes(item.id)">
+                          <x-solar-check-read-linear class="h-3 w-3" />
+                        </template>
+                      </div>
+                    </div>
+
+                    <h5 class="mt-2 text-xs font-bold text-black" x-text="item.name"></h5>
+                    <p class="text-xs text-grey-2 mt-0.5 truncate" x-text="item.lokasi"></p>
+                  </div>
+
+                  <div class="mt-3 border-t border-gray-100 pt-2 flex items-center justify-between text-xs">
+                    <span class="font-bold text-amber-500" x-text="' ' + item.rating"></span>
                     <span class="font-bold text-primary-1" x-text="'Rp ' + Number(item.biaya).toLocaleString('id-ID')"></span>
                   </div>
                 </div>
-              </div>
-            </template>
+              </template>
+            </div>
           </div>
-        </div>
 
-        <label class="{{ $label }} mt-6">Pertanyaan</label>
-        <div class="mt-2">
-          <x-rich-editor path="form.wisata.question" placeholder="Tulis pertanyaan untuk kategori Tempat Wisata..." />
-        </div>
+          {{-- Pertanyaan & Deskripsi --}}
+          <div class="mt-5 space-y-4">
+            <div>
+              <label class="{{ $label }}">Pertanyaan Kategori</label>
+              <input type="text" x-model="form.wisata.question" class="{{ $input }}"
+                     placeholder="Tuliskan pertanyaan (contoh: Pilih destinasi wisata kegiatan yang paling Anda minati:)">
+            </div>
 
-        <div class="mt-5 space-y-4">
-          <template x-for="(o, i) in form.wisata.options" x-bind:key="o.uid">
-            <div class="rounded-sm bg-white p-5 shadow-type-3">
-              
-              {{-- Header Opsi --}}
-              <div class="flex flex-wrap items-center justify-between border-b border-grey-1 pb-3 gap-2">
-                <div class="flex items-center gap-3">
-                  <span class="text-xs font-bold text-primary-1" x-text="'Opsi ' + (i + 1)"></span>
-                  <template x-if="o.name">
-                    <span class="text-xs font-semibold text-black" x-text="'- ' + o.name"></span>
+            <div>
+              <label class="{{ $label }}">Deskripsi & Panduan Pemilihan Wisata <span class="text-grey-2 font-normal">(opsional)</span></label>
+              <textarea x-model="form.wisata.description" rows="3" class="{{ $input }} resize-none"
+                        placeholder="Informasi tambahan mengenai destinasi, fasilitas, atau ketentuan perjalanan..."></textarea>
+            </div>
+          </div>
+
+          {{-- Daftar Opsi Tempat Wisata --}}
+          <div class="mt-6 border-t border-grey-1 pt-5 space-y-4">
+            <template x-for="(o, i) in form.wisata.options" :key="o.uid">
+              <div class="rounded-xl border border-grey-1 bg-gray-50/50 p-5 shadow-xs">
+                
+                {{-- Header Opsi --}}
+                <div class="flex items-center justify-between border-b border-grey-1 pb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-primary-1 text-white text-xs font-bold"
+                          x-text="i + 1"></span>
+                    <span class="text-xs font-bold text-black" x-text="o.name ? o.name : 'Opsi Destinasi ' + (i + 1)"></span>
+                  </div>
+
+                  {{-- Tombol Hapus Konsisten Icon Silang X --}}
+                  <template x-if="o.name.trim() !== '' || form.wisata.options.length > 1">
+                    <button type="button" @click="removeWisata(i)"
+                            class="flex h-7 w-7 items-center justify-center rounded-lg border border-grey-1 text-grey-2 hover:border-danger hover:text-danger hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Hapus opsi ini">
+                      <x-solar-close-circle-linear class="h-4 w-4" />
+                    </button>
                   </template>
                 </div>
 
-                <button type="button" class="text-xs font-semibold text-danger disabled:pointer-events-none disabled:opacity-30 cursor-pointer"
-                        x-bind:disabled="form.wisata.options.length <= 2" x-on:click="removeWisata(i)">Hapus Opsi</button>
-              </div>
+                {{-- Field Nama & Kategori --}}
+                <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label class="{{ $label }}">Nama Destinasi Wisata</label>
+                    <input type="text" x-model="o.name" class="{{ $input }}"
+                           placeholder="Nama tempat (contoh: Pantai Kartini / Karimunjawa)">
+                  </div>
 
-              {{-- Detail Bar Atas: Rating, Dikunjungi, Harga --}}
-              <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 bg-gray-50 p-3 rounded-sm border border-grey-1">
-                <div>
-                  <label class="block text-[11px] font-semibold text-black">Rating Google</label>
-                  <input type="number" step="0.1" min="0" max="5" x-model="o.rating"
-                         class="mt-1 {{ $input }} !shadow-none border border-grey-1 py-1.5" placeholder="Contoh: 4.8">
-                  <span class="text-[10px] text-grey-2">Otomatis / manual data rating</span>
-                </div>
-                <div>
-                  <label class="block text-[11px] font-semibold text-black">Total Pernah Dikunjungi</label>
-                  <input type="number" min="0" x-model="o.dikunjungi"
-                         class="mt-1 {{ $input }} !shadow-none border border-grey-1 py-1.5" placeholder="0">
-                  <span class="text-[10px] text-grey-2">Histori kunjungan kegiatan lalu</span>
-                </div>
-                <div>
-                  <label class="block text-[11px] font-semibold text-black">Estimasi Cashback (Rp)</label>
-                  <input type="number" min="0" x-model="o.biaya"
-                         class="mt-1 {{ $input }} !shadow-none border border-grey-1 py-1.5" placeholder="500000">
-                  <span class="text-[10px] text-grey-2">Perkiraan cashback yang didapat per peserta</span>
-                </div>
-              </div>
+                  <div>
+                    <label class="{{ $label }}">Kategori Wisata</label>
+                    <div class="relative">
+                      <div x-show="!o.isCustom" class="relative" @click.outside="o.openDropdown = false">
+                        <button type="button" @click="o.openDropdown = !o.openDropdown"
+                                class="flex h-10 w-full items-center justify-between rounded-xl border border-grey-1 bg-white px-3 text-xs font-semibold text-black shadow-xs hover:border-primary-1 cursor-pointer">
+                          <span x-text="o.label ? o.label : 'Pilih kategori wisata'"
+                                :class="o.label ? 'text-black' : 'text-grey-2 font-normal'"
+                                class="truncate"></span>
+                          <x-solar-alt-arrow-down-linear class="h-3.5 w-3.5 shrink-0 text-grey-2 transition-transform duration-200"
+                                                         ::class="o.openDropdown ? 'rotate-180 text-primary-1' : ''" />
+                        </button>
 
-              {{-- Form Utama: Nama, Lokasi, Jarak, Lama Perjalanan --}}
-              <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                <div>
-                  <label class="text-[11px] font-semibold text-black">Nama Tempat / Destinasi</label>
-                  <input type="text" x-model="o.name" class="mt-1 {{ $input }} !shadow-none border border-grey-1" placeholder="Pantai Kartini">
-                </div>
-                <div>
-                  <label class="text-[11px] font-semibold text-black">Kategori Wisata</label>
-                  <div class="relative mt-1">
-                    {{-- Mode Dropdown Select Custom (Sama persis dropdown pagination/arsip) --}}
-                    <div x-show="!o.isCustom" class="relative" @click.outside="o.openDropdown = false">
-                      {{-- Trigger Button --}}
-                      <button type="button"
-                              @click="o.openDropdown = !o.openDropdown"
-                              class="flex h-10 w-full items-center justify-between rounded-sm border border-grey-1 bg-white px-3.5 text-xs font-semibold text-black shadow-xs transition-all hover:border-primary-1 focus:outline-none cursor-pointer">
-                        <span x-text="o.label ? o.label : 'Pilih Kategori Wisata'"
-                              :class="o.label ? 'text-black' : 'text-grey-2 font-normal'"
-                              class="truncate"></span>
-                        <x-solar-alt-arrow-down-linear class="h-3.5 w-3.5 shrink-0 text-grey-2 transition-transform duration-200"
-                                                       ::class="o.openDropdown ? 'rotate-180 text-primary-1' : ''" />
-                      </button>
-
-                      {{-- Popover Dropdown Panel Sesuai Gambar --}}
-                      <div x-show="o.openDropdown" x-cloak
-                           x-transition:enter="transition ease-out duration-150"
-                           x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
-                           x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                           x-transition:leave="transition ease-in duration-100"
-                           x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                           x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
-                           class="absolute left-0 top-full z-40 mt-1 max-h-60 w-full overflow-y-auto rounded-sm border border-primary-1 bg-white shadow-menu">
-                        <div class="flex flex-col py-0.5">
+                        <div x-show="o.openDropdown" x-cloak
+                             class="absolute left-0 top-full z-40 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-grey-1 bg-white p-1 shadow-lg">
                           <template x-for="cat in wisataCategories" :key="cat.value">
-                            <button type="button"
-                                    @click="selectWisataCategory(o, cat.value)"
-                                    class="flex min-h-[34px] w-full items-center px-3.5 text-xs font-semibold text-left transition-colors cursor-pointer"
-                                    :class="o.label === cat.value
-                                      ? 'bg-primary-1 text-white font-bold'
-                                      : (cat.value === '__custom__' ? 'text-primary-1 bg-primary-3/30 hover:bg-primary-3 font-bold border-b border-gray-100' : 'text-primary-1 bg-white hover:bg-primary-3/50')">
+                            <button type="button" @click="selectWisataCategory(o, cat.value)"
+                                    class="flex w-full items-center rounded-lg px-3 py-2 text-xs font-medium text-left transition-colors cursor-pointer"
+                                    :class="o.label === cat.value ? 'bg-primary-1 text-white font-bold' : 'text-black hover:bg-gray-100'">
                               <span x-text="cat.label" class="truncate"></span>
                             </button>
                           </template>
                         </div>
                       </div>
-                    </div>
 
-                    {{-- Mode Input Manual Saat Memilih '+ Tambahkan lainnya' --}}
-                    <div x-show="o.isCustom" x-cloak class="relative flex items-center">
-                      <input type="text"
-                             x-model="o.label"
-                             class="{{ $input }} !shadow-none border border-primary-1 pr-16"
-                             placeholder="Ketik kategori wisata lainnya...">
-                      <button type="button"
-                              @click="o.isCustom = false; o.label = ''; o.openDropdown = true"
-                              title="Kembali ke pilihan dropdown"
-                              class="absolute right-2 px-2.5 py-1 text-[11px] font-bold text-primary-1 hover:underline cursor-pointer">
-                        Pilih
+                      <div x-show="o.isCustom" x-cloak class="relative flex items-center">
+                        <input type="text" x-model="o.label" class="{{ $input }} pr-16"
+                               placeholder="Ketik kategori manual...">
+                        <button type="button" @click="o.isCustom = false; o.label = ''; o.openDropdown = true"
+                                class="absolute right-2 text-xs font-bold text-primary-1 hover:underline cursor-pointer">
+                          Pilih
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {{-- Detail Lokasi, Daerah / Provinsi, Jarak, Waktu Tempuh, Estimasi Biaya/Cashback --}}
+                <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label class="{{ $label }}">Alamat</label>
+                    <input type="text" x-model="o.lokasi" class="{{ $input }}"
+                           placeholder="Lokasi (contoh: Jepara, Jawa Tengah)">
+                  </div>
+                  <div>
+                    <label class="{{ $label }}">Provinsi</label>
+                    <div class="relative" @click.outside="o.openProvinsiDropdown = false">
+                      <button type="button" @click="o.openProvinsiDropdown = !o.openProvinsiDropdown"
+                              class="flex h-10 w-full items-center justify-between rounded-xl border border-grey-1 bg-white px-3 text-xs font-semibold text-black shadow-xs hover:border-primary-1 cursor-pointer">
+                        <span x-text="o.provinsi ? o.provinsi : 'Pilih provinsi'"
+                              :class="o.provinsi ? 'text-black' : 'text-grey-2 font-normal'"
+                              class="truncate"></span>
+                        <x-solar-alt-arrow-down-linear class="h-3.5 w-3.5 shrink-0 text-grey-2 transition-transform duration-200"
+                                                       ::class="o.openProvinsiDropdown ? 'rotate-180 text-primary-1' : ''" />
                       </button>
+
+                      <div x-show="o.openProvinsiDropdown" x-cloak
+                           class="absolute left-0 top-full z-40 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-grey-1 bg-white p-1 shadow-lg">
+                        <template x-for="prov in indonesiaProvinces" :key="prov">
+                          <button type="button" @click="o.provinsi = prov; o.openProvinsiDropdown = false"
+                                  class="flex w-full items-center rounded-lg px-3 py-2 text-xs font-medium text-left transition-colors cursor-pointer"
+                                  :class="o.provinsi === prov ? 'bg-primary-1 text-white font-bold' : 'text-black hover:bg-gray-100'">
+                            <span x-text="prov" class="truncate"></span>
+                          </button>
+                        </template>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="mt-3">
-                <label class="text-[11px] font-semibold text-black">Lokasi Lengkap</label>
-                <input type="text" x-model="o.lokasi" class="mt-1 {{ $input }} !shadow-none border border-grey-1" placeholder="Pantai Kartini, Jepara, Jawa Tengah.">
-              </div>
-
-              <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label class="text-[11px] font-semibold text-black">Jarak (Km) <span class="text-primary-1 font-bold">*untuk filter jarak user</span></label>
-                  <div class="flex items-center mt-1">
-                    <input type="number" min="0" x-model="o.jarak" class="{{ $input }} !shadow-none border border-grey-1 rounded-r-none" placeholder="120">
-                    <span class="bg-primary-3 text-primary-1 border border-l-0 border-grey-1 px-3 py-2.5 text-xs font-semibold rounded-r-sm">Km</span>
+                {{--Info Jarak, Durasi & Cashback--}}
+                <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div>
+                    <label class="{{ $label }}">Jarak dari Kampus (Km)</label>
+                    <input type="number" min="0" x-model="o.jarak" class="{{ $input }}" placeholder="Contoh: 120">
+                  </div>
+                  <div>
+                    <label class="{{ $label }}">Estimasi Durasi Perjalanan</label>
+                    <input type="text" x-model="o.lama" class="{{ $input }}" placeholder="Contoh: 2 Hari / 1 Hari">
+                  </div>
+                  <div>
+                    <label class="{{ $label }}">Estimasi Cashback Peserta (Rp)</label>
+                    <input type="number" min="0" x-model="o.biaya" class="{{ $input }}" placeholder="Contoh: 500000">
                   </div>
                 </div>
-                <div>
-                  <label class="text-[11px] font-semibold text-black">Lama Perjalanan</label>
-                  <input type="text" x-model="o.lama" class="mt-1 {{ $input }} !shadow-none border border-grey-1" placeholder="2 Hari / 1 Hari">
+
+                {{-- Benefit / Fasilitas Paket --}}
+                <div class="mt-3">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="{{ $label }} mb-0">Fasilitas & Benefit Peserta</label>
+                    <span class="text-xs text-grey-deep">Bebas diisi (misal: Makan Siang, Kolam Renang, Bawa +2 Orang)</span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-1.5 rounded-xl border border-grey-1 bg-white p-2">
+                    <template x-for="(b, bi) in o.benefits" :key="bi">
+                      <span class="inline-flex items-center gap-1 rounded-md bg-primary-3/40 px-2.5 py-1 text-xs font-semibold text-primary-1">
+                        <span x-text="b"></span>
+                        <button type="button" @click="removeBenefit(o, bi)" class="text-danger hover:text-red-700 cursor-pointer ml-1">
+                          &times;
+                        </button>
+                      </span>
+                    </template>
+                    <input type="text" x-model="o.benefitInput"
+                           @keydown.enter.prevent="addBenefit(o)" @blur="addBenefit(o)"
+                           class="min-w-[200px] flex-1 bg-transparent text-xs p-1 focus:outline-none"
+                           placeholder="Ketik fasilitas lalu tekan Enter...">
+                  </div>
                 </div>
-              </div>
 
-              {{-- Benefit / Fasilitas (List item sesuai gambar) --}}
-              <div class="mt-3">
-                <label class="block text-[11px] font-semibold text-black">Benefit / Fasilitas Paket</label>
-                <div class="mt-1 flex flex-wrap items-center gap-1.5 rounded-sm border border-grey-1 p-2 bg-white">
-                  <template x-for="(b, bi) in o.benefits" x-bind:key="bi">
-                    <span class="inline-flex items-center gap-1 rounded bg-primary-3 px-2.5 py-1 text-xs font-medium text-primary-1">
-                      <span x-text="'• ' + b"></span>
-                      <button type="button" class="font-bold text-danger ml-1" x-on:click="removeBenefit(o, bi)">&times;</button>
-                    </span>
-                  </template>
-                  <input type="text" x-model="o.benefitInput"
-                         x-on:keydown.enter.prevent="addBenefit(o)" x-on:blur="addBenefit(o)"
-                         class="min-w-[150px] flex-1 bg-transparent text-xs p-1 focus:outline-none"
-                         placeholder="Ketik fasilitas lalu Enter (mis: Bis, Makan, Kamar)...">
+                {{-- UPLOAD FOTO TEMPAT WISATA (MAKSIMAL 3 FOTO) --}}
+                <div class="mt-4 pt-3 border-t border-grey-1">
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="{{ $label }} mb-0">Foto Destinasi Wisata <span class="text-grey-2 font-normal">(Maksimal 3 Foto, JPG/PNG maks 3MB)</span></label>
+                    <span class="text-xs text-grey-deep">Akan ditampilkan di card pilihan wisata user</span>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <template x-for="(p, pIdx) in o.photos" :key="pIdx">
+                      <div class="relative">
+                        <label class="flex h-28 cursor-pointer items-center justify-center rounded-xl border border-dashed border-primary-1 bg-white hover:bg-primary-3/10 transition-colors overflow-hidden">
+                          <template x-if="p.preview">
+                            <img :src="p.preview" class="h-full w-full object-cover" alt="Foto Wisata">
+                          </template>
+                          <div x-show="!p.preview" class="text-center p-2 text-grey-2">
+                            <x-solar-camera-linear class="mx-auto h-5 w-5 text-primary-1 mb-1" />
+                            <span class="block text-xs font-semibold text-primary-1" x-text="'Foto ' + (pIdx + 1)"></span>
+                            <span class="text-xs text-grey-2">Klik untuk unggah</span>
+                          </div>
+                          <input type="file" accept="image/*" class="hidden"
+                                 :name="'wisata_image_' + o.uid + '_' + pIdx"
+                                 @change="pickWisataPhoto(o, pIdx, $event)">
+                        </label>
+                        {{-- Hapus foto --}}
+                        <template x-if="p.preview">
+                          <button type="button" @click="removeWisataPhoto(o, pIdx)"
+                                  class="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white border border-danger/40 text-danger shadow-xs hover:bg-rose-50 cursor-pointer"
+                                  title="Hapus foto ini">
+                            <x-solar-close-circle-linear class="h-4 w-4" />
+                          </button>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
                 </div>
+
               </div>
-
-              {{-- Deskripsi Singkat & Tag Filter Tambahan --}}
-              <div class="mt-3">
-                <label class="block text-[11px] font-semibold text-black">Deskripsi Tambahan</label>
-                <textarea rows="2" x-model="o.description" class="mt-1 {{ $input }} !shadow-none border border-grey-1" placeholder="Keterangan singkat mengenai tempat wisata..."></textarea>
-              </div>
-
-              <div class="mt-3">
-                <label class="block text-[11px] font-semibold text-black">Tag Tambahan <span class="font-normal text-grey-2">(Enter atau koma)</span></label>
-                <div class="mt-1 flex flex-wrap items-center gap-1.5 rounded-sm border border-grey-1 p-2">
-                  <template x-for="(t, ti) in o.tags" x-bind:key="t">
-                    <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-grey-deep">
-                      <span x-text="'#' + t"></span>
-                      <button type="button" class="font-bold" x-on:click="o.tags.splice(ti, 1)">&times;</button>
-                    </span>
-                  </template>
-                  <input type="text" x-model="o.tagInput"
-                         x-on:keydown.enter.prevent="addTag(o)" x-on:keydown.comma.prevent="addTag(o)" x-on:blur="addTag(o)"
-                         class="min-w-[120px] flex-1 bg-transparent text-xs p-1 focus:outline-none" placeholder="Tambah tag...">
-                </div>
-              </div>
-
-            </div>
-          </template>
-        </div>
-
-        <button type="button" class="{{ $ghost }} mt-4" x-on:click="addWisata()">+ Tambah Opsi Wisata</button>
-      </section>
-
-      {{-- 3. Kategori Desain Kaos (Size Chart Fleksibel: Tabel Manual atau Gambar) --}}
-      <section class="{{ $panel }}">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="text-xl font-bold text-primary-1">3. Desain Kaos & Size Chart</h2>
-            <p class="mt-1 text-xs text-black">Size chart dapat dibuat manual melalui tabel angka ATAU cukup mengunggah gambar panduan ukuran.</p>
-          </div>
-          <button type="button" class="{{ $ghost }}" x-on:click="addKaos()">+ Tambah Desain Kaos</button>
-        </div>
-
-        <label class="{{ $label }} mt-5">Pertanyaan</label>
-        <div class="mt-2">
-          <x-rich-editor path="form.kaos.question" placeholder="Tulis pertanyaan untuk kategori Desain Kaos..." />
-        </div>
-
-        {{-- Toggle Mode Size Chart --}}
-        <div class="mt-5 flex items-center gap-4 bg-white p-3 rounded-sm shadow-type-3">
-          <span class="text-xs font-bold text-primary-1">Metode Size Chart:</span>
-          <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-black">
-            <input type="radio" value="manual" x-model="form.kaos.chart_mode" name="chart_mode_choice" class="text-primary-1">
-            <span>Tabel Angka Manual</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-black">
-            <input type="radio" value="image" x-model="form.kaos.chart_mode" name="chart_mode_choice" class="text-primary-1">
-            <span>Unggah Gambar Panduan Ukuran</span>
-          </label>
-        </div>
-
-        {{-- Pilihan Mode 1: Tabel Manual --}}
-        <div x-show="form.kaos.chart_mode === 'manual'" class="mt-4">
-          <label class="{{ $label }}">Ukuran yang tersedia</label>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <template x-for="s in allSizes" x-bind:key="s">
-              <button type="button" x-on:click="toggleSize(s)" x-text="s"
-                      class="rounded-button px-4 py-1.5 text-xs font-semibold"
-                      x-bind:class="form.kaos.sizes.includes(s) ? 'bg-primary-1 text-white' : 'bg-white text-primary-1 shadow-type-3'"></button>
             </template>
           </div>
 
-          <label class="{{ $label }} mt-4">Size chart <span class="text-xs font-normal text-grey-2">(cm)</span></label>
-          <div class="mt-2 overflow-x-auto rounded-sm bg-white p-2 shadow-type-3">
-            <table class="w-full min-w-[420px] text-xs">
-              <thead>
-                <tr class="bg-primary-1 text-white">
-                  <th class="rounded-l-sm px-3 py-2 text-center font-semibold">UKURAN</th>
-                  <th class="px-3 py-2 text-center font-semibold">LEBAR DADA</th>
-                  <th class="rounded-r-sm px-3 py-2 text-center font-semibold">PANJANG BADAN</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template x-for="s in activeSizes" x-bind:key="s">
-                  <tr>
-                    <td class="px-3 py-2 text-center font-bold text-primary-1" x-text="s"></td>
-                    <td class="px-3 py-2"><input type="number" min="0" x-model="form.kaos.chart[s].chest"
-                         class="w-full rounded-sm border border-grey-1 px-3 py-1.5 text-center focus:outline-none focus:ring-2 focus:ring-primary-1"></td>
-                    <td class="px-3 py-2"><input type="number" min="0" x-model="form.kaos.chart[s].length"
-                         class="w-full rounded-sm border border-grey-1 px-3 py-1.5 text-center focus:outline-none focus:ring-2 focus:ring-primary-1"></td>
-                  </tr>
-                </template>
-                <tr x-show="activeSizes.length === 0">
-                  <td colspan="3" class="px-3 py-4 text-center text-grey-2">Pilih ukuran di atas dulu.</td>
-                </tr>
-              </tbody>
-            </table>
+          {{-- Tombol Tambah Opsi CUKUP DI BAWAH --}}
+          <div class="mt-4">
+            <button type="button" @click="addWisata()"
+                    class="btn-secondary h-9 px-4 text-xs font-semibold">
+              <x-solar-add-circle-linear class="h-4 w-4 text-primary-1" />
+              <span>+ Tambah Opsi Tempat Wisata</span>
+            </button>
           </div>
-        </div>
+        </x-card>
 
-        {{-- Pilihan Mode 2: Upload Gambar Chart --}}
-        <div x-show="form.kaos.chart_mode === 'image'" class="mt-4">
-          <label class="{{ $label }}">Unggah Gambar Panduan / Size Chart Kaos</label>
-          <label class="mt-2 flex h-48 cursor-pointer items-center justify-center overflow-hidden rounded-sm border border-dashed border-primary-1 bg-white text-xs text-primary-1 shadow-type-3">
-            <img x-show="form.kaos.chart_image_preview" x-bind:src="form.kaos.chart_image_preview" class="h-full w-full object-contain" alt="Preview Chart">
-            <div x-show="!form.kaos.chart_image_preview" class="text-center p-4">
-              <span class="block font-semibold">Klik untuk memilih gambar size chart (PNG/JPG maks 3 MB)</span>
-              <span class="text-grey-2 mt-1 block">Peserta dapat melihat gambar ini saat memilih ukuran di halaman voting</span>
+        {{-- 3. KATEGORI DESAIN KAOS & SIZE CHART --}}
+        <x-card variant="panel" class="p-6">
+          <div class="border-b border-grey-1 pb-3">
+            <span class="text-xs font-bold text-primary-1 uppercase tracking-wider">Kategori 3</span>
+            <h2 class="text-base font-bold text-black mt-0.5">Desain Kaos & Panduan Ukuran</h2>
+            <p class="text-xs text-grey-2 mt-0.5">Pilihan desain baju seragam kegiatan beserta size chart.</p>
+          </div>
+
+          {{-- Pertanyaan & Deskripsi --}}
+          <div class="mt-5 space-y-4">
+            <div>
+              <label class="{{ $label }}">Pertanyaan Kategori</label>
+              <input type="text" x-model="form.kaos.question" class="{{ $input }}"
+                     placeholder="Tuliskan pertanyaan (contoh: Tentukan pilihan desain kaos seragam kegiatan:)">
             </div>
-            <input type="file" name="kaos_chart_image" accept="image/*" class="hidden" x-on:change="pickChartImage($event)">
-          </label>
-        </div>
 
-        {{-- Pilihan Desain Kaos (Dinamis berapapun) --}}
-        <label class="{{ $label }} mt-6">Pilihan Desain Kaos</label>
-        <div class="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
-          <template x-for="(o, i) in form.kaos.options" x-bind:key="o.uid">
-            <div class="rounded-sm bg-white p-4 shadow-type-3">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-primary-1" x-text="'Desain ' + (i + 1)"></span>
-                <button type="button" class="text-xs font-semibold text-danger disabled:pointer-events-none disabled:opacity-30"
-                        x-bind:disabled="form.kaos.options.length <= 2" x-on:click="removeKaos(i)">Hapus Desain</button>
-              </div>
+            <div>
+              <label class="{{ $label }}">Deskripsi & Ketentuan Ukuran Kaos <span class="text-grey-2 font-normal">(opsional)</span></label>
+              <textarea x-model="form.kaos.description" rows="3" class="{{ $input }} resize-none"
+                        placeholder="Informasi jenis bahan kain kaos, ketentuan pembagian ukuran, atau catatan ukuran keluarga..."></textarea>
+            </div>
+          </div>
 
-              <input type="text" x-model="o.name" class="mt-3 {{ $input }} !shadow-none border border-grey-1" placeholder="Nama Kaos (misal: Navy Polo Gathering)">
-
-              <label class="mt-3 flex h-36 cursor-pointer items-center justify-center overflow-hidden rounded-sm border border-dashed border-primary-1 bg-primary-3 text-xs text-primary-1">
-                <img x-show="o.preview" x-bind:src="o.preview" class="h-full w-full object-contain" alt="">
-                <span x-show="!o.preview">Klik untuk unggah gambar desain (maks 2 MB)</span>
-                <input type="file" accept="image/*" class="hidden"
-                       x-bind:name="'kaos_image_' + o.uid" x-on:change="pickImage(o, $event)">
+          {{-- Mode Size Chart Toggle & Fleksibilitas Ukuran --}}
+          <div class="mt-5 rounded-xl border border-grey-1 bg-gray-50/60 p-4">
+            <span class="block text-xs font-bold text-black mb-2">Metode Size Chart:</span>
+            <div class="flex flex-wrap items-center gap-5">
+              <label class="flex items-center gap-2 text-xs font-semibold text-black cursor-pointer">
+                <input type="radio" value="manual" x-model="form.kaos.chart_mode" name="chart_mode" class="accent-primary-1">
+                <span>Tabel Ukuran Manual (cm)</span>
+              </label>
+              <label class="flex items-center gap-2 text-xs font-semibold text-black cursor-pointer">
+                <input type="radio" value="image" x-model="form.kaos.chart_mode" name="chart_mode" class="accent-primary-1">
+                <span>Unggah Gambar Panduan Ukuran</span>
               </label>
             </div>
-          </template>
+
+            {{-- Mode Manual: Pilihan Ukuran & Input Ukuran Kustom Baru --}}
+            <div x-show="form.kaos.chart_mode === 'manual'" class="mt-4 pt-3 border-t border-grey-1/60">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                <label class="{{ $label }} mb-0">Ukuran Standar yang Disediakan</label>
+                <div class="flex items-center gap-2">
+                  <input type="text" x-model="customSizeInput"
+                         @keydown.enter.prevent="addCustomSize()"
+                         placeholder="Tambah size lain (mis: 4XL/Anak-S)"
+                         class="h-8 rounded-lg border border-grey-1 bg-white px-2.5 text-xs focus:border-primary-1 focus:outline-none w-48">
+                  <button type="button" @click="addCustomSize()" class="btn-secondary h-8 px-2.5 text-xs font-semibold">
+                    + Tambah
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <template x-for="s in allSizes" :key="s">
+                  <button type="button" @click="toggleSize(s)"
+                          class="h-8 min-w-[36px] px-3 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                          :class="form.kaos.sizes.includes(s) ? 'btn-primary' : 'btn-secondary'"
+                          x-text="s"></button>
+                </template>
+              </div>
+
+              {{-- Checkbox Opsi: Izinkan User Input Ukuran Sendiri jika Tidak Ada di List --}}
+              <div class="mt-3.5 flex items-center gap-2 bg-white p-2.5 rounded-xl border border-grey-1">
+                <input type="checkbox" id="allow_custom_size" x-model="form.kaos.allow_custom_user_size" class="h-4 w-4 accent-primary-1 cursor-pointer">
+                <label for="allow_custom_size" class="text-xs font-semibold text-black cursor-pointer select-none">
+                  Izinkan peserta menambahkan ukuran kustom sendiri saat voting jika ukuran yang dicari tidak tersedia
+                </label>
+              </div>
+
+              <div class="mt-3 overflow-x-auto rounded-xl border border-grey-1 bg-white p-2">
+                <table class="w-full min-w-[380px] text-xs">
+                  <thead>
+                    <tr class="bg-gray-50 text-grey-deep border-b border-gray-100">
+                      <th class="py-2 px-3 text-center font-bold">UKURAN</th>
+                      <th class="py-2 px-3 text-center font-bold">LEBAR DADA (CM)</th>
+                      <th class="py-2 px-3 text-center font-bold">PANJANG BADAN (CM)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template x-for="s in activeSizes" :key="s">
+                      <tr class="border-b border-gray-50">
+                        <td class="py-2 px-3 text-center font-bold text-primary-1" x-text="s"></td>
+                        <td class="py-2 px-3">
+                          <input type="number" min="0" x-model="form.kaos.chart[s].chest"
+                                 class="h-8 w-full rounded-lg border border-grey-1 px-2 text-center text-xs focus:border-primary-1 focus:outline-none"
+                                 placeholder="Lebar">
+                        </td>
+                        <td class="py-2 px-3">
+                          <input type="number" min="0" x-model="form.kaos.chart[s].length"
+                                 class="h-8 w-full rounded-lg border border-grey-1 px-2 text-center text-xs focus:border-primary-1 focus:outline-none"
+                                 placeholder="Panjang">
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {{-- Mode Gambar: Upload File --}}
+            <div x-show="form.kaos.chart_mode === 'image'" class="mt-4 pt-3 border-t border-grey-1/60">
+              <label class="{{ $label }}">Berkas Gambar Panduan Ukuran</label>
+              <label class="flex h-36 cursor-pointer items-center justify-center rounded-xl border border-dashed border-primary-1 bg-white hover:bg-primary-3/10 transition-colors">
+                <template x-if="form.kaos.chart_image_preview">
+                  <img :src="form.kaos.chart_image_preview" class="h-full w-full object-contain p-2" alt="Preview Chart">
+                </template>
+                <div x-show="!form.kaos.chart_image_preview" class="text-center p-3">
+                  <x-solar-gallery-add-linear class="mx-auto h-6 w-6 text-primary-1 mb-1" />
+                  <span class="block text-xs font-semibold text-primary-1">Pilih gambar panduan ukuran (PNG/JPG maks 3 MB)</span>
+                </div>
+                <input type="file" name="kaos_chart_image" accept="image/*" class="hidden" @change="pickChartImage($event)">
+              </label>
+
+              {{-- Checkbox Opsi Ukuran Kustom pada Mode Gambar juga --}}
+              <div class="mt-3.5 flex items-center gap-2 bg-white p-2.5 rounded-xl border border-grey-1">
+                <input type="checkbox" id="allow_custom_size_img" x-model="form.kaos.allow_custom_user_size" class="h-4 w-4 accent-primary-1 cursor-pointer">
+                <label for="allow_custom_size_img" class="text-xs font-semibold text-black cursor-pointer select-none">
+                  Izinkan peserta menambahkan ukuran kustom sendiri saat voting jika ukuran yang dicari tidak tersedia
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {{-- Daftar Opsi Desain Kaos --}}
+          <div class="mt-6 border-t border-grey-1 pt-5">
+            <label class="{{ $label }}">Pilihan Desain Kaos</label>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <template x-for="(o, i) in form.kaos.options" :key="o.uid">
+                <div class="rounded-xl border border-grey-1 bg-gray-50/50 p-4 shadow-xs">
+                  <div class="flex items-center justify-between border-b border-grey-1 pb-2">
+                    <span class="text-xs font-bold text-black" x-text="'Pilihan Desain ' + (i + 1)"></span>
+                    
+                    {{-- Tombol Hapus Konsisten Icon Silang X --}}
+                    <template x-if="o.name.trim() !== '' || form.kaos.options.length > 1">
+                      <button type="button" @click="removeKaos(i)"
+                              class="flex h-7 w-7 items-center justify-center rounded-lg border border-grey-1 text-grey-2 hover:border-danger hover:text-danger hover:bg-rose-50 transition-colors cursor-pointer"
+                              title="Hapus desain ini">
+                        <x-solar-close-circle-linear class="h-4 w-4" />
+                      </button>
+                    </template>
+                  </div>
+
+                  <div class="mt-3">
+                    <label class="{{ $label }}">Nama / Tema Desain</label>
+                    <input type="text" x-model="o.name" class="{{ $input }}"
+                           placeholder="Nama desain (contoh: Polo Navy Gathering)">
+                  </div>
+
+                  {{-- UPLOAD FOTO DESAIN KAOS (MAKSIMAL 3 FOTO) --}}
+                  <div class="mt-3 pt-2">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <label class="{{ $label }} mb-0">Foto Mockup Desain <span class="text-grey-2 font-normal">(Maksimal 3 Foto)</span></label>
+                      <span class="text-xs text-grey-deep">Tampak Depan, Belakang, Detail</span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                      <template x-for="(kp, kpIdx) in o.photos" :key="kpIdx">
+                        <div class="relative">
+                          <label class="flex h-24 cursor-pointer items-center justify-center rounded-xl border border-dashed border-primary-1 bg-white hover:bg-primary-3/10 transition-colors overflow-hidden">
+                            <template x-if="kp.preview">
+                              <img :src="kp.preview" class="h-full w-full object-cover" alt="Mockup Kaos">
+                            </template>
+                            <div x-show="!kp.preview" class="text-center p-1 text-grey-2">
+                              <x-solar-camera-linear class="mx-auto h-4 w-4 text-primary-1 mb-0.5" />
+                              <span class="block text-xs font-semibold text-primary-1" x-text="'Foto ' + (kpIdx + 1)"></span>
+                            </div>
+                            <input type="file" accept="image/*" class="hidden"
+                                   :name="'kaos_image_' + o.uid + '_' + kpIdx"
+                                   @change="pickKaosPhoto(o, kpIdx, $event)">
+                          </label>
+                          {{-- Tombol Hapus Foto X --}}
+                          <template x-if="kp.preview">
+                            <button type="button" @click="removeKaosPhoto(o, kpIdx)"
+                                    class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white border border-danger/40 text-danger shadow-xs hover:bg-rose-50 cursor-pointer"
+                                    title="Hapus foto ini">
+                              <x-solar-close-circle-linear class="h-3.5 w-3.5" />
+                            </button>
+                          </template>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+
+                </div>
+              </template>
+            </div>
+
+            {{-- Tombol Tambah Opsi CUKUP DI BAWAH --}}
+            <div class="mt-4">
+              <button type="button" @click="addKaos()"
+                      class="btn-secondary h-9 px-4 text-xs font-semibold">
+                <x-solar-add-circle-linear class="h-4 w-4 text-primary-1" />
+                <span>+ Tambah Desain Kaos</span>
+              </button>
+            </div>
+          </div>
+        </x-card>
+
+        {{-- Navigasi Kembali ke Tahap 1 --}}
+        <div class="flex justify-between items-center pt-2">
+          <button type="button" @click="step = 1" class="btn-secondary h-10 px-5 text-sm font-semibold">
+            <x-solar-arrow-left-linear class="h-4 w-4" />
+            <span>Kembali ke Tahap 1</span>
+          </button>
         </div>
 
-        <button type="button" class="{{ $ghost }} mt-4" x-on:click="addKaos()">+ Tambah Desain Kaos</button>
-      </section>
-
-      {{-- Navigasi Bawah --}}
-      <div class="flex flex-wrap items-center justify-between gap-3 pt-3">
-        <button type="button" class="{{ $ghost }}" x-on:click="step = 1">Kembali ke Tahap 1</button>
-        <div class="flex flex-wrap items-center gap-2">
-          <button type="button" class="{{ $cancel }}" x-on:click="askCancel()">Batalkan</button>
-          <button type="button" class="{{ $outl }}" x-on:click="submit('draft')">Simpan Draft</button>
-          <button type="button" class="{{ $prim }} shadow-type-1" x-on:click="askPublish()">Post Polling</button>
-        </div>
       </div>
+
     </div>
 
-  </x-card>
+    {{-- ============================================================
+         KOLOM KANAN: SIDEBAR AKSI STICKY
+         ============================================================ --}}
+    <aside class="sticky top-[100px] space-y-4">
+      {{-- Tombol Kembali di Atas Sidebar Aksi --}}
+      <button type="button"
+              @click="askCancel()"
+              class="btn-secondary h-11 w-full text-sm font-semibold justify-center">
+        <x-solar-arrow-left-linear class="h-4 w-4" />
+        <span>Kembali</span>
+      </button>
+
+      <x-card variant="panel" class="p-5">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-black border-b border-grey-1 pb-3">
+          Aksi Polling
+        </h3>
+
+        <div class="mt-4 space-y-2.5">
+          <button type="button"
+                  @click="askPublish()"
+                  class="btn-primary h-11 w-full text-sm font-bold shadow-primary-glow">
+            <x-solar-upload-linear class="h-4 w-4" />
+            <span>Post Polling Sekarang</span>
+          </button>
+
+          <button type="button"
+                  @click="submit('draft')"
+                  class="btn-secondary h-11 w-full text-sm font-semibold">
+            <x-solar-diskette-linear class="h-4 w-4 text-primary-1" />
+            <span>Simpan sebagai Draft</span>
+          </button>
+
+          <button type="button"
+                  @click="resetForm()"
+                  class="btn-danger h-10 w-full text-xs font-semibold">
+            <x-solar-restart-linear class="h-4 w-4" />
+            <span>Reset Form Ulang</span>
+          </button>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-grey-1 text-xs text-grey-2 leading-relaxed">
+          <p><span class="font-bold text-black">Catatan:</span> Polling yang diposting akan langsung dapat dilihat dan dipilih oleh sivitas sesuai jadwal yang ditentukan.</p>
+        </div>
+      </x-card>
+
+      {{-- Ringkasan Status Tahapan --}}
+      <x-card variant="panel" class="p-4 bg-gray-50/60">
+        <span class="text-xs font-bold text-grey-deep uppercase tracking-wider block mb-2">Progres Form:</span>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-black">1. Identitas & Waktu</span>
+          <span class="font-bold" :class="(form.identity.title && form.identity.start.date && form.identity.end.date) ? 'text-emerald-600' : (form.identity.title ? 'text-amber-500' : 'text-grey-2')"
+                  x-text="(form.identity.title && form.identity.start.date && form.identity.end.date) ? 'Lengkap' : (form.identity.title ? 'Belum ada jadwal' : 'Kosong')"></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-black">2. Kategori Peserta</span>
+            <span class="font-bold" :class="form.peserta.options.some(o => o.label) ? 'text-emerald-600' : 'text-grey-2'"
+                  x-text="form.peserta.options.filter(o => o.label).length + ' Opsi'"></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-black">3. Tempat Wisata</span>
+            <span class="font-bold" :class="form.wisata.options.some(o => o.name) ? 'text-emerald-600' : 'text-grey-2'"
+                  x-text="form.wisata.options.filter(o => o.name).length + ' Opsi'"></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-black">4. Desain Kaos</span>
+            <span class="font-bold" :class="form.kaos.options.some(o => o.name) ? 'text-emerald-600' : 'text-grey-2'"
+                  x-text="form.kaos.options.filter(o => o.name).length + ' Opsi'"></span>
+          </div>
+        </div>
+      </x-card>
+    </aside>
+
+  </div>
 
   {{-- ================= MODAL KONFIRMASI ================= --}}
   <div x-show="modal" x-cloak
-       class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+       class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background-color: rgba(0,0,0,0.18); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);"
        x-on:keydown.escape.window="modal = null">
-    <div class="w-full max-w-sm rounded-xl bg-white p-6 shadow-type-1" x-on:click.outside="modal = null">
+    <div class="w-full max-w-[380px] rounded-2xl bg-white p-6"
+         style="box-shadow: 0 8px 40px 0 rgba(0,0,0,.12), 0 2px 8px 0 rgba(0,0,0,.08);"
+         x-on:click.outside="modal = null">
 
+      {{-- Modal: Batalkan Perubahan --}}
       <template x-if="modal === 'cancel'">
-        <div class="relative">
-          {{-- Tombol close (X) --}}
-          <button type="button" class="absolute -top-1 -right-1 p-1 text-grey-2 hover:text-black transition-colors" x-on:click="modal = null">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          <h3 class="text-lg font-bold text-black">Buang perubahan?</h3>
-          <p class="mt-2 text-sm text-grey-2">Isian yang belum disimpan akan hilang. Kamu bisa menyimpannya sebagai draft dulu.</p>
-          <div class="mt-5 flex flex-wrap justify-end gap-2">
-            <button type="button" class="{{ $outl }}" x-on:click="submit('draft')">Simpan Draft</button>
-            <button type="button" class="rounded-button bg-danger px-5 py-2.5 text-sm font-semibold text-white" x-on:click="confirmCancel()">Buang</button>
+        <div>
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 border border-danger/20">
+            <x-solar-close-circle-linear class="h-6 w-6 text-danger" />
+          </div>
+          <h3 class="text-center text-sm font-bold text-black">Batalkan Pembuatan Polling?</h3>
+          <p class="mt-2 text-center text-xs text-grey-deep leading-relaxed">Anda akan diarahkan kembali ke halaman daftar polling. Semua isian yang belum disimpan akan hilang.</p>
+          <div class="mt-3 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5">
+            <p class="text-center text-xs text-amber-700 font-medium"> Simpan sebagai Draft agar data tidak hilang dan bisa dilanjutkan nanti.</p>
+          </div>
+          <div class="mt-5 flex justify-center gap-2">
+            <button type="button" class="btn-secondary h-9 px-4 text-xs font-semibold" x-on:click="modal = null">Kembali</button>
+            <button type="button" class="btn-secondary h-9 px-4 text-xs font-semibold" x-on:click="submit('draft')">Simpan Draft</button>
+            <button type="button" class="btn-danger h-9 px-4 text-xs font-semibold" x-on:click="confirmCancel()">Ya, Batalkan</button>
           </div>
         </div>
       </template>
 
+      {{-- Modal: Reset Form --}}
+      <template x-if="modal === 'reset'">
+        <div>
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 border border-rose-200">
+            <x-solar-refresh-linear class="h-6 w-6 text-danger" />
+          </div>
+          <h3 class="text-center text-sm font-bold text-black">Reset Form Pembuatan Polling?</h3>
+          <p class="mt-2 text-center text-xs text-grey-deep leading-relaxed">Seluruh isian yang sudah Anda ketik akan dikosongkan dan kembali ke kondisi awal.</p>
+          <div class="mt-5 flex justify-center gap-2">
+            <button type="button" class="btn-secondary h-9 px-4 text-xs font-semibold" x-on:click="modal = null">Batal</button>
+            <button type="button" class="btn-danger h-9 px-4 text-xs font-semibold" x-on:click="confirmResetForm()">Ya, Reset Form</button>
+          </div>
+        </div>
+      </template>
+
+      {{-- Modal: Post Polling --}}
       <template x-if="modal === 'publish'">
         <div>
-          <h3 class="text-lg font-bold text-black">Post polling ini?</h3>
-          <p class="mt-2 text-sm text-grey-2">Polling akan diterbitkan dan bisa dilihat peserta sesuai jadwal voting. Kamu bisa memilih Simpan Draft kalau belum yakin.</p>
-          <div class="mt-5 flex flex-wrap justify-end gap-2">
-            <button type="button" class="{{ $ghost }}" x-on:click="modal = null">Periksa lagi</button>
-            <button type="button" class="{{ $prim }}" x-on:click="submit('publish')">Ya, Post</button>
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-3/30 border border-primary-1/20">
+            <x-solar-upload-linear class="h-6 w-6 text-primary-1" />
+          </div>
+          <h3 class="text-center text-sm font-bold text-black">Publikasikan Polling Ini?</h3>
+          <p class="mt-2 text-center text-xs text-grey-deep leading-relaxed">Polling akan resmi diterbitkan dan dapat diikuti oleh seluruh sivitas sesuai jadwal yang ditentukan.</p>
+          <div class="mt-3 rounded-xl bg-primary-3/20 border border-primary-1/20 px-3 py-2.5">
+            <p class="text-center text-xs text-primary-1 font-medium"> Pastikan semua data sudah benar — polling aktif tidak dapat diubah.</p>
+          </div>
+          <div class="mt-5 flex justify-center gap-2">
+            <button type="button" class="btn-secondary h-9 px-4 text-xs font-semibold" x-on:click="modal = null">Periksa Lagi</button>
+            <button type="button" class="btn-primary h-9 px-5 text-xs font-semibold" x-on:click="submit('publish')">Ya, Publikasikan</button>
           </div>
         </div>
       </template>
 
     </div>
   </div>
+
 </form>
 @endsection
