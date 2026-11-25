@@ -1,7 +1,8 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\Admin\AkunController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Admin\PollingAktifController;
 use App\Http\Controllers\Admin\PollingArsipController;
 use App\Http\Controllers\Admin\PollingController;
@@ -22,6 +23,13 @@ Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify.o
 Route::get('/test-google', function () {
     return view('test-google');
 });
+
+// Login user (Google SSO UGM)
+Route::get('/user-login', function () {
+    return view('auth.user-login');
+})->name('user.login');
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 // Halaman User / Sivitas
 Route::get('/home', function () {
