@@ -358,6 +358,17 @@
 
       {{-- Input Fields Sesuai Gambar Figma --}}
       <div class="mt-6 space-y-3.5">
+        {{-- NIP / ID --}}
+        <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
+          <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
+            <x-solar-card-linear class="h-4 w-4 text-primary-1" />
+            <span>NIP / ID</span>
+          </span>
+          <input type="text" name="id" x-model="manualData.id" required
+                 placeholder="Nomor identitas (contoh: 198501012010121001)"
+                 class="h-10 w-full pl-3 text-xs text-black placeholder:text-grey-2 focus:outline-none">
+        </div>
+
         {{-- Nama --}}
         <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
           <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
