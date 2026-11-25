@@ -505,7 +505,7 @@
                      placeholder="namaadmin@ugm.ac.id"
                      class="h-11 w-full rounded-xl border border-grey-1 bg-white pl-10 pr-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none">
             </div>
-            <p class="mt-1 text-xs text-grey-2">Wajib berakhiran @ugm.ac.id atau @mail.ugm.ac.id</p>
+            <p class="mt-1 text-[11px] text-grey-2">Wajib berakhiran @ugm.ac.id atau @mail.ugm.ac.id</p>
           </div>
 
           {{-- Unit Kerja --}}
@@ -556,7 +556,7 @@
           {{-- Tombol Submit & Batal --}}
           <div class="pt-4 space-y-2.5">
             <button type="submit"
-                    class="btn-primary h-11 w-full text-sm font-semibold">
+                    class="btn-primary h-11 w-full text-xs font-semibold">
               <x-solar-user-plus-linear class="h-4 w-4" />
               <span>Daftarkan Akun Admin</span>
             </button>
@@ -568,7 +568,7 @@
             </button>
           </div>
 
-          <div class="pt-3 flex items-center justify-center gap-2 text-xs text-grey-2">
+          <div class="pt-3 flex items-center justify-center gap-2 text-[11px] text-grey-2">
             <x-solar-shield-check-linear class="h-3.5 w-3.5 text-primary-1" />
             <span>Kredensial admin baru terenkripsi secara aman di database Vonic.</span>
           </div>
