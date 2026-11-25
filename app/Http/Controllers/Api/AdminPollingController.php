@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notifikasi;
 use App\Models\PeriodePolling;
 use App\Models\Partisipasi;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -12,7 +14,7 @@ class AdminPollingController extends Controller
 {
     private function cekAdmin(Request $request)
     {
-            if (!$request->user() || $request->user()->role !== 'admin') {
+        if (!$request->user() || $request->user()->role !== 'admin') {
             abort(403, 'Akses hanya untuk admin.');
         }
     }
@@ -44,28 +46,41 @@ class AdminPollingController extends Controller
         }
 
         $validated = $request->validate([
-            'nama_periode' => 'required|string|max:255',
-            'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-            'status' => 'required|in:draft,aktif,selesai',
-            'mode_kelompok' => 'required|string|max:255',
-            'paket_wisata' => 'required|array|min:1',
+            'nama_periode'   => 'required|string|max:255',
+            'tanggal_mulai'  => 'required|date',
+            'tanggal_selesai'=> 'required|date|after_or_equal:tanggal_mulai',
+            'status'         => 'required|in:draft,aktif,selesai',
+            'mode_kelompok'  => 'required|string|max:255',
+            'paket_wisata'   => 'required|array|min:1',
             'paket_wisata.*' => 'required|exists:paket_wisata,id_paket',
-            'desain_kaos' => 'required|array|min:1',
-            'desain_kaos.*' => 'required|exists:desain_kaos,id_kaos',
+            'desain_kaos'    => 'required|array|min:1',
+            'desain_kaos.*'  => 'required|exists:desain_kaos,id_kaos',
         ]);
 
         $periode = PeriodePolling::create([
-            'nama_periode' => $validated['nama_periode'],
-            'tanggal_mulai' => $validated['tanggal_mulai'],
-            'tanggal_selesai' => $validated['tanggal_selesai'],
-            'status' => $validated['status'],
-            'mode_kelompok' => $validated['mode_kelompok'],
-            'created_by' => $request->user()->id_user,
+            'nama_periode'   => $validated['nama_periode'],
+            'tanggal_mulai'  => $validated['tanggal_mulai'],
+            'tanggal_selesai'=> $validated['tanggal_selesai'],
+            'status'         => $validated['status'],
+            'mode_kelompok'  => $validated['mode_kelompok'],
+            'created_by'     => $request->user()->id_user,
         ]);
 
         $periode->paketWisata()->sync($validated['paket_wisata']);
         $periode->desainKaos()->sync($validated['desain_kaos']);
+
+        // Notif ke semua user jika polling langsung aktif
+        if ($validated['status'] === 'aktif') {
+            $users = User::where('role', 'user')->get();
+            foreach ($users as $user) {
+                Notifikasi::kirim(
+                    $user->id_user,
+                    'Polling Baru Tersedia',
+                    'Polling "' . $validated['nama_periode'] . '" telah dibuka. Segera berikan suaramu!',
+                    '/voting'
+                );
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -109,18 +124,18 @@ class AdminPollingController extends Controller
         }
 
         $validated = $request->validate([
-            'nama_periode' => 'sometimes|required|string|max:255',
-            'tanggal_mulai' => 'sometimes|required|date',
-            'tanggal_selesai' => 'sometimes|required|date',
-            'status' => 'sometimes|required|in:draft,aktif,selesai',
-            'mode_kelompok' => 'sometimes|required|string|max:255',
-            'paket_wisata' => 'sometimes|required|array|min:1',
+            'nama_periode'   => 'sometimes|required|string|max:255',
+            'tanggal_mulai'  => 'sometimes|required|date',
+            'tanggal_selesai'=> 'sometimes|required|date',
+            'status'         => 'sometimes|required|in:draft,aktif,selesai',
+            'mode_kelompok'  => 'sometimes|required|string|max:255',
+            'paket_wisata'   => 'sometimes|required|array|min:1',
             'paket_wisata.*' => 'required|exists:paket_wisata,id_paket',
-            'desain_kaos' => 'sometimes|required|array|min:1',
-            'desain_kaos.*' => 'required|exists:desain_kaos,id_kaos',
+            'desain_kaos'    => 'sometimes|required|array|min:1',
+            'desain_kaos.*'  => 'required|exists:desain_kaos,id_kaos',
         ]);
 
-        $tanggalMulai = $validated['tanggal_mulai'] ?? $periode->tanggal_mulai;
+        $tanggalMulai   = $validated['tanggal_mulai'] ?? $periode->tanggal_mulai;
         $tanggalSelesai = $validated['tanggal_selesai'] ?? $periode->tanggal_selesai;
 
         if ($tanggalSelesai < $tanggalMulai) {
@@ -130,10 +145,7 @@ class AdminPollingController extends Controller
             ], 422);
         }
 
-        $periode->update(collect($validated)->except([
-            'paket_wisata',
-            'desain_kaos'
-        ])->toArray());
+        $periode->update(collect($validated)->except(['paket_wisata', 'desain_kaos'])->toArray());
 
         if (isset($validated['paket_wisata'])) {
             $periode->paketWisata()->sync($validated['paket_wisata']);
@@ -150,7 +162,75 @@ class AdminPollingController extends Controller
         ]);
     }
 
-    // 5. Menghapus periode polling
+    // 5. Publikasikan polling (draft → aktif) + kirim notifikasi ke semua user
+    public function publish(Request $request, $id)
+    {
+        $this->cekAdmin($request);
+
+        $periode = PeriodePolling::findOrFail($id);
+
+        if ($periode->status !== 'draft') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya polling berstatus draft yang dapat dipublikasikan.'
+            ], 422);
+        }
+
+        $periode->update(['status' => 'aktif']);
+
+        // Notif ke semua user: polling baru tersedia
+        $users = User::where('role', 'user')->get();
+        foreach ($users as $user) {
+            Notifikasi::kirim(
+                $user->id_user,
+                'Polling Baru Tersedia',
+                'Polling "' . $periode->nama_periode . '" telah dibuka. Segera berikan suaramu!',
+                '/voting'
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Polling berhasil dipublikasikan dan notifikasi telah dikirim.',
+            'data' => $periode->fresh()
+        ]);
+    }
+
+    // 6. Hentikan/arsipkan polling (aktif → selesai)
+    public function archive(Request $request, $id)
+    {
+        $this->cekAdmin($request);
+
+        $periode = PeriodePolling::findOrFail($id);
+
+        if ($periode->status === 'selesai') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Polling sudah berstatus selesai.'
+            ], 422);
+        }
+
+        $periode->update(['status' => 'selesai']);
+
+        // Notif ke semua user: polling telah ditutup, lihat hasil
+        $users = User::where('role', 'user')->get();
+        foreach ($users as $user) {
+            Notifikasi::kirim(
+                $user->id_user,
+                'Polling Telah Ditutup',
+                'Polling "' . $periode->nama_periode . '" telah selesai. Lihat hasilnya sekarang!',
+                '/hasil-polling/' . $periode->id_periode
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Polling berhasil dihentikan/diarsipkan.',
+            'data' => $periode->fresh()
+        ]);
+    }
+
+    // 7. Menghapus periode polling
     public function destroy(Request $request, $id)
     {
         $this->cekAdmin($request);
@@ -174,7 +254,7 @@ class AdminPollingController extends Controller
         ]);
     }
 
-    // 6. Menampilkan hasil voting khusus admin
+    // 8. Menampilkan hasil voting khusus admin
     public function hasil(Request $request, $id)
     {
         $this->cekAdmin($request);
@@ -205,9 +285,9 @@ class AdminPollingController extends Controller
             'success' => true,
             'message' => 'Hasil voting berhasil diambil.',
             'data' => [
-                'periode' => $periode,
+                'periode'          => $periode,
                 'hasil_paket_wisata' => $hasilPaket,
-                'hasil_desain_kaos' => $hasilKaos
+                'hasil_desain_kaos'  => $hasilKaos,
             ]
         ]);
     }

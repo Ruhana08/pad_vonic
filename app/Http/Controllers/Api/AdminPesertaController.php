@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notifikasi;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -41,19 +42,27 @@ class AdminPesertaController extends Controller
         $this->cekAdmin($request);
 
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'nip' => 'required|string|max:255|unique:users,nip',
-            'email' => 'required|email|max:255|unique:users,email',
-            'pekerjaan' => 'nullable|string|max:255',
+            'nama'       => 'required|string|max:255',
+            'nip'        => 'nullable|string|max:255|unique:users,nip',
+            'email'      => 'required|email|max:255|unique:users,email',
+            'pekerjaan'  => 'nullable|string|max:255',
             'unit_kerja' => 'nullable|string|max:255',
-            'no_telp' => 'nullable|string|max:255',
-            'foto' => 'nullable|string|max:255',
-            'kategori' => 'required|in:dosen,tendik',
+            'no_telp'    => 'nullable|string|max:255',
+            'foto'       => 'nullable|string|max:255',
+            'kategori'   => 'required|in:dosen,tendik',
         ]);
 
         $validated['role'] = 'user';
 
         $peserta = User::create($validated);
+
+        // Notif ke admin: peserta baru berhasil ditambahkan
+        Notifikasi::kirim(
+            $request->user()->id_user,
+            'Peserta Baru Ditambahkan',
+            'Akun sivitas atas nama "' . $peserta->nama . '" berhasil dibuat.',
+            '/admin/akun'
+        );
 
         return response()->json([
             'success' => true,
@@ -88,8 +97,8 @@ class AdminPesertaController extends Controller
         $validated = $request->validate([
             'nama' => 'sometimes|required|string|max:255',
             'nip' => [
+                'nullable',
                 'sometimes',
-                'required',
                 'string',
                 'max:255',
                 Rule::unique('users', 'nip')->ignore($id, 'id_user'),
@@ -125,11 +134,14 @@ class AdminPesertaController extends Controller
         $peserta = User::where('role', 'user')
             ->findOrFail($id);
 
-        if (\App\Models\Partisipasi::where('id_user', $id)->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Peserta sudah memiliki riwayat voting sehingga tidak dapat dihapus.'
-            ], 409);
+        // Cascade delete: hapus detail_ukuran_vote → partisipasi → user
+        // agar statistik Dashboard & Polling Aktif tetap sinkron
+        $partisipasiIds = \App\Models\Partisipasi::where('id_user', $id)
+            ->pluck('id_partisipasi');
+
+        if ($partisipasiIds->isNotEmpty()) {
+            \App\Models\DetailUkuranVote::whereIn('id_partisipasi', $partisipasiIds)->delete();
+            \App\Models\Partisipasi::whereIn('id_partisipasi', $partisipasiIds)->delete();
         }
 
         $peserta->delete();
@@ -139,7 +151,6 @@ class AdminPesertaController extends Controller
             'message' => 'Peserta berhasil dihapus.'
         ]);
     }
-
 
     // Import peserta dari Excel
     public function import(Request $request)
@@ -154,6 +165,14 @@ class AdminPesertaController extends Controller
 
         Excel::import($import, $request->file('file'));
 
+        // Notif ke admin yang melakukan import: hasil import selesai
+        Notifikasi::kirim(
+            $request->user()->id_user,
+            'Import Akun Sivitas Selesai',
+            'Import data peserta selesai. Berhasil: ' . $import->berhasil . ', Dilewati: ' . $import->dilewati . '.',
+            '/admin/akun'
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Import peserta selesai.',
@@ -163,5 +182,4 @@ class AdminPesertaController extends Controller
             ]
         ]);
     }
-
 }
