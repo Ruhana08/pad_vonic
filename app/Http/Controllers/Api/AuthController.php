@@ -8,6 +8,7 @@ use App\Models\EmailLoginOtp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -143,11 +144,11 @@ class AuthController extends Controller
         ]);
     }
 
-    // 3. User login hanya menggunakan email terdaftar
+    // 3. User login hanya menggunakan email terdaftar (Google SSO)
     public function loginUser(Request $request)
     {
         $request->validate([
-        'id_token' => 'required|string',
+            'id_token' => 'required|string',
         ]);
 
         $client = new \Google\Client([
@@ -199,7 +200,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // 4. Menampilkan profile
+    // 4. Menampilkan profil (GET /api/profile)
     public function profile(Request $request)
     {
         $user = $request->user();
@@ -207,11 +208,53 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Profile berhasil diambil.',
-            'data' => $user
+            'data' => array_merge($user->toArray(), [
+                'foto_url' => $user->foto
+                    ? Storage::url($user->foto)
+                    : null,
+            ])
         ]);
     }
 
-    // 5. Logout
+    // 5. Update profil + upload foto (POST /api/profile)
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'nama'       => 'sometimes|required|string|max:255',
+            'pekerjaan'  => 'nullable|string|max:255',
+            'unit_kerja' => 'nullable|string|max:255',
+            'no_telp'    => 'nullable|string|max:20',
+            'foto'       => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $data = $request->only(['nama', 'pekerjaan', 'unit_kerja', 'no_telp']);
+
+        if ($request->hasFile('foto')) {
+            // Hapus foto lama jika ada
+            if ($user->foto && Storage::exists($user->foto)) {
+                Storage::delete($user->foto);
+            }
+
+            $path = $request->file('foto')->store('foto_profil', 'public');
+            $data['foto'] = $path;
+        }
+
+        $user->update(array_filter($data, fn($v) => !is_null($v)));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil diperbarui.',
+            'data' => array_merge($user->fresh()->toArray(), [
+                'foto_url' => $user->foto
+                    ? Storage::url($user->foto)
+                    : null,
+            ])
+        ]);
+    }
+
+    // 6. Logout
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

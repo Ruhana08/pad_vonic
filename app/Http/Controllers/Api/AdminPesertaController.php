@@ -42,14 +42,14 @@ class AdminPesertaController extends Controller
         $this->cekAdmin($request);
 
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'nip' => 'required|string|max:255|unique:users,nip',
-            'email' => 'required|email|max:255|unique:users,email',
-            'pekerjaan' => 'nullable|string|max:255',
+            'nama'       => 'required|string|max:255',
+            'nip'        => 'nullable|string|max:255|unique:users,nip',
+            'email'      => 'required|email|max:255|unique:users,email',
+            'pekerjaan'  => 'nullable|string|max:255',
             'unit_kerja' => 'nullable|string|max:255',
-            'no_telp' => 'nullable|string|max:255',
-            'foto' => 'nullable|string|max:255',
-            'kategori' => 'required|in:dosen,tendik',
+            'no_telp'    => 'nullable|string|max:255',
+            'foto'       => 'nullable|string|max:255',
+            'kategori'   => 'required|in:dosen,tendik',
         ]);
 
         $validated['role'] = 'user';
@@ -97,8 +97,8 @@ class AdminPesertaController extends Controller
         $validated = $request->validate([
             'nama' => 'sometimes|required|string|max:255',
             'nip' => [
+                'nullable',
                 'sometimes',
-                'required',
                 'string',
                 'max:255',
                 Rule::unique('users', 'nip')->ignore($id, 'id_user'),
@@ -134,11 +134,14 @@ class AdminPesertaController extends Controller
         $peserta = User::where('role', 'user')
             ->findOrFail($id);
 
-        if (\App\Models\Partisipasi::where('id_user', $id)->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Peserta sudah memiliki riwayat voting sehingga tidak dapat dihapus.'
-            ], 409);
+        // Cascade delete: hapus detail_ukuran_vote → partisipasi → user
+        // agar statistik Dashboard & Polling Aktif tetap sinkron
+        $partisipasiIds = \App\Models\Partisipasi::where('id_user', $id)
+            ->pluck('id_partisipasi');
+
+        if ($partisipasiIds->isNotEmpty()) {
+            \App\Models\DetailUkuranVote::whereIn('id_partisipasi', $partisipasiIds)->delete();
+            \App\Models\Partisipasi::whereIn('id_partisipasi', $partisipasiIds)->delete();
         }
 
         $peserta->delete();
