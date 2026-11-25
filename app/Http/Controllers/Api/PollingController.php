@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notifikasi;
 use App\Models\PeriodePolling;
 use Illuminate\Http\Request;
 
@@ -194,6 +195,25 @@ class PollingController extends Controller
                 'id_ukuran' => $item['id_ukuran'],
                 'jumlah' => $item['jumlah'],
             ]);
+        }
+
+        // Notif ke user: voting berhasil disimpan
+        Notifikasi::kirim(
+            $request->user()->id_user,
+            'Suara Anda Berhasil Disimpan',
+            'Pilihan wisata dan kaos Anda telah tercatat. Terima kasih!',
+            '/home'
+        );
+
+        // Notif ke semua admin: ada suara baru masuk
+        $admins = \App\Models\User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            Notifikasi::kirim(
+                $admin->id_user,
+                'Suara Baru Diterima',
+                $request->user()->nama . ' telah mengirimkan suara untuk periode polling ini.',
+                '/admin/polling/aktif'
+            );
         }
 
         return response()->json([

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AdminDesainKaosController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AdminGaleriPaketWisataController;
 use App\Http\Controllers\Api\AdminGaleriDesainKaosController;
+use App\Http\Controllers\Api\NotifikasiController;
 
 // Login Admin menggunakan OTP
 Route::post('/request-otp', [AuthController::class, 'requestOtp']);
@@ -34,6 +35,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/polling/{id}/vote', [PollingController::class, 'vote']);
     Route::get('/riwayat-voting', [PollingController::class, 'riwayat']);
     Route::get('/profile', [AuthController::class, 'profile']);
+    Route::post('/profile', [AuthController::class, 'updateProfile']);
+
+    // Notifikasi (User & Admin)
+    Route::get('/notifikasi', [NotifikasiController::class, 'index']);
+    Route::post('/notifikasi/read-all', [NotifikasiController::class, 'markReadAll']);
+    Route::post('/notifikasi/{id}/read', [NotifikasiController::class, 'markRead']);
 
     // Admin
     Route::prefix('admin')->group(function () {
@@ -54,6 +61,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/polling/{id}', [AdminPollingController::class, 'update']);
         Route::delete('/polling/{id}', [AdminPollingController::class, 'destroy']);
         Route::get('/polling/{id}/hasil', [AdminPollingController::class, 'hasil']);
+        Route::post('/polling/{id}/publish', [AdminPollingController::class, 'publish']);
+        Route::post('/polling/{id}/archive', [AdminPollingController::class, 'archive']);
 
         Route::post('/paket-wisata', [AdminPaketWisataController::class, 'store']);
         Route::post('/paket-wisata/{id}/update', [AdminPaketWisataController::class, 'update']);
