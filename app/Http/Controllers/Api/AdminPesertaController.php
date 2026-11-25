@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notifikasi;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -54,6 +55,14 @@ class AdminPesertaController extends Controller
         $validated['role'] = 'user';
 
         $peserta = User::create($validated);
+
+        // Notif ke admin: peserta baru berhasil ditambahkan
+        Notifikasi::kirim(
+            $request->user()->id_user,
+            'Peserta Baru Ditambahkan',
+            'Akun sivitas atas nama "' . $peserta->nama . '" berhasil dibuat.',
+            '/admin/akun'
+        );
 
         return response()->json([
             'success' => true,
@@ -140,7 +149,6 @@ class AdminPesertaController extends Controller
         ]);
     }
 
-
     // Import peserta dari Excel
     public function import(Request $request)
     {
@@ -154,6 +162,14 @@ class AdminPesertaController extends Controller
 
         Excel::import($import, $request->file('file'));
 
+        // Notif ke admin yang melakukan import: hasil import selesai
+        Notifikasi::kirim(
+            $request->user()->id_user,
+            'Import Akun Sivitas Selesai',
+            'Import data peserta selesai. Berhasil: ' . $import->berhasil . ', Dilewati: ' . $import->dilewati . '.',
+            '/admin/akun'
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Import peserta selesai.',
@@ -163,5 +179,4 @@ class AdminPesertaController extends Controller
             ]
         ]);
     }
-
 }

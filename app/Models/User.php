@@ -38,4 +38,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(PeriodePolling::class, 'created_by', 'id_user');
     }
+
+    public function notifikasi()
+    {
+        return $this->hasMany(Notifikasi::class, 'id_user', 'id_user');
+    }
 }

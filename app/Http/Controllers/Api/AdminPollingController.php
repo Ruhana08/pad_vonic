@@ -72,6 +72,19 @@ class AdminPollingController extends Controller
             'message' => 'Periode polling berhasil dibuat.',
             'data' => $periode->load(['paketWisata', 'desainKaos'])
         ], 201);
+
+        // Notif ke semua user jika polling langsung aktif
+        if ($validated['status'] === 'aktif') {
+            $users = \App\Models\User::where('role', 'user')->get();
+            foreach ($users as $user) {
+                Notifikasi::kirim(
+                    $user->id_user,
+                    'Polling Baru Tersedia',
+                    'Polling "' . $validated['nama_periode'] . '" telah dibuka. Segera berikan suaramu!',
+                    '/voting'
+                );
+            }
+        }
     }
 
     // 3. Melihat detail periode polling
