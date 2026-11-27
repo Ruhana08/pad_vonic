@@ -71,8 +71,20 @@
       </div>
     </div>
 
+    {{-- State Kosong: Tidak ada suara masuk --}}
+    <div x-show="({{ $item }}?.participants ?? {{ $item }}?.total_suara ?? 0) === 0" x-cloak
+         class="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-grey-1 bg-gray-50/70 p-10 text-center">
+      <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-3/50 text-primary-1">
+        <x-solar-chart-linear class="h-6 w-6" />
+      </div>
+      <h3 class="text-base font-bold text-black">Hasil voting kosong</h3>
+      <p class="mt-1 max-w-sm text-xs text-grey-deep">
+        Belum ada suara yang masuk pada periode polling ini sehingga belum ada hasil yang dapat ditampilkan.
+      </p>
+    </div>
+
     {{-- Kategori 1: Peserta (Reuse Card Pilihan Voting) --}}
-    <div class="mt-5">
+    <div class="mt-5" x-show="({{ $item }}?.participants ?? {{ $item }}?.total_suara ?? 0) > 0">
       <h3 class="mb-2.5 flex items-center gap-1.5 text-sm font-bold text-primary-1">
         <x-solar-users-group-two-rounded-linear class="h-4 w-4" />
         <span>Peserta</span>
@@ -83,7 +95,8 @@
     </div>
 
     {{-- Grid Dua Kolom: Desain Kaos & Destinasi Wisata (Reuse Card Pilihan Voting) --}}
-    <div class="mt-5 grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+    <div class="mt-5 grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch"
+         x-show="({{ $item }}?.participants ?? {{ $item }}?.total_suara ?? 0) > 0">
 
       {{-- Kategori 2: Desain Kaos (Reuse Card Voting Step 3) --}}
       <div class="md:col-span-5 flex flex-col">
@@ -100,7 +113,7 @@
             </div>
 
             {{-- Gambar Utama Kaos --}}
-            <div class="mt-3 relative h-52 overflow-hidden rounded-lg bg-gray-100 cursor-pointer group"
+            <div class="mt-3 relative h-52 overflow-hidden rounded-[4px] bg-gray-100 cursor-pointer group"
                  @click="openLightbox(kaosPhotos.length ? kaosPhotos : ['https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80'], 0)">
               <img :src="kaosPhotos[0] || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80'"
                    class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
@@ -150,11 +163,6 @@
                       x-text="{{ $item }}?.wisata?.kategori"></span>
               </div>
               <div class="mt-1 flex items-center gap-2 text-[11px] text-grey-deep">
-                <span class="flex items-center gap-1 font-semibold text-amber-500">
-                  <x-solar-star-bold class="h-3.5 w-3.5" />
-                  <span x-text="{{ $item }}?.wisata?.rating || '4.8'"></span>
-                </span>
-                <span>•</span>
                 <span x-text="{{ $item }}?.wisata?.lokasi || {{ $item }}?.wisata?.provinsi || '—'"></span>
               </div>
             </div>

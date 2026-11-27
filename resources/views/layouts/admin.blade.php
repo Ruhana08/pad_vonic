@@ -54,7 +54,7 @@
     Padding atas = jarak atas navbar (16px) + tinggi navbar (80px) + gap ke konten (32px) = 128px
     Padding bawah = ruang napas konten sebelum footer = 48px
   -->
-  <main class="ml-0 lg:ml-[240px] min-w-0 flex-1 px-4 lg:pl-0 lg:pr-4 pb-[48px] pt-[112px] lg:pt-[128px]">
+  <main class="ml-0 lg:ml-[240px] min-w-0 flex-1 px-4 lg:pl-0 lg:pr-4 pb-[48px] pt-[112px]">
     @yield('content')
   </main>
 

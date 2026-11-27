@@ -12,7 +12,7 @@ class AdminGaleriPaketWisataController extends Controller
     // Memastikan hanya admin yang bisa mengakses
     private function cekAdmin(Request $request)
     {
-        if ($request->user()?->role !== 'admin') {
+        if (!$request->user()?->isAdmin()) {
             abort(403, 'Akses hanya untuk admin.');
         }
     }

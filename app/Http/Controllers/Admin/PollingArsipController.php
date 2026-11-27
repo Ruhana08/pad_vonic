@@ -79,25 +79,43 @@ class PollingArsipController extends Controller
             $completedPolls = $dbPolls->where('status', 'selesai')->values();
 
             $history = $completedPolls->map(function ($p) {
-                // Cari paket wisata pemenang berdasarkan vote terbanyak atau opsi pertama
-                $paketCounts = $p->partisipasi->groupBy('id_paket')->map->count();
-                $topPaketId  = $paketCounts->sortDesc()->keys()->first();
-                $wisata      = $p->paketWisata->firstWhere('id_paket', $topPaketId) ?? $p->paketWisata->first();
-
-                // Cari kaos pemenang berdasarkan vote terbanyak atau opsi pertama
-                $kaosCounts  = $p->partisipasi->groupBy('id_kaos')->map->count();
-                $topKaosId   = $kaosCounts->sortDesc()->keys()->first();
-                $kaos        = $p->desainKaos->firstWhere('id_kaos', $topKaosId) ?? $p->desainKaos->first();
-
+                $totalVotes = $p->partisipasi->count();
                 $start = $p->tanggal_mulai ? date('d/m/y', strtotime($p->tanggal_mulai)) : '—';
                 $end   = $p->tanggal_selesai ? date('d/m/y', strtotime($p->tanggal_selesai)) : '—';
+                $cfg   = is_array($p->config) ? $p->config : [];
+
+                if ($totalVotes === 0) {
+                    return [
+                        'id'            => $p->id_periode,
+                        'title'         => $p->nama_periode,
+                        'description'   => !empty($cfg['description']) ? $cfg['description'] : 'Pemilihan paket wisata dan desain kaos tahunan civitas DTEDI periode ' . date('Y', strtotime($p->tanggal_mulai ?? now())) . '.',
+                        'start'         => $start,
+                        'end'           => $end,
+                        'full_duration' => $start . ' - ' . $end,
+                        'participants'  => 0,
+                        'peserta_type'  => 'Hasil voting kosong',
+                        'public'        => (bool) ($p->is_public ?? true),
+                        'kaos'          => null,
+                        'wisata'        => null,
+                    ];
+                }
+
+                // Cari paket wisata pemenang berdasarkan vote terbanyak
+                $paketCounts = $p->partisipasi->groupBy('id_paket')->map->count();
+                $topPaketId  = $paketCounts->sortDesc()->keys()->first();
+                $wisata      = $p->paketWisata->firstWhere('id_paket', $topPaketId);
+
+                // Cari kaos pemenang berdasarkan vote terbanyak
+                $kaosCounts  = $p->partisipasi->groupBy('id_kaos')->map->count();
+                $topKaosId   = $kaosCounts->sortDesc()->keys()->first();
+                $kaos        = $p->desainKaos->firstWhere('id_kaos', $topKaosId);
 
                 $pesertaCounts = $p->partisipasi->groupBy('pilihan_kelompok')->map->count();
                 $topPesertaKey = $pesertaCounts->sortDesc()->keys()->first();
                 $pesertaKategori = match ($topPesertaKey) {
                     'dipisah'  => 'Dosen dan tendik dipisah',
                     'digabung' => 'Dosen dan tendik digabung',
-                    default    => 'Belum ada suara',
+                    default    => $topPesertaKey ?: 'Belum ada suara',
                 };
 
                 $fotoWisata = $wisata && $wisata->foto_url ? $wisata->foto_url : 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
@@ -121,11 +139,11 @@ class PollingArsipController extends Controller
                 return [
                     'id'           => $p->id_periode,
                     'title'        => $p->nama_periode,
-                    'description'  => 'Pemilihan paket wisata dan desain kaos tahunan civitas DTEDI periode ' . date('Y', strtotime($p->tanggal_mulai ?? now())) . '.',
+                    'description'  => !empty($cfg['description']) ? $cfg['description'] : 'Pemilihan paket wisata dan desain kaos tahunan civitas DTEDI periode ' . date('Y', strtotime($p->tanggal_mulai ?? now())) . '.',
                     'start'        => $start,
                     'end'          => $end,
                     'full_duration'=> $start . ' - ' . $end,
-                    'participants' => $p->partisipasi->count(),
+                    'participants' => $totalVotes,
                     'peserta_type' => $pesertaKategori,
                     'public'       => (bool) ($p->is_public ?? true),
                     'kaos'         => [
@@ -137,7 +155,6 @@ class PollingArsipController extends Controller
                         'title'       => $wisata->nama_destinasi ?? 'Destinasi Wisata Pilihan',
                         'kategori'    => $wisata->kategori ?? 'Wisata',
                         'provinsi'    => $wisata->provinsi ?? null,
-                        'rating'      => $wisata->rating ?? '4.8',
                         'image'       => $fotoWisata,
                         'gallery'     => $wisataGaleri,
                         'lokasi'      => $wisata->lokasi ?? ($wisata->provinsi ?? '—'),
@@ -178,6 +195,16 @@ class PollingArsipController extends Controller
         $poll->status = 'aktif';
         $poll->save();
 
+        $users = \App\Models\User::where('role', 'user')->get();
+        foreach ($users as $u) {
+            \App\Models\Notifikasi::kirim(
+                $u->id_user,
+                'Polling Baru Tersedia',
+                'Polling "' . $poll->nama_periode . '" telah dibuka. Segera berikan suaramu!',
+                '/voting?periode=' . $poll->id_periode
+            );
+        }
+
         return back()->with('success', "Polling {$poll->nama_periode} berhasil dipublikasikan dan statusnya kini Aktif!");
     }
 
@@ -201,9 +228,9 @@ class PollingArsipController extends Controller
         }
 
         // Hapus relasi pivot, detail ukuran, partisipasi, lalu polling
-        $partisipasiIds = $poll->partisipasi()->pluck('id_partisipasi');
+        $partisipasiIds = $poll->partisipasi()->pluck('id_vote');
         if ($partisipasiIds->isNotEmpty()) {
-            \App\Models\DetailUkuranVote::whereIn('id_partisipasi', $partisipasiIds)->delete();
+            \App\Models\DetailUkuranVote::whereIn('id_vote', $partisipasiIds)->delete();
         }
         $poll->paketWisata()->detach();
         $poll->desainKaos()->detach();

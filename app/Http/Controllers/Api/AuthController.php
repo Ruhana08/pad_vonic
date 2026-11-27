@@ -20,7 +20,7 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $request->email)
-            ->where('role', 'admin')
+            ->whereIn('role', ['admin', 'master_admin'])
             ->first();
 
         if (!$user) {
@@ -66,7 +66,7 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $request->email)
-            ->where('role', 'admin')
+            ->whereIn('role', ['admin', 'master_admin'])
             ->first();
 
         if (!$user) {
@@ -231,17 +231,23 @@ class AuthController extends Controller
 
         $data = $request->only(['nama', 'pekerjaan', 'unit_kerja', 'no_telp']);
 
-        if ($request->hasFile('foto')) {
+        if ($request->boolean('remove_foto')) {
+            if ($user->foto && Storage::disk('public')->exists($user->foto)) {
+                Storage::disk('public')->delete($user->foto);
+            }
+            $user->foto = null;
+        } elseif ($request->hasFile('foto')) {
             // Hapus foto lama jika ada
-            if ($user->foto && Storage::exists($user->foto)) {
-                Storage::delete($user->foto);
+            if ($user->foto && Storage::disk('public')->exists($user->foto)) {
+                Storage::disk('public')->delete($user->foto);
             }
 
             $path = $request->file('foto')->store('foto_profil', 'public');
             $data['foto'] = $path;
         }
 
-        $user->update(array_filter($data, fn($v) => !is_null($v)));
+        $user->fill(array_filter($data, fn($v) => !is_null($v)));
+        $user->save();
 
         return response()->json([
             'success' => true,

@@ -14,7 +14,7 @@ class AdminPollingController extends Controller
 {
     private function cekAdmin(Request $request)
     {
-        if (!$request->user() || $request->user()->role !== 'admin') {
+        if (!$request->user()?->isAdmin()) {
             abort(403, 'Akses hanya untuk admin.');
         }
     }

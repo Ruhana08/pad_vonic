@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'Status Polling & Riwayat')
 
@@ -101,7 +101,7 @@
                 {{-- Polling Name (Bisa diklik untuk melihat analitik jika Aktif atau Selesai) --}}
                 <td class="border-b border-gray-100 py-3.5 px-4 font-semibold text-black">
                   @if ($p['status'] === 'Aktif' || $p['status'] === 'Selesai')
-                    <a href="{{ route('admin.polling.detail', ['id' => $p['id']]) }}" class="hover:text-primary-1 hover:underline transition-colors" title="Lihat Statistik & Analitik Lengkap">
+                    <a href="{{ route('admin.polling.detail', ['id' => $p['id_periode']]) }}" class="hover:text-primary-1 hover:underline transition-colors" title="Lihat Statistik & Analitik Lengkap">
                       {{ $p['name'] }}
                     </a>
                   @else
@@ -141,9 +141,9 @@
                 <td class="border-b border-gray-100 py-3.5 px-3 text-left">
                   <div class="flex items-center justify-start gap-2">
                     @if ($p['status'] === 'Draft')
-                      {{-- Draft: Lihat -> edit draft, Edit aktif, Post aktif, Hapus aktif --}}
-                      <x-action-button type="view" :href="route('admin.polling.create', ['id' => $p['id_periode']])" data-turbo="false" label="Lihat & Lanjutkan Draft Polling" />
-                      <x-action-button type="edit" :href="route('admin.polling.create', ['id' => $p['id_periode']])" data-turbo="false" label="Edit Polling" />
+                      {{-- Draft: Lihat disabled, Edit ke halaman pembuatan polling berisi draft --}}
+                      <x-action-button type="view" :disabled="true" label="Draft polling belum memiliki hasil untuk dilihat" />
+                      <x-action-button type="edit" :href="route('admin.polling.create', ['id' => $p['id_periode']])" data-turbo="false" label="Edit Draft Polling" />
                       <x-action-button type="upload" label="Publikasikan Polling"
                                        @click="openPostModal({{ json_encode($p) }})" />
                       <x-action-button type="delete" label="Hapus Polling"
@@ -172,9 +172,7 @@
                   <x-empty-state 
                     icon="solar-clipboard-list-linear"
                     title="Belum Ada Polling yang Dibuat"
-                    message="Saat ini belum ada sesi pemilihan atau kegiatan polling aktif. Mulai buat polling pertama untuk civitas DTEDI."
-                    actionText="+ Buat Polling Baru"
-                    :actionUrl="route('admin.polling.create')" />
+                    message="Saat ini belum ada sesi pemilihan atau kegiatan polling aktif. Mulai buat polling pertama untuk civitas DTEDI." />
                 </td>
               </tr>
             @endforelse
@@ -192,6 +190,8 @@
         pub: @json($publicIds),
         snapshot: [],
         editMode: false,
+        savingAccess: false,
+        accessSavedMsg: '',
         page: 1,
         perPage: 10,
 
@@ -234,8 +234,34 @@
           this.pub = this.snapshot;
           this.editMode = false;
         },
-        save() {
-          this.editMode = false;
+        async save() {
+          if (this.savingAccess) return;
+          this.savingAccess = true;
+          this.accessSavedMsg = '';
+          try {
+            const res = await fetch('{{ route('admin.polling.arsip.access') }}', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+              },
+              credentials: 'same-origin',
+              body: JSON.stringify({ public_ids: this.pub })
+            });
+            const json = await res.json().catch(() => ({}));
+            if (res.ok && json.success) {
+              this.editMode = false;
+              this.accessSavedMsg = 'Akses riwayat berhasil diperbarui.';
+              setTimeout(() => { this.accessSavedMsg = ''; }, 3500);
+            } else {
+              alert(json.message || 'Gagal menyimpan pengaturan akses.');
+            }
+          } catch (e) {
+            alert('Terjadi kesalahan jaringan saat menyimpan akses.');
+          } finally {
+            this.savingAccess = false;
+          }
         }
       };
     }
@@ -289,7 +315,7 @@
                         x-text="String((page - 1) * perPage + i + 1).padStart(2, '0')"></span>
                 </td>
                 <td class="border-b border-gray-100 py-3.5 px-4 font-semibold text-black">
-                  <a :href="'{{ route('admin.polling.aktif') }}'" class="hover:text-primary-1 hover:underline transition-colors" title="Buka Detail Analitik" x-text="h.title"></a>
+                  <a :href="'/admin/polling/detail/' + h.id" class="hover:text-primary-1 hover:underline transition-colors" title="Buka Detail Analitik" x-text="h.title"></a>
                 </td>
                 <td class="border-b border-gray-100 py-3.5 px-4 text-grey-deep leading-relaxed"
                     x-bind:title="h.description" x-text="h.description"></td>
@@ -358,11 +384,13 @@
         </div>
       </div>
 
+      <div x-show="accessSavedMsg" x-cloak class="mt-3 rounded-lg bg-success-soft px-3 py-2 text-[11px] font-semibold text-success" x-text="accessSavedMsg"></div>
+
       <div x-show="editMode" x-cloak class="mt-5 space-y-2 border-t border-gray-100 pt-4">
         <p class="text-xs leading-snug text-grey-deep">Centang baris yang ingin dijadikan publik.</p>
-        <button type="button" x-on:click="save()"
-                class="w-full rounded-xl bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 transition-all">
-          Simpan
+        <button type="button" x-on:click="save()" :disabled="savingAccess"
+                class="w-full rounded-xl bg-primary-1 py-2 text-xs font-semibold text-white shadow-menu hover:bg-primary-4 disabled:opacity-50 transition-all cursor-pointer">
+          <span x-text="savingAccess ? 'Menyimpan...' : 'Simpan'"></span>
         </button>
         <button type="button" x-on:click="cancel()"
                 class="w-full rounded-xl border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all">
@@ -405,7 +433,8 @@
         Waktu mulai polling ini sudah terlewat dari jadwal yang ditentukan. Durasi voting akan berjalan hingga waktu penutupan yang telah di-setting sebelumnya.
       </p>
       <div class="mt-6 flex items-center gap-3">
-        <a :href="'{{ route('admin.polling.create') }}?id=' + (targetPoll ? targetPoll.id : '')"
+        <a :href="'{{ route('admin.polling.create') }}?id=' + (targetPoll ? targetPoll.id_periode : '')"
+           data-turbo="false"
            class="flex-1 rounded-xl border border-grey-1 bg-white py-2 text-xs font-semibold text-grey-deep shadow-xs hover:bg-gray-50 transition-all text-center">
           Edit Waktu
         </a>

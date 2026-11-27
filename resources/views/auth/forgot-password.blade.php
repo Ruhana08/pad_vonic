@@ -10,7 +10,7 @@
        submitting: false,
        errorMsg: '',
 
-       submitForgot() {
+       async submitForgot() {
          const raw = this.email.trim();
          if (!raw) {
            this.errorMsg = 'Masukkan alamat email institusi Anda.';
@@ -19,11 +19,27 @@
          this.errorMsg = '';
          this.submitting = true;
 
-         // Simulasi pengiriman tautan reset password ke email
-         setTimeout(() => {
+         try {
+           const res = await fetch('{{ route('password.email') }}', {
+             method: 'POST',
+             headers: {
+               'Content-Type': 'application/json',
+               'Accept': 'application/json',
+               'X-CSRF-TOKEN': '{{ csrf_token() }}'
+             },
+             body: JSON.stringify({ email: raw })
+           });
+           const data = await res.json();
+           if (res.ok && data.success) {
+             this.submitted = true;
+           } else {
+             this.errorMsg = data.message || 'Gagal mengirim tautan reset password.';
+           }
+         } catch (e) {
+           this.errorMsg = 'Terjadi kesalahan jaringan atau server.';
+         } finally {
            this.submitting = false;
-           this.submitted = true;
-         }, 800);
+         }
        }
      }">
 
@@ -48,9 +64,9 @@
     </div>
 
     {{-- Error Alert --}}
-    <div x-show="errorMsg" x-cloak class="rounded-xl border border-danger/20 bg-red-50 p-3 text-xs font-medium text-danger">
+    <x-alert x-show="errorMsg" x-cloak type="error">
       <span x-text="errorMsg"></span>
-    </div>
+    </x-alert>
 
     <form @submit.prevent="submitForgot()" class="space-y-4">
       <div class="space-y-1.5">
@@ -60,7 +76,7 @@
           <input type="email"
                  x-model="email"
                  required
-                 placeholder="admin@ugm.ac.id"
+                 placeholder="nama@mail.ugm.ac.id"
                  class="w-full text-[14px] text-[#191919] placeholder:text-[#acacac] focus:outline-none" />
         </div>
       </div>
@@ -78,7 +94,7 @@
 
       <div class="pt-2 text-center text-[13px] text-[#6d6d6d]">
         Ingat kata sandi Anda?
-        <a href="{{ route('login.page') }}" class="font-semibold text-primary-1 hover:underline ml-1">
+        <a href="{{ route('admin.login') }}" class="font-semibold text-primary-1 hover:underline ml-1">
           Kembali ke Log In
         </a>
       </div>
@@ -98,7 +114,7 @@
     </p>
 
     <div class="pt-4">
-      <a href="{{ route('login.page') }}"
+      <a href="{{ route('admin.login') }}"
          class="inline-flex w-full h-[52px] items-center justify-center gap-2 rounded-[12px] bg-gradient-main-blue text-[14px] font-semibold text-white shadow-primary-glow hover:opacity-95 active:scale-[0.99] transition-all">
         <x-solar-arrow-left-linear class="h-5 w-5" />
         <span>Kembali ke Halaman Log In</span>

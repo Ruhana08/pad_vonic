@@ -1,7 +1,32 @@
-<header id="admin-navbar" data-turbo-permanent
-        x-data="{ scrolled: false }"
-        x-init="scrolled = (window.scrollY > 16);
-                window.addEventListener('scroll', () => { scrolled = (window.scrollY > 16) }, { passive: true })"
+@php
+  $navUser = Auth::user();
+  $navName = $navUser?->nama ?? 'Admin';
+  $navFoto = $navUser?->foto_url ?? '';
+@endphp
+<header id="admin-navbar"
+        x-data="{
+            scrolled: false,
+            userName: @js($navName),
+            userPhoto: @js($navFoto),
+            photoErr: false,
+            getInitials(name) {
+                const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+                if (!parts.length) return 'A';
+                if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+                return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+            },
+            init() {
+                this.scrolled = (window.scrollY > 16);
+                window.addEventListener('scroll', () => { this.scrolled = (window.scrollY > 16) }, { passive: true });
+                window.addEventListener('vonic-profile-updated', (e) => {
+                    if (e.detail?.nama) this.userName = e.detail.nama;
+                    if (e.detail?.foto !== undefined) {
+                        this.userPhoto = e.detail.foto || '';
+                        this.photoErr = false;
+                    }
+                });
+            }
+        }"
         :class="scrolled
           ? 'fixed inset-x-0 top-0 z-30 flex h-[72px] items-center justify-between bg-white/95 backdrop-blur-md px-4 sm:px-8 shadow-nav border-b border-gray-100 transition-all duration-300'
           : 'fixed left-3 right-3 sm:left-4 sm:right-4 top-3 sm:top-4 z-30 flex h-[72px] sm:h-[80px] items-center justify-between rounded-2xl bg-white px-4 sm:px-6 shadow-nav transition-all duration-300'">
@@ -11,7 +36,7 @@
     <button type="button"
             @click="sidebarOpen = !sidebarOpen"
             aria-label="Buka Menu"
-            class="flex h-10 w-10 items-center justify-center rounded-sm bg-white text-primary-1 shadow-control hover:bg-primary-3/30 lg:hidden cursor-pointer">
+            class="btn-secondary flex h-10 w-10 items-center justify-center lg:hidden">
       <x-solar-hamburger-menu-linear class="h-5 w-5" />
     </button>
 
@@ -27,7 +52,7 @@
     </div>
   </div>
 
-  <!-- Kanan: Notifikasi dan Dropdown Profil -->
+  <!-- Kanan: Notifikasi dan Dropdown Profil (Identik User) -->
   <div class="flex items-center gap-3">
 
     <!-- Dropdown Notifikasi (Model disamakan dengan User + wired API) -->
@@ -38,14 +63,14 @@
            unreadCount: 0,
            init() {
              this.fetchNotifications();
+             window.addEventListener('vonic-admin-notif-updated', () => this.fetchNotifications());
            },
            async fetchNotifications() {
-             const token = localStorage.getItem('vonic_token');
-             if (!token) return;
              this.loadingNotif = true;
              try {
-               const res = await fetch('/api/notifikasi?limit=5', {
-                 headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
+               const res = await fetch('{{ route('admin.notifikasi.data') }}?limit=5', {
+                 headers: { 'Accept': 'application/json' },
+                 credentials: 'same-origin'
                });
                if (res.ok) {
                  const json = await res.json();
@@ -65,13 +90,14 @@
              if (!notif.read) {
                notif.read = true;
                this.unreadCount = Math.max(0, this.unreadCount - 1);
-               const token = localStorage.getItem('vonic_token');
-               if (token) {
-                 fetch('/api/notifikasi/' + notif.id + '/read', {
-                   method: 'POST',
-                   headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
-                 }).catch(() => {});
-               }
+               await fetch('/admin/notifikasi/' + notif.id + '/read', {
+                 method: 'POST',
+                 headers: {
+                   'Accept': 'application/json',
+                   'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                 },
+                 credentials: 'same-origin'
+               }).catch(() => {});
              }
              if (notif.link) {
                window.location.href = notif.link;
@@ -80,25 +106,26 @@
            async markAllAsRead() {
              this.notifications.forEach(n => n.read = true);
              this.unreadCount = 0;
-             const token = localStorage.getItem('vonic_token');
-             if (token) {
-               fetch('/api/notifikasi/read-all', {
-                 method: 'POST',
-                 headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
-               }).catch(() => {});
-             }
+             await fetch('{{ route('admin.notifikasi.read-all') }}', {
+               method: 'POST',
+               headers: {
+                 'Accept': 'application/json',
+                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
+               },
+               credentials: 'same-origin'
+             }).catch(() => {});
            }
          }"
          @click.outside="openNotif = false"
          @keydown.escape.window="openNotif = false"
          class="relative">
 
-      <!-- Tombol Trigger Notifikasi (Dot biru polos tanpa animasi) -->
+      <!-- Tombol Trigger Notifikasi (Identik User) -->
       <button type="button"
               @click="openNotif = !openNotif; if (openNotif) fetchNotifications();"
               :aria-expanded="openNotif"
               aria-label="Notifikasi"
-              class="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-sm bg-white text-primary-1 shadow-control transition-all hover:bg-primary-3/30 cursor-pointer">
+              class="btn-secondary relative flex h-11 w-11 items-center justify-center">
         <x-solar-bell-linear class="h-5 w-5" />
         <span x-show="unreadCount > 0" x-cloak
               class="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-primary-1"></span>
@@ -162,7 +189,7 @@
       </div>
     </div>
 
-    <!-- Dropdown Profil (Aktif Saat Hover) -->
+    <!-- Dropdown Profil (Identik User — hover trigger) -->
     <div x-data="{ open: false }"
          @mouseenter="open = true"
          @mouseleave="open = false"
@@ -173,15 +200,19 @@
       <button type="button"
               @click="open = !open"
               :aria-expanded="open"
-              class="flex h-10 sm:h-12 items-center gap-2 sm:gap-3 rounded-sm bg-white px-2.5 sm:px-3.5 shadow-control transition-all hover:bg-primary-3/30 cursor-pointer">
-        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-1 text-white">
-          <x-solar-user-bold class="h-4 w-4" />
-        </span>
-        <span class="hidden sm:inline whitespace-nowrap text-sm font-medium tracking-wide text-black">
-          {{ Auth::check() ? Auth::user()->name : 'Melisa D' }}
+              class="btn-secondary flex h-11 items-center gap-2.5 px-3">
+        <template x-if="userPhoto && !photoErr">
+          <img :src="userPhoto" :alt="userName" x-on:error="photoErr = true" class="h-6 w-6 shrink-0 rounded-full object-cover border border-primary-1/30" />
+        </template>
+        <template x-if="!userPhoto || photoErr">
+          <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-1 text-[10px] font-bold text-white select-none" x-text="getInitials(userName)">
+          </span>
+        </template>
+        <span class="hidden sm:inline whitespace-nowrap text-xs font-semibold text-black"
+              x-text="userName">
         </span>
         <x-solar-alt-arrow-down-linear
-          class="h-4 w-4 shrink-0 text-gray-700 transition-transform duration-200"
+          class="h-3.5 w-3.5 shrink-0 text-grey-dark transition-transform duration-200"
           ::class="open ? 'rotate-180' : ''" />
       </button>
 

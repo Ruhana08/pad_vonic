@@ -21,10 +21,18 @@
       <h1 class="text-2xl font-bold tracking-tight text-black">{{ $title }}</h1>
 
       <div class="flex items-center gap-3">
+        @php
+          $canAnnounceBtn = ($hasActivePolling ?? false) && ($canAnnounce ?? false);
+          $announceTitle = !($hasActivePolling ?? false)
+              ? 'Belum ada polling aktif'
+              : (!($canAnnounce ?? false) ? 'Tombol aktif setelah periode polling selesai' : 'Umumkan hasil resmi polling ke sivitas');
+        @endphp
         <template x-if="!isAnnounced">
           <button type="button"
-                  @click="modalAnnounce = true"
-                  class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-1 to-secondary-1 px-5 py-2.5 text-xs font-semibold text-white shadow-primary-glow hover:opacity-95 transition-all cursor-pointer">
+                  @if($canAnnounceBtn) @click="modalAnnounce = true" @endif
+                  @disabled(!$canAnnounceBtn)
+                  title="{{ $announceTitle }}"
+                  class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold transition-all {{ $canAnnounceBtn ? 'bg-gradient-to-r from-primary-1 to-secondary-1 text-white shadow-primary-glow hover:opacity-95 cursor-pointer' : 'bg-gray-200 text-grey-2 cursor-not-allowed opacity-70' }}">
             <x-solar-cup-star-linear class="h-4 w-4" />
             <span>Umumkan Hasil Voting</span>
           </button>
@@ -174,17 +182,18 @@
 
             {{-- Baris Pilihan: Default maks 5 baris, atau tampilkan semua bila expanded --}}
             @foreach ($cat['options'] as $idx => $opt)
-              <tr class="border-b border-gray-100 transition-colors duration-150 hover:bg-[#F3F7FF] {{ $loop->first ? 'bg-[#F9FBFF]' : '' }}"
+              @php $isWinnerRow = $loop->first && ($opt['total'] ?? 0) > 0; @endphp
+              <tr class="border-b border-gray-100 transition-colors duration-150 hover:bg-[#F3F7FF] {{ $isWinnerRow ? 'bg-[#F9FBFF]' : '' }}"
                   @if ($idx >= 5)
                     x-show="isExpanded('{{ $key }}')"
                     x-cloak
                   @endif>
-                <td class="py-3.5 px-4 text-left font-semibold {{ $loop->first ? 'text-primary-1' : 'text-grey-deep' }}">
+                <td class="py-3.5 px-4 text-left font-semibold {{ $isWinnerRow ? 'text-primary-1' : 'text-grey-deep' }}">
                   {{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}
                 </td>
                 <td class="py-3.5 px-4 text-left font-semibold text-black">
                   <span>{{ $opt['name'] }}</span>
-                  @if ($loop->first)
+                  @if ($isWinnerRow)
                     <span class="ml-2 inline-flex items-center rounded bg-primary-1 px-1.5 py-0.5 text-xs font-bold text-white">
                       Terbanyak
                     </span>
@@ -430,15 +439,14 @@
       </div>
 
       {{-- Alert Pemberitahuan Konsekuensi --}}
-      <div class="mt-6 flex items-start gap-3 rounded-xl bg-amber-50 p-4 border border-amber-200">
-        <x-solar-danger-circle-bold class="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
-        <div class="text-xs text-amber-900">
+      <x-alert type="info" class="mt-6 items-start">
+        <div>
           <p class="font-bold">Konfirmasi Publikasi Pengumuman</p>
-          <p class="mt-0.5 text-xs leading-relaxed text-amber-800">
+          <p class="mt-0.5 text-xs leading-relaxed">
             Setelah diumumkan, sesi polling akan otomatis ditutup dan dikunci. Seluruh sivitas akan menerima notifikasi pengumuman hasil resmi, dan rekaman kegiatan akan dipindahkan ke arsip.
           </p>
         </div>
-      </div>
+      </x-alert>
 
       {{-- Tombol Aksi Batal & Konfirmasi --}}
       <div class="mt-7 flex items-center justify-end gap-3 pt-3 border-t border-grey-1">

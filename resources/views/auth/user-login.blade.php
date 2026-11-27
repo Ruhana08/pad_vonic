@@ -3,7 +3,7 @@
 @section('title', 'Log In Sivitas')
 
 @section('content')
-<div class="w-full max-w-[580px] rounded-[24px] bg-white px-7 sm:px-8 pt-8 pb-10 shadow-[0_4px_27.7px_0_rgba(0,0,0,0.04),0_3px_6px_0_rgba(0,0,0,0.1)] flex flex-col items-center gap-10"
+<div class="w-full max-w-[550px] rounded-[24px] bg-white p-6 sm:p-8 shadow-[0px_11px_20px_0px_rgba(0,0,0,0.09),0px_3px_6px_0px_rgba(0,0,0,0.1)] border border-gray-100 flex flex-col items-center gap-6"
      x-data="{
         errorMsg: '{{ session('error') }}',
         infoMsg: '',
@@ -37,22 +37,14 @@
   </div>
 
   {{-- Session Expired Banner --}}
-  <div x-show="infoMsg" x-cloak
-       class="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-800">
-    <div class="flex items-center gap-2">
-      <x-solar-info-circle-bold class="h-4 w-4 shrink-0 text-amber-600" />
-      <span x-text="infoMsg"></span>
-    </div>
-  </div>
+  <x-alert x-show="infoMsg" x-cloak type="info">
+    <span x-text="infoMsg"></span>
+  </x-alert>
 
   {{-- Error dari callback Google --}}
-  <div x-show="errorMsg" x-cloak
-       class="w-full rounded-xl border border-danger/20 bg-red-50 px-4 py-3 text-xs font-medium text-danger">
-    <div class="flex items-center gap-2">
-      <x-solar-danger-triangle-bold class="h-4 w-4 shrink-0" />
-      <span x-text="errorMsg"></span>
-    </div>
-  </div>
+  <x-alert x-show="errorMsg" x-cloak type="error">
+    <span x-text="errorMsg"></span>
+  </x-alert>
 
   {{-- 3. CTA — Langsung redirect ke Google OAuth, tanpa popup --}}
   <div class="w-full">

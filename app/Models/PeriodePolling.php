@@ -17,8 +17,15 @@ class PeriodePolling extends Model
         'tanggal_mulai',
         'tanggal_selesai',
         'status',
+        'is_public',
         'mode_kelompok',
+        'config',
         'created_by',
+    ];
+
+    protected $casts = [
+        'config'    => 'array',
+        'is_public' => 'boolean',
     ];
 
     protected $appends = [

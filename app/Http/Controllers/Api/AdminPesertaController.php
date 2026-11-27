@@ -15,7 +15,7 @@ class AdminPesertaController extends Controller
     // Memastikan hanya admin yang bisa mengakses
     private function cekAdmin(Request $request)
     {
-        if (!$request->user() || $request->user()->role !== 'admin') {
+        if (!$request->user()?->isAdmin()) {
             abort(403, 'Akses hanya untuk admin.');
         }
     }
@@ -137,11 +137,11 @@ class AdminPesertaController extends Controller
         // Cascade delete: hapus detail_ukuran_vote → partisipasi → user
         // agar statistik Dashboard & Polling Aktif tetap sinkron
         $partisipasiIds = \App\Models\Partisipasi::where('id_user', $id)
-            ->pluck('id_partisipasi');
+            ->pluck('id_vote');
 
         if ($partisipasiIds->isNotEmpty()) {
-            \App\Models\DetailUkuranVote::whereIn('id_partisipasi', $partisipasiIds)->delete();
-            \App\Models\Partisipasi::whereIn('id_partisipasi', $partisipasiIds)->delete();
+            \App\Models\DetailUkuranVote::whereIn('id_vote', $partisipasiIds)->delete();
+            \App\Models\Partisipasi::whereIn('id_vote', $partisipasiIds)->delete();
         }
 
         $peserta->delete();

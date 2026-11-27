@@ -25,7 +25,7 @@ class ProfilController extends Controller
             'nip'        => $adminUser?->nip ?? '-',
             'unit_kerja' => $adminUser?->unit_kerja ?? 'Departemen TEDIV',
             'pekerjaan'  => $adminUser?->pekerjaan ?? 'Tenaga Kependidikan',
-            'photo'      => $adminUser?->foto ?? null,
+            'photo'      => $adminUser?->foto ? (str_starts_with($adminUser->foto, 'http') || str_starts_with($adminUser->foto, '/') ? $adminUser->foto : asset('storage/' . $adminUser->foto)) : null,
         ];
 
         $perPage = 10;
@@ -96,6 +96,18 @@ class ProfilController extends Controller
                 ]);
                 $adminUser->password = Hash::make($request->password);
             }
+            if ($request->input('remove_foto') === '1') {
+                $adminUser->foto = null;
+            } elseif ($request->filled('foto_base64') && preg_match('/^data:image\/(png|jpeg|jpg|webp);base64,/', $request->foto_base64, $matches)) {
+                $ext = $matches[1] === 'jpeg' ? 'jpg' : $matches[1];
+                $rawBase64 = substr($request->foto_base64, strpos($request->foto_base64, ',') + 1);
+                $binary = base64_decode($rawBase64, true);
+                if ($binary !== false) {
+                    $filename = 'admin_' . $adminUser->id_user . '_' . time() . '.' . $ext;
+                    \Illuminate\Support\Facades\Storage::disk('public')->put('profiles/' . $filename, $binary);
+                    $adminUser->foto = '/storage/profiles/' . $filename;
+                }
+            }
             $adminUser->save();
         }
 
@@ -105,20 +117,24 @@ class ProfilController extends Controller
 
     public function storeAdmin(Request $request)
     {
+        if (!Auth::user()?->isMasterAdmin()) {
+            return redirect()->route('admin.profil')
+                ->with('error', 'Hanya Master Admin yang dapat menambahkan akun admin baru.');
+        }
+
         $request->validate([
             'nama'                  => 'required|string|max:150',
-            'email'                 => 'required|email|ends_with:@ugm.ac.id,@mail.ugm.ac.id|unique:users,email|max:150',
+            'email'                 => 'required|email|ends_with:@mail.ugm.ac.id|unique:users,email|max:150',
             'unit_kerja'            => 'nullable|string|max:100',
             'no_telp'               => 'nullable|string|max:30',
-            'password'              => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[a-z]/', 'regex:/[0-9]/', 'regex:/[^A-Za-z0-9]/', 'confirmed'],
+            'password'              => ['required', 'string', 'min:8', 'confirmed'],
         ], [
             'nama.required'      => 'Nama lengkap admin baru wajib diisi.',
             'email.required'     => 'Email institusi UGM wajib diisi.',
-            'email.ends_with'    => 'Email harus menggunakan domain resmi @ugm.ac.id atau @mail.ugm.ac.id.',
+            'email.ends_with'    => 'Email harus menggunakan domain resmi @mail.ugm.ac.id.',
             'email.unique'       => 'Email tersebut sudah terdaftar di sistem Vonic.',
             'password.required'  => 'Password akun baru wajib diisi.',
             'password.min'       => 'Password minimal 8 karakter.',
-            'password.regex'     => 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter spesial.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 

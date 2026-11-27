@@ -16,7 +16,7 @@ class AdminDashboardController extends Controller
     public function index(Request $request)
     {
         // Memastikan hanya admin yang bisa mengakses
-        if ($request->user()?->role !== 'admin') {
+        if (!$request->user()?->isAdmin()) {
             abort(403, 'Akses hanya untuk admin.');
         }
 

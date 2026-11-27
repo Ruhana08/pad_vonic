@@ -17,7 +17,7 @@ class GoogleAuthController extends Controller
     {
         return Socialite::driver('google')
             ->scopes(['openid', 'profile', 'email'])
-            ->with(['hd' => 'ugm.ac.id']) // hosted domain hint — tampilkan akun UGM dulu
+            ->with(['hd' => 'mail.ugm.ac.id']) // hosted domain hint — tampilkan akun UGM dulu
             ->redirect();
     }
 
@@ -37,10 +37,10 @@ class GoogleAuthController extends Controller
 
         $email = strtolower(trim($googleUser->getEmail()));
 
-        // Validasi domain — hanya @ugm.ac.id atau @mail.ugm.ac.id
-        if (! str_ends_with($email, '@ugm.ac.id') && ! str_ends_with($email, '@mail.ugm.ac.id')) {
+        // Validasi domain — wajib @mail.ugm.ac.id
+        if (! str_ends_with($email, '@mail.ugm.ac.id')) {
             return redirect()->route('user.login')
-                ->with('error', 'Hanya akun email resmi UGM (@ugm.ac.id / @mail.ugm.ac.id) yang dapat masuk.');
+                ->with('error', 'Hanya akun email resmi UGM (@mail.ugm.ac.id) yang dapat masuk.');
         }
 
         // Cek apakah email terdaftar di database users (pemilih resmi DTEDI)

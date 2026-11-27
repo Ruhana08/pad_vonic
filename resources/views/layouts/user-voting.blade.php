@@ -24,14 +24,14 @@
      <x-flash-message />
 
      <!-- Top Header Focus -->
-     <header class="fixed inset-x-0 top-0 z-30 flex h-[72px] items-center gap-6 border-b border-grey-1 bg-white px-8 shadow-xs">
-          <div class="flex items-center gap-3">
-               <img src="{{ asset('images/logo-vonic-b.webp') }}" alt="Vonic" class="h-7 w-auto" onerror="this.style.display='none'">
-               <span class="font-sans text-2xl font-bold tracking-tight text-primary-1">Vonic</span>
+     <header class="fixed inset-x-0 top-0 z-30 flex h-[72px] items-center gap-3 sm:gap-6 border-b border-grey-1 bg-white px-4 sm:px-8 shadow-xs">
+          <div class="flex items-center gap-2.5 sm:gap-3">
+               <img src="{{ asset('images/logo-vonic-b.webp') }}" alt="Vonic" class="h-6 sm:h-7 w-auto" onerror="this.style.display='none'">
+               <span class="font-sans text-xl sm:text-2xl font-bold tracking-tight text-primary-1">Vonic</span>
           </div>
 
           <span class="h-6 w-px bg-grey-1"></span>
-          <h1 class="text-base font-bold text-primary-1">@yield('page_title')</h1>
+          <h1 class="text-sm sm:text-base font-bold text-primary-1 truncate">@yield('page_title')</h1>
      </header>
 
      <!-- Main Canvas: Tanpa footer, nembus ke bawah -->

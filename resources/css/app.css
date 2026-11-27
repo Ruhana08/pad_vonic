@@ -214,6 +214,7 @@ table tbody tr.no-hover:hover {
    State baku dan terintegrasi untuk seluruh tombol di aplikasi VONIC.
    ========================================================================== */
 
+@layer components {
 /* 1. Gradient CTA Button */
 .btn-gradient {
   display: inline-flex;
@@ -373,6 +374,7 @@ table tbody tr.no-hover:hover {
 .btn-icon-danger:hover {
   border-color: var(--color-danger);
   background-color: #fff1f2;
+}
 }
 
 /* Batas maksimal 3 baris untuk teks panjang di dalam sel tabel */

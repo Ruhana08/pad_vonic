@@ -28,19 +28,31 @@ class PollingAktifController extends Controller
                 'categories' => [],
                 'kategori'   => 'semua',
                 'activities' => new LengthAwarePaginator(collect(), 0, 10, 1, ['path' => $request->url()]),
-                'rekapKaos'  => [],
-                'totalKaos'  => 0,
+                'rekapKaos'        => [],
+                'totalKaos'        => 0,
+                'hasActivePolling' => false,
+                'canAnnounce'      => false,
             ]);
         }
 
         // Hitung Countdown
-        $endDate = \Carbon\Carbon::parse($periodeAktif->tanggal_selesai . ' 23:59:59');
-        $diff = now()->diff($endDate);
-        $countdown = [
-            'days'    => max(0, $diff->days),
-            'hours'   => max(0, $diff->h),
-            'minutes' => max(0, $diff->i),
-        ];
+        $cfg = is_array($periodeAktif->config) ? $periodeAktif->config : [];
+        $endTime = $cfg['end_time'] ?? '23:59';
+        $endDate = \Carbon\Carbon::parse($periodeAktif->tanggal_selesai . ' ' . $endTime);
+        if (strlen((string) $endTime) === 5) {
+            $endDate->endOfMinute();
+        }
+
+        if (now()->gte($endDate)) {
+            $countdown = ['days' => 0, 'hours' => 0, 'minutes' => 0];
+        } else {
+            $diff = now()->diff($endDate);
+            $countdown = [
+                'days'    => max(0, $diff->days),
+                'hours'   => max(0, $diff->h),
+                'minutes' => max(0, $diff->i),
+            ];
+        }
 
         $deadline = [
             $endDate->translatedFormat('l'),
@@ -50,7 +62,7 @@ class PollingAktifController extends Controller
         // Partisipasi (hanya hitung user yang masih terdaftar)
         $partisipasi = $periodeAktif->partisipasi->filter(fn($pt) => $pt->user !== null)->values();
         $totalReceived = $partisipasi->count();
-        $totalSivitas = max($totalReceived, \App\Models\User::where('role', '!=', 'admin')->count());
+        $totalSivitas = max($totalReceived, \App\Models\User::where('role', 'user')->count());
         $percent = $totalSivitas > 0 ? round(($totalReceived / $totalSivitas) * 100) : 0;
         $totalVote = [
             'percent'  => $percent,
@@ -81,10 +93,30 @@ class PollingAktifController extends Controller
             ];
         });
 
-        $pesertaOptions = [
-            ['name' => 'Dosen dan tendik dipisah', 'dosen' => $partisipasi->where('pilihan_kelompok', 'dipisah')->count(), 'tendik' => 0, 'total' => $partisipasi->where('pilihan_kelompok', 'dipisah')->count()],
-            ['name' => 'Dosen dan tendik digabung', 'dosen' => $partisipasi->where('pilihan_kelompok', 'digabung')->count(), 'tendik' => 0, 'total' => $partisipasi->where('pilihan_kelompok', 'digabung')->count()],
-        ];
+        $pesertaLabels = collect($cfg['peserta']['options'] ?? [])
+            ->map(fn ($o) => is_string($o) ? trim($o) : trim((string) ($o['label'] ?? '')))
+            ->filter()
+            ->values();
+
+        if ($pesertaLabels->isEmpty()) {
+            $pesertaLabels = collect(['Dosen dan tendik dipisah', 'Dosen dan tendik digabung']);
+        }
+
+        $pesertaOptions = $pesertaLabels->map(function ($label) use ($partisipasi) {
+            $votes = $partisipasi->filter(function ($pt) use ($label) {
+                $val = (string) ($pt->pilihan_kelompok ?? '');
+                if ($val === $label) return true;
+                if ($val === 'dipisah' && str_contains(strtolower($label), 'pisah')) return true;
+                if ($val === 'digabung' && str_contains(strtolower($label), 'gabung')) return true;
+                return false;
+            })->count();
+            return [
+                'name'   => $label,
+                'dosen'  => $votes,
+                'tendik' => 0,
+                'total'  => $votes,
+            ];
+        })->toArray();
 
         $categories = [
             'peserta' => ['label' => 'Peserta', 'options' => $pesertaOptions],
@@ -97,8 +129,8 @@ class PollingAktifController extends Controller
             $cat['options'] = collect($cat['options'])->map(function ($o) use ($catTotal) {
                 $total = $o['total'];
                 return $o + [
-                    'dosen_pct'  => 100,
-                    'tendik_pct' => 0,
+                    'dosen_pct'  => $total > 0 ? round(($o['dosen'] / $total) * 100) : 0,
+                    'tendik_pct' => $total > 0 ? round(($o['tendik'] / $total) * 100) : 0,
                     'proporsi'   => $catTotal > 0 ? round(($total / $catTotal) * 100) : 0,
                 ];
             })->sortByDesc('total')->values();
@@ -112,12 +144,17 @@ class PollingAktifController extends Controller
         // Activities (Aktivitas suara masuk)
         $activitiesList = $partisipasi->map(function ($pt) {
             $u = $pt->user;
+            $pesertaText = match ($pt->pilihan_kelompok) {
+                'dipisah'  => 'Dosen & Tendik dipisah',
+                'digabung' => 'Dosen & Tendik digabung',
+                default    => $pt->pilihan_kelompok ?: '—',
+            };
             return [
                 'name'       => $u->nama ?? 'Sivitas DTEDI',
                 'email'      => $u->email ?? '-',
                 'unit_kerja' => 'DTEDI SV UGM',
                 'no_telp'    => '-',
-                'peserta'    => $pt->pilihan_kelompok === 'dipisah' ? 'Dosen & Tendik dipisah' : 'Dosen & Tendik digabung',
+                'peserta'    => $pesertaText,
                 'wisata'     => $pt->paketWisata->nama_destinasi ?? '-',
                 'kaos'       => $pt->desainKaos->nama_desain ?? '-',
                 'status'     => 'Tersimpan',
@@ -173,9 +210,11 @@ class PollingAktifController extends Controller
             'winners'      => $winners,
             'kategori'     => $kategori,
             'activities'   => $activities,
-            'rekapKaos'    => $rekapKaos,
-            'totalKaos'    => $totalKaos,
-            'isStandalone' => false,
+            'rekapKaos'        => $rekapKaos,
+            'totalKaos'        => $totalKaos,
+            'isStandalone'     => false,
+            'hasActivePolling' => true,
+            'canAnnounce'      => now()->gt($endDate),
         ]);
     }
 
@@ -208,13 +247,23 @@ class PollingAktifController extends Controller
         }
 
         // Hitung Countdown jika aktif
-        $endDate = \Carbon\Carbon::parse($periode->tanggal_selesai . ' 23:59:59');
-        $diff = now()->diff($endDate);
-        $countdown = [
-            'days'    => max(0, $diff->days),
-            'hours'   => max(0, $diff->h),
-            'minutes' => max(0, $diff->i),
-        ];
+        $cfg = is_array($periode->config) ? $periode->config : [];
+        $endTime = $cfg['end_time'] ?? '23:59';
+        $endDate = \Carbon\Carbon::parse($periode->tanggal_selesai . ' ' . $endTime);
+        if (strlen((string) $endTime) === 5) {
+            $endDate->endOfMinute();
+        }
+
+        if (now()->gte($endDate)) {
+            $countdown = ['days' => 0, 'hours' => 0, 'minutes' => 0];
+        } else {
+            $diff = now()->diff($endDate);
+            $countdown = [
+                'days'    => max(0, $diff->days),
+                'hours'   => max(0, $diff->h),
+                'minutes' => max(0, $diff->i),
+            ];
+        }
 
         $deadline = [
             $endDate->translatedFormat('l'),
@@ -224,7 +273,7 @@ class PollingAktifController extends Controller
         // Partisipasi (hanya hitung user yang masih terdaftar)
         $partisipasi = $periode->partisipasi->filter(fn($pt) => $pt->user !== null)->values();
         $totalReceived = $partisipasi->count();
-        $totalSivitas = max($totalReceived, \App\Models\User::where('role', '!=', 'admin')->count());
+        $totalSivitas = max($totalReceived, \App\Models\User::where('role', 'user')->count());
         $percent = $totalSivitas > 0 ? round(($totalReceived / $totalSivitas) * 100) : 0;
         $totalVote = [
             'percent'  => $percent,
@@ -255,10 +304,30 @@ class PollingAktifController extends Controller
             ];
         });
 
-        $pesertaOptions = [
-            ['name' => 'Dosen dan tendik dipisah', 'dosen' => $partisipasi->where('pilihan_kelompok', 'dipisah')->count(), 'tendik' => 0, 'total' => $partisipasi->where('pilihan_kelompok', 'dipisah')->count()],
-            ['name' => 'Dosen dan tendik digabung', 'dosen' => $partisipasi->where('pilihan_kelompok', 'digabung')->count(), 'tendik' => 0, 'total' => $partisipasi->where('pilihan_kelompok', 'digabung')->count()],
-        ];
+        $pesertaLabels = collect($cfg['peserta']['options'] ?? [])
+            ->map(fn ($o) => is_string($o) ? trim($o) : trim((string) ($o['label'] ?? '')))
+            ->filter()
+            ->values();
+
+        if ($pesertaLabels->isEmpty()) {
+            $pesertaLabels = collect(['Dosen dan tendik dipisah', 'Dosen dan tendik digabung']);
+        }
+
+        $pesertaOptions = $pesertaLabels->map(function ($label) use ($partisipasi) {
+            $votes = $partisipasi->filter(function ($pt) use ($label) {
+                $val = (string) ($pt->pilihan_kelompok ?? '');
+                if ($val === $label) return true;
+                if ($val === 'dipisah' && str_contains(strtolower($label), 'pisah')) return true;
+                if ($val === 'digabung' && str_contains(strtolower($label), 'gabung')) return true;
+                return false;
+            })->count();
+            return [
+                'name'   => $label,
+                'dosen'  => $votes,
+                'tendik' => 0,
+                'total'  => $votes,
+            ];
+        })->toArray();
 
         $categories = [
             'peserta' => ['label' => 'Peserta', 'options' => $pesertaOptions],
@@ -271,8 +340,8 @@ class PollingAktifController extends Controller
             $cat['options'] = collect($cat['options'])->map(function ($o) use ($catTotal) {
                 $total = $o['total'];
                 return $o + [
-                    'dosen_pct'  => 100,
-                    'tendik_pct' => 0,
+                    'dosen_pct'  => $total > 0 ? round(($o['dosen'] / $total) * 100) : 0,
+                    'tendik_pct' => $total > 0 ? round(($o['tendik'] / $total) * 100) : 0,
                     'proporsi'   => $catTotal > 0 ? round(($total / $catTotal) * 100) : 0,
                 ];
             })->sortByDesc('total')->values();
@@ -285,12 +354,17 @@ class PollingAktifController extends Controller
         // Activities
         $activitiesList = $partisipasi->map(function ($pt) {
             $u = $pt->user;
+            $pesertaText = match ($pt->pilihan_kelompok) {
+                'dipisah'  => 'Dosen & Tendik dipisah',
+                'digabung' => 'Dosen & Tendik digabung',
+                default    => $pt->pilihan_kelompok ?: '—',
+            };
             return [
                 'name'       => $u->nama ?? 'Sivitas DTEDI',
                 'email'      => $u->email ?? '-',
                 'unit_kerja' => 'DTEDI SV UGM',
                 'no_telp'    => '-',
-                'peserta'    => $pt->pilihan_kelompok === 'dipisah' ? 'Dosen & Tendik dipisah' : 'Dosen & Tendik digabung',
+                'peserta'    => $pesertaText,
                 'wisata'     => $pt->paketWisata->nama_destinasi ?? '-',
                 'kaos'       => $pt->desainKaos->nama_desain ?? '-',
                 'status'     => 'Tersimpan',
@@ -343,6 +417,16 @@ class PollingAktifController extends Controller
             $periodeAktif->status = 'selesai';
             $periodeAktif->is_public = 1;
             $periodeAktif->save();
+
+            $users = \App\Models\User::where('role', 'user')->get();
+            foreach ($users as $u) {
+                \App\Models\Notifikasi::kirim(
+                    $u->id_user,
+                    'Hasil Polling Tersedia',
+                    'Hasil resmi polling "' . $periodeAktif->nama_periode . '" telah diumumkan. Lihat hasilnya sekarang!',
+                    '/riwayat'
+                );
+            }
         }
 
         return redirect()->route('admin.polling.arsip')

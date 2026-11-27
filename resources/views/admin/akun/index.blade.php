@@ -7,89 +7,164 @@
   $field = 'h-10 w-full rounded-xl border border-grey-1 bg-white px-3.5 text-xs text-black placeholder:text-grey-2 shadow-xs focus:border-primary-1 focus:outline-none';
 @endphp
 
-<div class="space-y-6" x-data="{
-  modalMode: null, // null, 'choose', 'manual', 'import_upload', 'import_preview', 'edit', 'delete'
-  importFile: null,
-  importFileName: '',
-  manualData: {
-    name: '',
-    email: '',
-    phone: '',
-    role: 'dosen',
-    unit: 'Teknologi Rekayasa Perangkat Lunak',
-    photo_preview: ''
-  },
-  editData: {
-    id: '',
-    name: '',
-    email: '',
-    phone: '',
-    unit: '',
-    status: 'Aktif'
-  },
-  deleteData: {
-    id: '',
-    name: ''
-  },
-  openEditModal(account) {
-    this.editData = { ...account };
-    this.modalMode = 'edit';
-  },
-  openDeleteModal(account) {
-    this.deleteData = { id: account.id, name: account.name };
-    this.modalMode = 'delete';
-  },
-  previewRows: [],
-  get validCount() {
-    return this.previewRows.filter(r => r.valid).length;
-  },
-  get invalidCount() {
-    return this.previewRows.filter(r => !r.valid).length;
-  },
-  handleFileUpload(e) {
-    const f = e.target.files[0];
-    if (!f) return;
-    this.importFile = f;
-    this.importFileName = f.name;
-    const csvInput = document.getElementById('csvFileInput');
-    if (csvInput) {
-      const dt = new DataTransfer();
-      dt.items.add(f);
-      csvInput.files = dt.files;
+<script>
+function akunPage(existingEmails = []) {
+  return {
+    modalMode: null,
+    importFile: null,
+    importFileName: '',
+    manualData: {
+      name: '',
+      email: '',
+      phone: '',
+      role: '',
+      unit: '',
+      photo_preview: ''
+    },
+    editData: {
+      id: '',
+      name: '',
+      email: '',
+      phone: '',
+      unit: '',
+      status: 'Aktif'
+    },
+    deleteData: {
+      id: '',
+      name: ''
+    },
+    openEditModal(account) {
+      this.editData = { ...account };
+      this.modalMode = 'edit';
+    },
+    openDeleteModal(account) {
+      this.deleteData = { id: account.id, name: account.name };
+      this.modalMode = 'delete';
+    },
+    previewRows: [],
+    existingEmails: existingEmails,
+    get validCount() {
+      return this.previewRows.filter(r => r.status === 'valid').length;
+    },
+    get invalidCount() {
+      return this.previewRows.filter(r => r.status !== 'valid').length;
+    },
+    handleFileUpload(e) {
+      const f = e.target.files[0];
+      if (!f) return;
+      this.importFile = f;
+      this.importFileName = f.name;
+      const csvInput = document.getElementById('csvFileInput');
+      if (csvInput) {
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        csvInput.files = dt.files;
+      }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const rawText = (ev.target.result || '').replace(/^\uFEFF/, '');
+        const lines = rawText.split(/\r?\n/).filter(l => l.trim() !== '');
+        const sample = lines.slice(0, 5).join('\n');
+        const semiCount = (sample.match(/;/g) || []).length;
+        const commaCount = (sample.match(/,/g) || []).length;
+        const delimiter = semiCount > commaCount ? ';' : ',';
+
+        let colMap = null;
+        const seenEmails = new Set(this.existingEmails.map(em => String(em).toLowerCase().trim()));
+        const parsed = [];
+
+        for (const line of lines) {
+          const cols = line.split(delimiter).map(c => c.trim().replace(/^"|"$/g, ''));
+          const joinedLower = cols.join(' ').toLowerCase();
+
+          // Deteksi baris header kolom
+          if (!colMap && joinedLower.includes('email') && (joinedLower.includes('nama') || joinedLower.includes('name'))) {
+            colMap = {};
+            cols.forEach((h, idx) => {
+              const hl = h.toLowerCase();
+              if (hl.includes('nip') || hl === 'id') colMap.nip = idx;
+              else if (hl.includes('nama') || hl === 'name') colMap.nama = idx;
+              else if (hl.includes('email') || hl.includes('surel')) colMap.email = idx;
+              else if (hl.includes('unit') || hl.includes('prodi') || hl.includes('departemen')) colMap.unit = idx;
+              else if (hl.includes('telp') || hl.includes('hp') || hl.includes('phone') || hl.includes('wa')) colMap.phone = idx;
+            });
+            continue;
+          }
+
+          // Cari kolom email
+          let emailIdx = colMap?.email ?? null;
+          if (emailIdx === null) {
+            emailIdx = cols.findIndex(c => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c));
+            if (emailIdx === -1) emailIdx = null;
+          }
+
+          const emailRaw = emailIdx !== null ? (cols[emailIdx] || '') : '';
+          const emailLower = emailRaw.toLowerCase().trim();
+          const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLower);
+
+          // Lewati baris judul dokumen yang tidak punya email sama sekali
+          if (!isEmailValid && (cols.filter(Boolean).length <= 2 || joinedLower.includes('daftar') || joinedLower.includes('data '))) {
+            continue;
+          }
+
+          let nip = '', name = '', unit = '-', phone = '-';
+          if (colMap) {
+            nip   = colMap.nip !== undefined ? (cols[colMap.nip] || '') : '';
+            name  = colMap.nama !== undefined ? (cols[colMap.nama] || '') : '';
+            unit  = colMap.unit !== undefined ? (cols[colMap.unit] || '-') : '-';
+            phone = colMap.phone !== undefined ? (cols[colMap.phone] || '-') : '-';
+          } else if (emailIdx === 2) {
+            nip   = cols[0] || '';
+            name  = cols[1] || '';
+            unit  = cols[3] || '-';
+            phone = cols[4] || '-';
+          } else {
+            name  = cols[0] || '';
+            unit  = cols[2] || '-';
+            phone = cols[3] || '-';
+          }
+
+          let status = 'valid';
+          let reason = 'Siap diimpor';
+          if (!name || !isEmailValid) {
+            status = 'invalid';
+            reason = !name ? 'Nama kosong' : 'Format email tidak valid';
+          } else if (seenEmails.has(emailLower)) {
+            status = 'duplicate';
+            reason = 'Email sudah terdaftar atau duplikat di CSV';
+          } else {
+            seenEmails.add(emailLower);
+          }
+
+          parsed.push({
+            no: String(parsed.length + 1).padStart(2, '0'),
+            nip,
+            name: name || '—',
+            email: emailRaw ? emailRaw.toUpperCase() : '—',
+            unit: unit || '-',
+            phone: (phone || '-').replace(/[^0-9+\-\s]/g, '') || '-',
+            valid: status === 'valid',
+            status,
+            reason
+          });
+        }
+
+        this.previewRows = parsed;
+        this.modalMode = 'import_preview';
+      };
+      reader.readAsText(f);
+    },
+    handleManualPhoto(e) {
+      const f = e.target.files[0];
+      if (f) {
+        this.manualData.photo_preview = URL.createObjectURL(f);
+      }
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const lines = (ev.target.result || '').split(/\r?\n/).filter(l => l.trim() !== '');
-      const dataLines = lines.slice(1); // skip header
-      this.previewRows = dataLines.map((line, i) => {
-        const cols = line.split(',').map(c => c.trim());
-        const nip   = cols[0] || '';
-        const name  = cols[1] || '';
-        const email = cols[2] || '';
-        const unit  = cols[3] || '-';
-        const phone = cols[4] || '-';
-        const valid = Boolean(nip && name && email && email.includes('@'));
-        return {
-          no: String(i + 1).padStart(2, '0'),
-          nip,
-          name,
-          email: email.toUpperCase(),
-          unit,
-          phone,
-          valid
-        };
-      });
-      this.modalMode = 'import_preview';
-    };
-    reader.readAsText(f);
-  },
-  handleManualPhoto(e) {
-    const f = e.target.files[0];
-    if (f) {
-      this.manualData.photo_preview = URL.createObjectURL(f);
-    }
-  }
-}">
+  };
+}
+</script>
+
+<div class="space-y-6" x-data="akunPage(@js($existingEmails ?? []))">
 
   {{-- Header: Judul Halaman & Tombol Dropdown Tambah Akun Baru (Hover) --}}
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -198,7 +273,7 @@
     {{-- Tab Segmented Button: Dosen / Tenaga Kependidikan --}}
     <div class="flex items-center gap-3">
       @foreach (['dosen' => 'Dosen', 'tendik' => 'Tenaga Kependidikan'] as $key => $label)
-        <a href="{{ route('admin.akun.index', ['tab' => $key]) }}"
+        <a href="{{ route('admin.akun.index', array_merge(request()->only(['nama', 'unit', 'status']), ['tab' => $key])) }}"
            class="h-10 px-7 text-xs font-semibold {{ $tab === $key ? 'btn-primary' : 'btn-secondary' }}">
           {{ $label }}
         </a>
@@ -356,19 +431,8 @@
         </div>
       </div>
 
-      {{-- Input Fields Sesuai Gambar Figma --}}
+      {{-- Input Fields (Urutan & Judul Sinkron dengan Profil User: Nama, Email, Pekerjaan, Unit Kerja, No. Telp) --}}
       <div class="mt-6 space-y-3.5">
-        {{-- NIP / ID --}}
-        <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
-          <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
-            <x-solar-card-linear class="h-4 w-4 text-primary-1" />
-            <span>NIP / ID</span>
-          </span>
-          <input type="text" name="id" x-model="manualData.id" required
-                 placeholder="Nomor identitas (contoh: 198501012010121001)"
-                 class="h-10 w-full pl-3 text-xs text-black placeholder:text-grey-2 focus:outline-none">
-        </div>
-
         {{-- Nama --}}
         <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
           <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
@@ -391,28 +455,18 @@
                  class="h-10 w-full pl-3 text-xs text-black placeholder:text-grey-2 focus:outline-none">
         </div>
 
-        {{-- No. Telp --}}
-        <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
-          <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
-            <x-solar-phone-linear class="h-4 w-4 text-primary-1" />
-            <span>No. Telp</span>
-          </span>
-          <input type="text" name="phone" x-model="manualData.phone"
-                 placeholder="+62 812 3456 7890"
-                 class="h-10 w-full pl-3 text-xs text-black placeholder:text-grey-2 focus:outline-none">
-        </div>
-
-        {{-- Pekerjaan / Role --}}
+        {{-- Pekerjaan (Dosen / Tenaga Kependidikan) --}}
         <div x-data="{ openRole: false }" @click.outside="openRole = false" class="relative">
           <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
             <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
               <x-solar-case-linear class="h-4 w-4 text-primary-1" />
-              <span>Kategori</span>
+              <span>Pekerjaan</span>
             </span>
             <input type="hidden" name="role" :value="manualData.role">
             <button type="button" @click="openRole = !openRole"
-                    class="flex h-10 w-full items-center justify-between pl-3 text-xs font-medium text-black cursor-pointer focus:outline-none">
-              <span x-text="manualData.role === 'tendik' ? 'Tenaga Kependidikan' : 'Dosen'"></span>
+                    class="flex h-10 w-full items-center justify-between pl-3 text-xs cursor-pointer focus:outline-none">
+              <span :class="manualData.role ? 'text-black font-medium' : 'text-grey-2 font-normal'"
+                    x-text="manualData.role === 'tendik' ? 'Tenaga Kependidikan' : (manualData.role === 'dosen' ? 'Dosen' : 'Pilih pekerjaan')"></span>
               <x-solar-alt-arrow-down-linear class="h-3.5 w-3.5 text-grey-2 transition-transform duration-200"
                                              ::class="openRole ? 'rotate-180 text-primary-1' : ''" />
             </button>
@@ -440,12 +494,14 @@
           <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
             <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
               <x-solar-buildings-linear class="h-4 w-4 text-primary-1" />
-              <span>Unit kerja</span>
+              <span>Unit Kerja</span>
             </span>
             <input type="hidden" name="unit" :value="manualData.unit">
             <button type="button" @click="openUnit = !openUnit"
-                    class="flex h-10 w-full items-center justify-between pl-3 text-xs font-medium text-black cursor-pointer focus:outline-none">
-              <span class="truncate" x-text="manualData.unit || '{{ $units[0] ?? '' }}'"></span>
+                    class="flex h-10 w-full items-center justify-between pl-3 text-xs cursor-pointer focus:outline-none">
+              <span class="truncate"
+                    :class="manualData.unit ? 'text-black font-medium' : 'text-grey-2 font-normal'"
+                    x-text="manualData.unit || 'Pilih unit kerja'"></span>
               <x-solar-alt-arrow-down-linear class="h-3.5 w-3.5 shrink-0 text-grey-2 transition-transform duration-200"
                                              ::class="openUnit ? 'rotate-180 text-primary-1' : ''" />
             </button>
@@ -463,6 +519,18 @@
               </button>
             @endforeach
           </div>
+        </div>
+
+        {{-- No. Telp --}}
+        <div class="flex items-center rounded-xl border border-grey-1 bg-white px-3.5 focus-within:border-primary-1">
+          <span class="flex items-center gap-2 text-xs font-semibold text-black w-28 shrink-0 border-r border-gray-100 pr-2">
+            <x-solar-phone-linear class="h-4 w-4 text-primary-1" />
+            <span>No. Telp</span>
+          </span>
+          <input type="tel" inputmode="numeric" name="phone" x-model="manualData.phone"
+                 @input="manualData.phone = manualData.phone.replace(/[^0-9+\-\s]/g, '')"
+                 placeholder="081234567890"
+                 class="h-10 w-full pl-3 text-xs text-black placeholder:text-grey-2 focus:outline-none">
         </div>
       </div>
     </form>
@@ -563,14 +631,19 @@
                 <td class="py-3 px-3 text-left font-medium text-black" x-text="row.phone"></td>
                 {{-- Status Validasi Row --}}
                 <td class="py-3 px-3 text-left">
-                  <template x-if="row.valid">
-                    <span class="inline-flex items-center rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success">
+                  <template x-if="row.status === 'valid'">
+                    <span class="inline-flex items-center rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success" :title="row.reason">
                       Valid
                     </span>
                   </template>
-                  <template x-if="!row.valid">
-                    <span class="inline-flex items-center rounded-full bg-danger-soft px-2 py-0.5 text-xs font-bold text-danger" title="Email sudah terdaftar">
+                  <template x-if="row.status === 'duplicate'">
+                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700" :title="row.reason">
                       Duplikat
+                    </span>
+                  </template>
+                  <template x-if="row.status === 'invalid'">
+                    <span class="inline-flex items-center rounded-full bg-danger-soft px-2 py-0.5 text-xs font-bold text-danger" :title="row.reason">
+                      Format Salah
                     </span>
                   </template>
                 </td>

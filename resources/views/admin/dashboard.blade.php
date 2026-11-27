@@ -84,10 +84,17 @@
           <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary-3/50 text-primary-1 mb-3">
             <x-solar-chart-square-linear class="h-6 w-6" />
           </div>
-          <p class="text-sm font-bold text-black">Belum Ada Polling Aktif</p>
-          <p class="mt-1 text-xs text-grey-deep max-w-sm">
-            Saat ini tidak ada sesi pemungutan suara yang sedang berjalan. Hasil pilihan teratas akan muncul secara real-time saat voting dimulai.
-          </p>
+          @if ($hasActivePolling ?? false)
+            <p class="text-sm font-bold text-black">Hasil voting kosong</p>
+            <p class="mt-1 text-xs text-grey-deep max-w-sm">
+              Polling sudah aktif, namun belum ada suara yang masuk saat ini. Hasil pilihan teratas akan tampil setelah ada peserta yang memilih.
+            </p>
+          @else
+            <p class="text-sm font-bold text-black">Belum Ada Polling Aktif</p>
+            <p class="mt-1 text-xs text-grey-deep max-w-sm">
+              Saat ini tidak ada sesi pemungutan suara yang sedang berjalan. Hasil pilihan teratas akan muncul secara real-time saat voting dimulai.
+            </p>
+          @endif
         </div>
       @else
         <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">

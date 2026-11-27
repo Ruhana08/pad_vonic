@@ -9,9 +9,9 @@
      class="relative min-h-[calc(100vh-72px)] w-full overflow-hidden bg-gray-50">
 
     <!-- ========================================== -->
-    <!-- SIDEBAR KIRI (FLOATING / STICKY DI PINGGIR)-->
+    <!-- SIDEBAR KIRI (FLOATING / STICKY DESKTOP XL) -->
     <!-- ========================================== -->
-    <div class="fixed left-8 top-[96px] z-20 w-[240px] space-y-4">
+    <div class="hidden xl:block fixed left-8 top-[96px] z-20 w-[240px] space-y-4">
         
         <!-- Tombol Batalkan -->
         <a href="{{ route('home') }}"
@@ -86,12 +86,56 @@
     </div>
 
     <!-- ========================================== -->
+    <!-- STEPPER & AKSI MOBILE / TABLET (< XL)      -->
+    <!-- ========================================== -->
+    <div class="xl:hidden mx-auto w-full max-w-[860px] px-3 sm:px-4 pt-4 space-y-3">
+        <div class="flex items-center justify-between gap-3">
+            <a href="{{ route('home') }}"
+               class="inline-flex h-10 items-center gap-2 rounded-xl border border-grey-1 bg-white px-3.5 text-xs font-semibold text-grey-deep shadow-xs transition-colors hover:border-danger hover:text-danger">
+                <x-solar-close-circle-linear class="h-4 w-4" />
+                <span>Batalkan</span>
+            </a>
+            <span class="text-[11px] text-grey-deep text-right">Suara bersifat rahasia &amp; hanya 1x.</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-2xl bg-primary-1 p-2.5 shadow-sm text-white">
+            <button type="button"
+                    @click="if(step > 1) step = 1"
+                    :class="step === 1 ? 'bg-secondary-1 text-white font-bold' : (step > 1 ? 'bg-primary-1/40 text-white font-medium' : 'bg-white text-black font-semibold')"
+                    class="flex h-10 items-center justify-between rounded-xl px-3 text-xs transition-all cursor-pointer">
+                <span>1. Peserta</span>
+                <span class="text-[10px] opacity-75">1/4</span>
+            </button>
+            <button type="button"
+                    @click="if(step > 2) step = 2"
+                    :class="step === 2 ? 'bg-secondary-1 text-white font-bold' : (step > 2 ? 'bg-primary-1/40 text-white font-medium' : 'bg-white text-black font-semibold')"
+                    class="flex h-10 items-center justify-between rounded-xl px-3 text-xs transition-all cursor-pointer">
+                <span>2. Wisata</span>
+                <span class="text-[10px] opacity-75">2/4</span>
+            </button>
+            <button type="button"
+                    @click="if(step > 3) step = 3"
+                    :class="step === 3 ? 'bg-secondary-1 text-white font-bold' : (step > 3 ? 'bg-primary-1/40 text-white font-medium' : 'bg-white text-black font-semibold')"
+                    class="flex h-10 items-center justify-between rounded-xl px-3 text-xs transition-all cursor-pointer">
+                <span>3. Kaos</span>
+                <span class="text-[10px] opacity-75">3/4</span>
+            </button>
+            <button type="button"
+                    :class="step === 4 ? 'bg-secondary-1 text-white font-bold' : 'bg-white text-black font-semibold'"
+                    class="flex h-10 items-center justify-between rounded-xl px-3 text-xs transition-all">
+                <span>4. Hasil</span>
+                <span class="text-[10px] opacity-75">4/4</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
     <!-- PAPER CANVAS (CENTERED, NEMBUS KE BAWAH)   -->
     <!-- ========================================== -->
-    <div class="mx-auto flex min-h-[calc(100vh-72px)] w-full max-w-[860px] justify-center px-4 pt-6">
+    <div class="mx-auto flex min-h-[calc(100vh-72px)] w-full max-w-[860px] xl:max-w-[1160px] xl:pl-[288px] xl:pr-8 justify-center px-3 sm:px-4 pt-3 xl:pt-6">
         
         <!-- Paper Container: Rounded hanya di atas, bawah nembus tak terbatas -->
-        <div class="min-h-full w-full rounded-t-[28px] rounded-b-none border-x border-t border-gray-200/80 bg-white p-6 sm:p-10 pb-36 shadow-type-2">
+        <div class="min-h-full w-full rounded-t-[20px] sm:rounded-t-[28px] rounded-b-none border-x border-t border-gray-200/80 bg-white p-4 sm:p-8 lg:p-10 pb-28 sm:pb-36 shadow-type-2">
 
             <!-- Loading State Saat Fetch API -->
             <div x-show="loading" class="flex flex-col items-center justify-center py-24 text-center">
@@ -174,31 +218,20 @@
 
                 <!-- Deskripsi Pertanyaan -->
                 <div class="rounded-xl border border-gray-100 bg-gray-50/70 p-6">
-                    <h3 class="text-base sm:text-lg font-bold text-black tracking-tight leading-snug">Bagaimana rencana pembagian peserta piknik yang Anda harapkan?</h3>
-                    <p class="mt-2 text-xs sm:text-sm text-grey-deep leading-relaxed">
-                        Pilihan ini menentukan alokasi armada bus, pengaturan kamar hotel/villa, serta pembagian sesi santai antar civitas akademika DTEDI Sekolah Vokasi UGM.
-                    </p>
+                    <h3 class="text-base sm:text-lg font-bold text-black tracking-tight leading-snug"
+                        x-text="pesertaQuestion || 'Bagaimana rencana pembagian peserta piknik yang Anda harapkan?'"></h3>
+                    <p x-show="pesertaDescription" x-cloak class="mt-2 text-xs sm:text-sm text-grey-deep leading-relaxed" x-text="pesertaDescription"></p>
                 </div>
 
-                <!-- Opsi Pilihan (Radio Button Cards) -->
+                <!-- Opsi Pilihan (Radio Button Cards Dinamis dari Form Pembuatan) -->
                 <div class="space-y-3.5">
-                    <!-- Opsi Dipisah -->
-                    <label :class="pilihanPeserta === 'dipisah' ? 'is-active' : ''"
-                           class="card-choice flex items-center gap-3.5">
-                        <input type="radio" name="pilihan_peserta" value="dipisah" x-model="pilihanPeserta" class="h-4 w-4 text-primary-1 focus:ring-primary-1">
-                        <span class="text-sm font-medium text-black">
-                            Kelompok Dosen dan Tenaga Kependidikan (Tendik) <strong class="font-bold">dipisah</strong>
-                        </span>
-                    </label>
-
-                    <!-- Opsi Digabung -->
-                    <label :class="pilihanPeserta === 'digabung' ? 'is-active' : ''"
-                           class="card-choice flex items-center gap-3.5">
-                        <input type="radio" name="pilihan_peserta" value="digabung" x-model="pilihanPeserta" class="h-4 w-4 text-primary-1 focus:ring-primary-1">
-                        <span class="text-sm font-medium text-black">
-                            Kelompok Dosen dan Tenaga Kependidikan (Tendik) <strong class="font-bold">digabung</strong>
-                        </span>
-                    </label>
+                    <template x-for="(opt, idx) in pesertaOptions" :key="idx">
+                        <label :class="pilihanPeserta === opt ? 'is-active' : ''"
+                               class="card-choice flex items-center gap-3.5">
+                            <input type="radio" name="pilihan_peserta" :value="opt" x-model="pilihanPeserta" class="h-4 w-4 text-primary-1 focus:ring-primary-1">
+                            <span class="text-sm font-medium text-black" x-text="opt"></span>
+                        </label>
+                    </template>
                 </div>
             </div>
 
@@ -233,7 +266,8 @@
 
                 <!-- Subtitle & Bar Filter Interaktif -->
                 <div class="space-y-2">
-                    <p class="text-xs text-grey-deep">Silakan memilih paket wisata yang diinginkan.</p>
+                    <p class="text-xs font-semibold text-black" x-show="wisataQuestion" x-cloak x-text="wisataQuestion"></p>
+                    <p class="text-xs text-grey-deep" x-text="wisataDescription || 'Silakan memilih paket wisata yang diinginkan.'"></p>
 
                     <!-- Filter Pill Bar: Tidak terpotong overflow & dropdown z-index 50 -->
                     <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 relative z-20">
@@ -334,45 +368,74 @@
                                             <input type="radio" :value="item.id" x-model="pilihanWisata" class="h-4 w-4 text-primary-1 focus:ring-primary-1">
                                             <h4 class="text-sm font-bold text-black" x-text="item.nama"></h4>
                                         </div>
-                                        <span class="rounded-md bg-primary-3/50 px-2 py-0.5 text-[10px] font-bold text-primary-1 shrink-0" x-text="item.kategori"></span>
+                                        <span class="rounded-md bg-primary-3/50 px-2 py-0.5 text-[10px] font-bold text-primary-1 shrink-0" x-show="item.kategori" x-text="item.kategori"></span>
                                     </div>
                                     <div class="mt-1 flex items-center gap-2 text-[11px] text-grey-deep pl-6">
-                                        <span class="flex items-center gap-1 font-semibold text-amber-500">
-                                            <x-solar-star-bold class="h-3.5 w-3.5" />
-                                            <span x-text="item.rating"></span>
-                                        </span>
-                                        <span>•</span>
-                                        <span x-text="item.provinsi || item.lokasi"></span>
+                                        <span x-text="item.provinsi || item.lokasi || '—'"></span>
                                     </div>
                                 </div>
 
-                                <!-- Galeri Foto Miniatur: Rounded minimal (hampir kotak), klik untuk buka slider foto interaktif -->
-                                <div class="mt-3 grid grid-cols-3 gap-1.5 overflow-hidden rounded-xs bg-gray-100 p-1">
-                                    <div class="col-span-2 relative h-36 overflow-hidden rounded-xs cursor-pointer group"
-                                         @click.stop="openModalGallery(item.photos?.length ? item.photos : [item.image], 0, item.nama)">
-                                        <img :src="item.photos?.[0] || item.image" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                        <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20 flex items-center justify-center">
-                                            <span class="opacity-0 group-hover:opacity-100 bg-black/70 text-white rounded-xs px-2 py-1 text-[10px] font-medium backdrop-blur-xs flex items-center gap-1">
-                                                <x-solar-magnifer-linear class="h-3 w-3" /> Lihat Galeri
-                                            </span>
+                                <!-- Galeri Foto Miniatur: Menyesuaikan jumlah foto asli (1, 2, atau 3+) dengan radius paling kecil -->
+                                <div class="mt-3 overflow-hidden rounded-[4px] bg-gray-100 p-1">
+                                    <!-- 1 Foto -->
+                                    <template x-if="(item.photos?.length || 0) <= 1">
+                                        <div class="relative h-40 overflow-hidden rounded-[4px] cursor-pointer group"
+                                             @click.stop="openModalGallery(item.photos?.length ? item.photos : [item.image], 0, item.nama)">
+                                            <img :src="item.photos?.[0] || item.image" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                            <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20 flex items-center justify-center">
+                                                <span class="opacity-0 group-hover:opacity-100 bg-black/70 text-white rounded-[4px] px-2 py-1 text-[10px] font-medium backdrop-blur-xs flex items-center gap-1">
+                                                    <x-solar-magnifer-linear class="h-3 w-3" /> Lihat Foto
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <div class="relative h-[68px] overflow-hidden rounded-xs cursor-pointer group"
-                                             @click.stop="openModalGallery(item.photos?.length ? item.photos : [item.image], 1, item.nama)">
-                                            <img :src="item.photos?.[1] || item.image" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                            <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20"></div>
+                                    </template>
+
+                                    <!-- 2 Foto -->
+                                    <template x-if="(item.photos?.length || 0) === 2">
+                                        <div class="grid grid-cols-2 gap-1.5">
+                                            <div class="relative h-36 overflow-hidden rounded-[4px] cursor-pointer group"
+                                                 @click.stop="openModalGallery(item.photos, 0, item.nama)">
+                                                <img :src="item.photos[0]" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20"></div>
+                                            </div>
+                                            <div class="relative h-36 overflow-hidden rounded-[4px] cursor-pointer group"
+                                                 @click.stop="openModalGallery(item.photos, 1, item.nama)">
+                                                <img :src="item.photos[1]" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20"></div>
+                                            </div>
                                         </div>
-                                        <div class="relative h-[68px] overflow-hidden rounded-xs cursor-pointer group"
-                                             @click.stop="openModalGallery(item.photos?.length ? item.photos : [item.image], 2, item.nama)">
-                                            <img :src="item.photos?.[2] || item.image" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                            <template x-if="(item.photos?.length || 0) > 2">
-                                                <div class="absolute inset-0 flex items-center justify-center bg-black/55 text-[11px] font-bold text-white backdrop-blur-[1px]">
-                                                    <span x-text="item.photos.length + ' Foto'"></span>
+                                    </template>
+
+                                    <!-- 3+ Foto -->
+                                    <template x-if="(item.photos?.length || 0) >= 3">
+                                        <div class="grid grid-cols-3 gap-1.5">
+                                            <div class="col-span-2 relative h-36 overflow-hidden rounded-[4px] cursor-pointer group"
+                                                 @click.stop="openModalGallery(item.photos, 0, item.nama)">
+                                                <img :src="item.photos[0]" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20 flex items-center justify-center">
+                                                    <span class="opacity-0 group-hover:opacity-100 bg-black/70 text-white rounded-[4px] px-2 py-1 text-[10px] font-medium backdrop-blur-xs flex items-center gap-1">
+                                                        <x-solar-magnifer-linear class="h-3 w-3" /> Lihat Galeri
+                                                    </span>
                                                 </div>
-                                            </template>
+                                            </div>
+                                            <div class="flex flex-col gap-1.5">
+                                                <div class="relative h-[69px] overflow-hidden rounded-[4px] cursor-pointer group"
+                                                     @click.stop="openModalGallery(item.photos, 1, item.nama)">
+                                                    <img :src="item.photos[1]" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                    <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20"></div>
+                                                </div>
+                                                <div class="relative h-[69px] overflow-hidden rounded-[4px] cursor-pointer group"
+                                                     @click.stop="openModalGallery(item.photos, 2, item.nama)">
+                                                    <img :src="item.photos[2]" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                    <template x-if="item.photos.length > 3">
+                                                        <div class="absolute inset-0 flex items-center justify-center bg-black/55 text-[11px] font-bold text-white backdrop-blur-[1px]">
+                                                            <span x-text="'+' + (item.photos.length - 2) + ' Foto'"></span>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </template>
                                 </div>
 
                                 <!-- Model Khusus Info Metrik: Jarak, Durasi & Cashback (Border & Divider Halus Soft Gray-100) -->
@@ -457,39 +520,126 @@
                     </div>
                 </div>
 
-                <p class="text-xs text-grey-deep">Silakan memilih Desain Kaos & Ukuran yang diinginkan (bisa memilih lebih dari 1 ukuran untuk anggota keluarga).</p>
+                <div class="space-y-1">
+                    <p class="text-xs font-semibold text-black" x-show="kaosQuestion" x-cloak x-text="kaosQuestion"></p>
+                    <p class="text-xs text-grey-deep" x-text="kaosDescription || 'Silakan memilih Desain Kaos & Ukuran yang diinginkan (bisa memilih lebih dari 1 ukuran untuk anggota keluarga).'"></p>
+                </div>
 
-                <!-- Section Size Chart Banner -->
-                <div>
+                <!-- Section Size Chart (Dinamis: Gambar atau Tabel Ukuran dari Form Pembuatan) -->
+                <div x-show="kaosChartMode === 'image' ? Boolean(kaosChartImageUrl) : kaosChartRows.length > 0" x-cloak>
                     <h3 class="mb-3 text-sm font-bold text-primary-1">Size Chart</h3>
-                    <div class="overflow-hidden rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-center">
-                        <img src="https://images.unsplash.com/photo-1523381294911-8d3cead13475?w=800&auto=format&fit=crop&q=80"
-                             alt="Size Chart Kaos" class="mx-auto max-h-56 rounded-lg object-contain">
-                    </div>
+                    <template x-if="kaosChartMode === 'image' && kaosChartImageUrl">
+                        <div class="overflow-hidden rounded-[4px] border border-gray-100 bg-gray-50/50 p-3 text-center">
+                            <img :src="kaosChartImageUrl"
+                                 alt="Size Chart Kaos" class="mx-auto max-h-64 rounded-[4px] object-contain cursor-pointer"
+                                 @click="openModalGallery([kaosChartImageUrl], 0, 'Size Chart Kaos')">
+                        </div>
+                    </template>
+                    <template x-if="kaosChartMode !== 'image' && kaosChartRows.length > 0">
+                        <div class="overflow-x-auto rounded-[8px] border border-grey-1 bg-white">
+                            <table class="w-full text-xs">
+                                <thead>
+                                    <tr class="bg-gray-50 text-grey-deep border-b border-gray-100">
+                                        <th class="py-2.5 px-4 text-center font-bold">UKURAN</th>
+                                        <th class="py-2.5 px-4 text-center font-bold">LEBAR DADA (CM)</th>
+                                        <th class="py-2.5 px-4 text-center font-bold">PANJANG BADAN (CM)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="row in kaosChartRows" :key="row.size">
+                                        <tr class="border-b border-gray-50 last:border-b-0">
+                                            <td class="py-2 px-4 text-center font-bold text-primary-1" x-text="row.size"></td>
+                                            <td class="py-2 px-4 text-center text-black" x-text="row.chest ? row.chest + ' cm' : '—'"></td>
+                                            <td class="py-2 px-4 text-center text-black" x-text="row.length ? row.length + ' cm' : '—'"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
                 </div>
 
                 <!-- Section Desain Kaos -->
                 <div>
                     <h3 class="mb-3 text-sm font-bold text-primary-1">Desain Kaos</h3>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <template x-for="kaos in kaosList" :key="kaos.id">
                             <div @click="pilihanKaos = kaos.id"
                                  :class="pilihanKaos === kaos.id ? 'is-active' : ''"
                                  class="card-choice flex flex-col justify-between">
                                 
-                                <div class="flex items-center gap-2">
-                                    <input type="radio" :value="kaos.id" x-model="pilihanKaos" class="h-4 w-4 text-primary-1 focus:ring-primary-1">
-                                    <span class="text-xs font-bold text-black" x-text="kaos.label"></span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <input type="radio" :value="kaos.id" x-model="pilihanKaos" class="h-4 w-4 text-primary-1 focus:ring-primary-1">
+                                        <span class="text-xs font-bold text-black" x-text="kaos.label"></span>
+                                    </div>
+                                    <template x-if="(kaos.photos?.length || 0) > 1">
+                                        <span class="rounded-[4px] bg-primary-3/60 px-1.5 py-0.5 text-[10px] font-bold text-primary-1"
+                                              x-text="kaos.photos.length + ' Foto'"></span>
+                                    </template>
                                 </div>
 
-                                <div class="mt-3 overflow-hidden rounded-lg cursor-pointer group relative"
-                                     @click.stop="openModalGallery(kaos.photos?.length ? kaos.photos : [kaos.image], 0, kaos.label)">
-                                    <img :src="kaos.image" class="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                    <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                        <span class="rounded-full bg-white/90 p-2 text-black shadow-md">
-                                            <x-solar-magnifer-zoom-in-linear class="h-4 w-4" />
-                                        </span>
-                                    </div>
+                                <!-- Galeri Foto Kaos: Menyesuaikan jumlah foto asli (1, 2, atau 3+) dengan radius paling kecil -->
+                                <div class="mt-3 overflow-hidden rounded-[4px] bg-gray-100 p-1">
+                                    <!-- 1 Foto -->
+                                    <template x-if="(kaos.photos?.length || 0) <= 1">
+                                        <div class="relative h-44 overflow-hidden rounded-[4px] cursor-pointer group"
+                                             @click.stop="openModalGallery(kaos.photos?.length ? kaos.photos : [kaos.image], 0, kaos.label)">
+                                            <img :src="kaos.photos?.[0] || kaos.image" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                            <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                                <span class="rounded-full bg-white/90 p-2 text-black shadow-md">
+                                                    <x-solar-magnifer-zoom-in-linear class="h-4 w-4" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- 2 Foto -->
+                                    <template x-if="(kaos.photos?.length || 0) === 2">
+                                        <div class="grid grid-cols-2 gap-1.5">
+                                            <div class="relative h-44 overflow-hidden rounded-[4px] cursor-pointer group"
+                                                 @click.stop="openModalGallery(kaos.photos, 0, kaos.label)">
+                                                <img :src="kaos.photos[0]" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20"></div>
+                                            </div>
+                                            <div class="relative h-44 overflow-hidden rounded-[4px] cursor-pointer group"
+                                                 @click.stop="openModalGallery(kaos.photos, 1, kaos.label)">
+                                                <img :src="kaos.photos[1]" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- 3+ Foto -->
+                                    <template x-if="(kaos.photos?.length || 0) >= 3">
+                                        <div class="grid grid-cols-3 gap-1.5">
+                                            <div class="col-span-2 relative h-44 overflow-hidden rounded-[4px] cursor-pointer group"
+                                                 @click.stop="openModalGallery(kaos.photos, 0, kaos.label)">
+                                                <img :src="kaos.photos[0]" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                                    <span class="rounded-full bg-white/90 p-2 text-black shadow-md">
+                                                        <x-solar-magnifer-zoom-in-linear class="h-4 w-4" />
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-1.5">
+                                                <div class="relative h-[85px] overflow-hidden rounded-[4px] cursor-pointer group"
+                                                     @click.stop="openModalGallery(kaos.photos, 1, kaos.label)">
+                                                    <img :src="kaos.photos[1]" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                    <div class="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20"></div>
+                                                </div>
+                                                <div class="relative h-[85px] overflow-hidden rounded-[4px] cursor-pointer group"
+                                                     @click.stop="openModalGallery(kaos.photos, 2, kaos.label)">
+                                                    <img :src="kaos.photos[2]" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                    <template x-if="kaos.photos.length > 3">
+                                                        <div class="absolute inset-0 flex items-center justify-center bg-black/55 text-[11px] font-bold text-white backdrop-blur-[1px]">
+                                                            <span x-text="'+' + (kaos.photos.length - 2) + ' Foto'"></span>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </template>
@@ -530,6 +680,18 @@
                             </div>
                         </template>
                     </div>
+
+                    <!-- Opsi Tambah Ukuran Kustom oleh User (jika diaktifkan admin) -->
+                    <div x-show="allowCustomUserSize" x-cloak class="mt-3 flex flex-wrap items-center gap-2">
+                        <input type="text" x-model="customSizeUserInput"
+                               @keydown.enter.prevent="tambahUkuranKustom()"
+                               placeholder="Tambah ukuran lain (mis: 4XL / Anak-M)"
+                               class="h-9 rounded-[8px] border border-grey-1 bg-white px-3 text-xs text-black placeholder:text-grey-2 focus:border-primary-1 focus:outline-none w-56">
+                        <button type="button" @click="tambahUkuranKustom()"
+                                class="h-9 rounded-[8px] border border-primary-1 bg-white px-3.5 text-xs font-semibold text-primary-1 hover:bg-primary-3/30 transition-colors cursor-pointer">
+                            + Tambah Ukuran
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -538,7 +700,7 @@
             <!-- ========================================== -->
             <div x-show="step === 4" x-cloak class="space-y-6">
                 <!-- Header Tahap dengan Navigasi Icon Prev & Tombol Kirim di Atas Kanan -->
-                <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
                     <div class="flex items-center gap-3">
                         <span class="rounded-lg bg-primary-3 px-3 py-1 text-xs font-bold text-primary-1">4/4</span>
                         <h2 class="text-xl font-bold tracking-tight text-primary-1">Hasil Akhir</h2>
@@ -563,31 +725,31 @@
                 </div>
 
                 <!-- Box Dotted Review -->
-                <div class="rounded-2xl border-2 border-dashed border-gray-200 p-6 space-y-6">
+                <div class="rounded-2xl border-2 border-dashed border-gray-200 p-4 sm:p-6 space-y-6">
                     
                     <!-- Row 1: Peserta -->
-                    <div class="flex items-start gap-6">
-                        <div class="w-36 shrink-0">
+                    <div class="flex flex-col sm:flex-row sm:items-start gap-2.5 sm:gap-6">
+                        <div class="sm:w-36 shrink-0">
                             <span class="inline-block rounded-lg bg-primary-1 px-4 py-2 text-xs font-bold text-white shadow-xs">
                                 Peserta
                             </span>
                         </div>
-                        <div class="rounded-xl border border-gray-100 bg-gray-50/70 p-3.5 text-xs text-black">
-                            Dosen dan Tenaga Didik DTEDI <strong class="capitalize" x-text="pilihanPeserta"></strong>.
+                        <div class="rounded-xl border border-gray-100 bg-gray-50/70 p-3.5 text-xs font-medium text-black"
+                             x-text="pilihanPeserta || '—'">
                         </div>
                     </div>
 
                     <!-- Row 2: Paket Wisata -->
-                    <div class="flex items-start gap-6">
-                        <div class="w-36 shrink-0">
+                    <div class="flex flex-col sm:flex-row sm:items-start gap-2.5 sm:gap-6">
+                        <div class="sm:w-36 shrink-0">
                             <span class="inline-block rounded-lg bg-primary-1 px-4 py-2 text-xs font-bold text-white shadow-xs">
                                 Paket Wisata
                             </span>
                         </div>
                         <!-- Card Mini Tempat Wisata Terpilih -->
-                        <div class="flex-1 max-w-sm rounded-xl border border-grey-1 bg-white p-4 shadow-xs">
+                        <div class="flex-1 w-full sm:max-w-sm rounded-xl border border-grey-1 bg-white p-4 shadow-xs">
                             <h4 class="text-sm font-bold text-black" x-text="selectedWisataObj.nama ?? '—'"></h4>
-                            <img :src="selectedWisataObj.image ?? ''" class="mt-2 h-28 w-full rounded-lg object-cover">
+                            <img :src="selectedWisataObj.image ?? ''" class="mt-2 h-28 w-full rounded-[4px] object-cover">
                             <div class="mt-3 space-y-1 text-[11px]">
                                 <p class="text-grey-deep" x-text="selectedWisataObj.lokasi ?? '—'"></p>
                                 <p class="font-semibold text-primary-1" x-text="selectedWisataObj.harga ? 'Harga: ' + selectedWisataObj.harga : ''"></p>
@@ -596,8 +758,8 @@
                     </div>
 
                     <!-- Row 3: Kaos & Daftar Ukuran Keluarga -->
-                    <div class="flex items-start gap-6">
-                        <div class="w-36 shrink-0">
+                    <div class="flex flex-col sm:flex-row sm:items-start gap-2.5 sm:gap-6">
+                        <div class="sm:w-36 shrink-0">
                             <span class="inline-block rounded-lg bg-primary-1 px-4 py-2 text-xs font-bold text-white shadow-xs">
                                 Kaos
                             </span>
@@ -606,7 +768,7 @@
                             <!-- Card Kaos -->
                             <div class="rounded-xl border border-grey-1 bg-white p-3 text-center shadow-xs">
                                 <span class="text-xs font-bold text-black" x-text="selectedKaosObj.label ?? '—'"></span>
-                                <div class="mt-2 h-24 w-24 overflow-hidden rounded-md">
+                                <div class="mt-2 h-24 w-24 overflow-hidden rounded-[4px]">
                                     <img :src="selectedKaosObj.image ?? ''" class="h-full w-full object-cover">
                                 </div>
                             </div>
@@ -739,6 +901,21 @@ function votingApp() {
         periodeId: null,
 
         // Data dari API
+        pesertaQuestion: '',
+        pesertaDescription: '',
+        pesertaOptions: [
+            'Kelompok Dosen dan Tenaga Kependidikan (Tendik) dipisah',
+            'Kelompok Dosen dan Tenaga Kependidikan (Tendik) digabung',
+        ],
+        wisataQuestion: '',
+        wisataDescription: '',
+        kaosQuestion: '',
+        kaosDescription: '',
+        kaosChartMode: 'manual',
+        kaosChartImageUrl: '',
+        kaosChartRows: [],
+        allowCustomUserSize: false,
+        customSizeUserInput: '',
         wisataList: [],
         kaosList: [],
         ukuranTersedia: [],
@@ -847,6 +1024,37 @@ function votingApp() {
                     el.textContent = periode.nama_periode;
                 });
 
+                // Konfigurasi dinamis dari form pembuatan polling
+                const cfg = periode.config || {};
+                if (cfg.peserta) {
+                    this.pesertaQuestion = cfg.peserta.question || '';
+                    this.pesertaDescription = cfg.peserta.description || '';
+                    const opts = Array.isArray(cfg.peserta.options)
+                        ? cfg.peserta.options.map(o => (typeof o === 'string' ? o : (o.label || ''))).filter(Boolean)
+                        : [];
+                    if (opts.length > 0) {
+                        this.pesertaOptions = opts;
+                    }
+                }
+                if (cfg.wisata) {
+                    this.wisataQuestion = cfg.wisata.question || '';
+                    this.wisataDescription = cfg.wisata.description || '';
+                }
+                if (cfg.kaos) {
+                    this.kaosQuestion = cfg.kaos.question || '';
+                    this.kaosDescription = cfg.kaos.description || '';
+                    this.kaosChartMode = cfg.kaos.chart_mode || 'manual';
+                    this.kaosChartImageUrl = cfg.kaos.chart_image_url || '';
+                    this.allowCustomUserSize = Boolean(cfg.kaos.allow_custom_user_size);
+                    const cfgSizes = Array.isArray(cfg.kaos.sizes) ? cfg.kaos.sizes : [];
+                    const cfgChart = cfg.kaos.chart || {};
+                    this.kaosChartRows = cfgSizes.map(s => ({
+                        size: s,
+                        chest: cfgChart[s]?.chest || '',
+                        length: cfgChart[s]?.length || '',
+                    }));
+                }
+
                 // Helper untuk parse foto yang bisa berupa array, json string, atau string tunggal
                 const parseFoto = (fotoField, defaultUrl) => {
                     if (!fotoField) return [defaultUrl];
@@ -875,14 +1083,13 @@ function votingApp() {
                     return {
                         id: p.id_paket,
                         nama: p.nama_destinasi,
-                        provinsi: p.provinsi ?? '—',
-                        kategori: p.kategori ?? '—',
+                        provinsi: (p.provinsi && p.provinsi !== '—') ? p.provinsi : '',
+                        kategori: (p.kategori && p.kategori !== '—') ? p.kategori : '',
                         lokasi: p.lokasi ?? '—',
                         jarakKm: parseFloat(p.jarak) || 0,
                         jarak: (p.jarak ? p.jarak + ' Km' : '—'),
                         durasiHari: parseFloat(p.durasi_perjalanan) || 0,
                         durasi: (p.durasi_perjalanan ? p.durasi_perjalanan + ' Jam' : '—'),
-                        rating: p.rating ?? '—',
                         dikunjungi: p.total_kunjungan ? p.total_kunjungan + ' kali' : '—',
                         benefit: p.benefit ? (Array.isArray(p.benefit) ? p.benefit : p.benefit.split(',').map(b => b.trim())) : [],
                         harga: p.harga ? 'Rp ' + Number(p.harga).toLocaleString('id-ID') : '—',
@@ -973,6 +1180,17 @@ function votingApp() {
         },
         totalKaos() {
             return this.keranjangKaos.reduce((t, item) => t + item.jumlah, 0);
+        },
+        tambahUkuranKustom() {
+            const kode = String(this.customSizeUserInput || '').trim().toUpperCase();
+            if (!kode) return;
+            let existing = this.ukuranTersedia.find(u => String(u.kode).toUpperCase() === kode);
+            if (!existing) {
+                existing = { id: 'custom_' + kode, kode: kode };
+                this.ukuranTersedia.push(existing);
+            }
+            this.tambahUkuran(existing.id, existing.kode);
+            this.customSizeUserInput = '';
         },
 
         resetFilter() {

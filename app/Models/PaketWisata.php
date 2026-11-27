@@ -15,11 +15,15 @@ class PaketWisata extends Model
     protected $fillable = [
         'nama_destinasi',
         'lokasi',
+        'provinsi',
+        'kategori',
         'jarak',
         'durasi_perjalanan',
         'benefit',
         'harga',
         'foto',
+        'total_kunjungan',
+        'hidden_from_library',
     ];
 
     protected $appends = [

@@ -182,17 +182,18 @@
 
             {{-- Baris Pilihan --}}
             @foreach ($cat['options'] as $idx => $opt)
-              <tr class="border-b border-gray-100 transition-colors duration-150 hover:bg-[#F3F7FF] {{ $loop->first ? 'bg-[#F9FBFF]' : '' }}"
+              @php $isWinnerRow = $loop->first && ($opt['total'] ?? 0) > 0; @endphp
+              <tr class="border-b border-gray-100 transition-colors duration-150 hover:bg-[#F3F7FF] {{ $isWinnerRow ? 'bg-[#F9FBFF]' : '' }}"
                   @if ($idx >= 5)
                     x-show="isExpanded('{{ $key }}')"
                     x-cloak
                   @endif>
-                <td class="py-3.5 px-4 text-left font-semibold {{ $loop->first ? 'text-primary-1' : 'text-grey-deep' }}">
+                <td class="py-3.5 px-4 text-left font-semibold {{ $isWinnerRow ? 'text-primary-1' : 'text-grey-deep' }}">
                   {{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}
                 </td>
                 <td class="py-3.5 px-4 text-left font-semibold text-black">
                   <span>{{ $opt['name'] }}</span>
-                  @if ($loop->first)
+                  @if ($isWinnerRow)
                     <span class="ml-2 inline-flex items-center rounded bg-primary-1 px-1.5 py-0.5 text-xs font-bold text-white">
                       Terbanyak
                     </span>

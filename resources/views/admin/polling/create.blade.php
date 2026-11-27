@@ -37,7 +37,7 @@
       ],
 
       wisataCategories: [
-        { value: '__custom__', label: '+ Tambahkan kategori lainnya (ketik manual)' },
+        { value: '__custom__', label: '+ Tambahkan kategori lainnya' },
         { value: 'Wisata Pantai & Bahari', label: 'Wisata Pantai & Bahari' },
         { value: 'Wisata Pegunungan & Dataran Tinggi', label: 'Wisata Pegunungan & Dataran Tinggi' },
         { value: 'Wisata Air Terjun (Curug)', label: 'Wisata Air Terjun (Curug)' },
@@ -69,9 +69,12 @@
 
       // Katalog Riwayat Destinasi (Dinamis dari DB paket_wisata)
       wisataLibrary: @json($wisataLibrary ?? []),
+      deleteTargetLibrary: null,
+      deleteLibraryError: '',
+      deletingLibrary: false,
 
-      // Kondisi Awal Bersih & Netral (Default Kosong)
-      form: {
+      // Kondisi Awal Bersih & Netral (atau terisi dari Draft jika sedang edit draft)
+      form: @if(!empty($draftData)) @js($draftData) @else {
         identity: {
           title: '',
           description: '',
@@ -95,7 +98,9 @@
               label: '',
               isCustom: false,
               openDropdown: false,
+              openProvinsiDropdown: false,
               lokasi: '',
+              provinsi: '',
               jarak: '',
               lama: '',
               biaya: '',
@@ -138,7 +143,7 @@
             }
           ],
         },
-      },
+      } @endif,
 
       init() {
         window.__pollFormScope = this.form;
@@ -194,6 +199,7 @@
         opt.name = '';
         opt.label = '';
         opt.lokasi = '';
+        opt.provinsi = '';
         opt.jarak = '';
         opt.lama = '';
         opt.biaya = '';
@@ -214,7 +220,9 @@
           label: '',
           isCustom: false,
           openDropdown: false,
+          openProvinsiDropdown: false,
           lokasi: '',
+          provinsi: '',
           jarak: '',
           lama: '',
           biaya: '',
@@ -249,6 +257,7 @@
         opt.name        = libItem.name;
         opt.label       = libItem.label;
         opt.lokasi      = libItem.lokasi;
+        opt.provinsi    = libItem.provinsi || '';
         opt.jarak       = libItem.jarak;
         opt.lama        = libItem.lama;
         opt.biaya       = libItem.biaya;
@@ -335,12 +344,19 @@
       validate(mode) {
         const f = this.form, e = [];
         if (!f.identity.title.trim()) e.push({ step: 1, msg: 'Judul kegiatan voting wajib diisi.' });
+
+        if (f.identity.start.date && f.identity.end.date) {
+          const startDt = f.identity.start.date + 'T' + (f.identity.start.time || '00:00');
+          const endDt   = f.identity.end.date + 'T' + (f.identity.end.time || '23:59');
+          if (endDt <= startDt) {
+            e.push({ step: 1, msg: 'Waktu selesai polling tidak boleh lebih awal atau sama dengan waktu mulai polling.' });
+          }
+        }
+
         if (mode === 'draft') return e;
 
         if (!f.identity.start.date || !f.identity.end.date) {
           e.push({ step: 1, msg: 'Tanggal mulai dan tanggal selesai voting wajib ditentukan.' });
-        } else if (f.identity.end.date < f.identity.start.date) {
-          e.push({ step: 1, msg: 'Tanggal selesai tidak boleh mendahului tanggal mulai.' });
         }
         
         // Validasi Peserta
@@ -376,7 +392,47 @@
         }
         this.action = mode;
         this.leaving = true;
-        this.$nextTick(() => this.$refs.form.submit());
+        if (this.$refs.actionInput) this.$refs.actionInput.value = mode;
+        if (this.$refs.payloadInput) this.$refs.payloadInput.value = this.payload();
+        this.$nextTick(() => {
+          const formEl = this.$refs.form || this.$root;
+          HTMLFormElement.prototype.submit.call(formEl);
+        });
+      },
+
+      askDeleteLibraryItem(item) {
+        this.deleteTargetLibrary = item;
+        this.deleteLibraryError = '';
+        this.modal = 'delete_library_wisata';
+      },
+
+      async confirmDeleteLibraryItem() {
+        if (!this.deleteTargetLibrary || this.deletingLibrary) return;
+        this.deletingLibrary = true;
+        this.deleteLibraryError = '';
+        try {
+          const res = await fetch('/admin/paket-wisata/' + this.deleteTargetLibrary.id, {
+            method: 'DELETE',
+            headers: {
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.success) {
+            this.deleteLibraryError = data.message || 'Gagal menghapus riwayat paket wisata.';
+            return;
+          }
+          const deletedId = this.deleteTargetLibrary.id;
+          this.wisataLibrary = this.wisataLibrary.filter(w => w.id !== deletedId);
+          this.selectedLibraryIds = this.selectedLibraryIds.filter(id => id !== deletedId);
+          this.deleteTargetLibrary = null;
+          this.modal = null;
+        } catch (err) {
+          this.deleteLibraryError = 'Terjadi kesalahan jaringan saat menghapus data.';
+        } finally {
+          this.deletingLibrary = false;
+        }
       },
 
       askCancel() {
@@ -492,8 +548,11 @@
       data-cancel-url="{{ route('admin.polling.arsip') }}"
       x-data="pollForm" x-ref="form" x-on:submit.prevent>
   @csrf
-  <input type="hidden" name="payload" x-bind:value="payload()">
-  <input type="hidden" name="action" x-bind:value="action">
+  <input type="hidden" name="payload" x-ref="payloadInput" x-bind:value="payload()">
+  <input type="hidden" name="action" x-ref="actionInput" x-bind:value="action">
+  @if(!empty($draftId))
+    <input type="hidden" name="draft_id" value="{{ $draftId }}">
+  @endif
 
   {{-- Layout Grid: Sisi Kiri Form Utama, Sisi Kanan Action Sidebar Sticky --}}
   <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1fr_280px]">
@@ -507,7 +566,6 @@
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 class="text-2xl font-bold tracking-tight text-black">Form Pembuatan Polling</h1>
-          <p class="mt-0.5 text-xs text-grey-2">Susun identitas voting, jadwal pelaksanaan, dan kategori pilihan suara.</p>
         </div>
 
         {{-- Segmented Controller Step 1 & Step 2 --}}
@@ -527,7 +585,7 @@
                   class="flex h-9 items-center gap-2 rounded-lg px-4 text-xs transition-all cursor-pointer">
             <span class="flex h-5 w-5 items-center justify-center rounded-full text-xs"
                   :class="step === 2 ? 'bg-white/20 text-white' : 'bg-gray-200 text-grey-deep'">2</span>
-            <span>Kategori & Opsi</span>
+            <span>Kategori</span>
           </button>
         </div>
       </div>
@@ -563,13 +621,12 @@
             <div>
               <label class="{{ $label }}">Judul Kegiatan Polling</label>
               <input type="text" x-model="form.identity.title" class="{{ $input }}"
-                     placeholder="Tuliskan judul kegiatan (contoh: Piknik & Gathering Tahunan DTEDI SV UGM)">
-              <p class="mt-1 text-xs text-grey-2">*Judul ini akan menjadi nama utama pada kartu voting dan pengumuman.</p>
+                     placeholder="Tuliskan judul kegiatan...">
             </div>
 
             {{-- Deskripsi Panduan --}}
             <div>
-              <label class="{{ $label }}">Deskripsi & Petunjuk Pemilih <span class="text-grey-2 font-normal">(opsional)</span></label>
+              <label class="{{ $label }}">Deskripsi dan Info Tambahan <span class="text-grey-2 font-normal">(opsional)</span></label>
               <textarea x-model="form.identity.description" rows="3" class="{{ $input }} resize-none"
                         placeholder="Tuliskan latar belakang kegiatan, ketentuan pemilihan, atau catatan penting..."></textarea>
             </div>
@@ -587,11 +644,11 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
                       <span class="block text-xs text-grey-deep mb-1">Tanggal Mulai</span>
-                      <input type="date" x-model="form.identity.start.date" class="{{ $input }}">
+                      <x-datepicker x-model="form.identity.start.date" placeholder="Pilih tanggal mulai" />
                     </div>
                     <div>
                       <span class="block text-xs text-grey-deep mb-1">Jam (WIB)</span>
-                      <input type="time" x-model="form.identity.start.time" class="{{ $input }}">
+                      <x-timepicker x-model="form.identity.start.time" placeholder="08:00" />
                     </div>
                   </div>
                 </div>
@@ -600,16 +657,16 @@
                 <div class="rounded-xl border border-grey-1 bg-gray-50/60 p-4">
                   <div class="flex items-center gap-2 text-xs font-bold text-danger mb-3">
                     <x-solar-clock-circle-linear class="h-4 w-4" />
-                    <span>Batas Akhir / Penutupan</span>
+                    <span>Waktu Selesai Voting</span>
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
                       <span class="block text-xs text-grey-deep mb-1">Tanggal Selesai</span>
-                      <input type="date" x-model="form.identity.end.date" class="{{ $input }}">
+                      <x-datepicker x-model="form.identity.end.date" placeholder="Pilih tanggal selesai" />
                     </div>
                     <div>
                       <span class="block text-xs text-grey-deep mb-1">Jam (WIB)</span>
-                      <input type="time" x-model="form.identity.end.time" class="{{ $input }}">
+                      <x-timepicker x-model="form.identity.end.time" placeholder="18:00" />
                     </div>
                   </div>
                 </div>
@@ -622,7 +679,7 @@
           <div class="mt-8 flex justify-end border-t border-grey-1 pt-4">
             <button type="button" @click="step = 2" class="btn-primary h-10 px-6 text-xs font-semibold">
               <x-solar-arrow-right-linear class="h-4 w-4" />
-              <span>Lanjut ke Kategori & Opsi</span>
+              <span>Lanjut ke Kategori</span>
             </button>
           </div>
         </x-card>
@@ -644,13 +701,13 @@
           {{-- Pertanyaan & Deskripsi --}}
           <div class="mt-5 space-y-4">
             <div>
-              <label class="{{ $label }}">Pertanyaan Kategori</label>
+              <label class="{{ $label }}">Pertanyaan</label>
               <input type="text" x-model="form.peserta.question" class="{{ $input }}"
-                     placeholder="Tuliskan pertanyaan (contoh: Bagaimana preferensi pembagian rombongan keberangkatan?)">
+                     placeholder="Tuliskan pertanyaan...">
             </div>
 
             <div>
-              <label class="{{ $label }}">Deskripsi & Info Tambahan <span class="text-grey-2 font-normal">(opsional)</span></label>
+              <label class="{{ $label }}">Deskripsi dan Info Tambahan <span class="text-grey-2 font-normal">(opsional)</span></label>
               <textarea x-model="form.peserta.description" rows="3" class="{{ $input }} resize-none"
                         placeholder="Tambahkan petunjuk khusus atau penjelasan detail jika ada..."></textarea>
             </div>
@@ -738,11 +795,19 @@
                   <div>
                     <div class="flex items-center justify-between gap-1">
                       <span class="rounded-md bg-primary-3/60 px-2 py-0.5 text-xs font-bold text-primary-1 truncate" x-text="item.label"></span>
-                      <div class="flex h-4 w-4 shrink-0 items-center justify-center rounded-md border"
-                           :class="selectedLibraryIds.includes(item.id) ? 'border-primary-1 bg-primary-1 text-white' : 'border-grey-1 bg-white'">
-                        <template x-if="selectedLibraryIds.includes(item.id)">
-                          <x-solar-check-read-linear class="h-3 w-3" />
-                        </template>
+                      <div class="flex items-center gap-1.5 shrink-0">
+                        <button type="button"
+                                @click.stop="askDeleteLibraryItem(item)"
+                                title="Hapus dari riwayat paket wisata"
+                                class="flex h-5 w-5 items-center justify-center rounded-md border border-grey-1 bg-white text-grey-2 hover:border-danger hover:bg-rose-50 hover:text-danger transition-colors cursor-pointer">
+                          <x-solar-trash-bin-trash-linear class="h-3 w-3" />
+                        </button>
+                        <div class="flex h-4 w-4 shrink-0 items-center justify-center rounded-md border"
+                             :class="selectedLibraryIds.includes(item.id) ? 'border-primary-1 bg-primary-1 text-white' : 'border-grey-1 bg-white'">
+                          <template x-if="selectedLibraryIds.includes(item.id)">
+                            <x-solar-check-read-linear class="h-3 w-3" />
+                          </template>
+                        </div>
                       </div>
                     </div>
 
@@ -751,24 +816,29 @@
                   </div>
 
                   <div class="mt-3 border-t border-gray-100 pt-2 flex items-center justify-between text-xs">
-                    <span class="font-bold text-amber-500" x-text="' ' + item.rating"></span>
-                    <span class="font-bold text-primary-1" x-text="'Rp ' + Number(item.biaya).toLocaleString('id-ID')"></span>
+                    <span class="text-grey-2 truncate" x-text="item.provinsi || 'Indonesia'"></span>
+                    <span class="font-bold text-primary-1 shrink-0" x-text="'Rp ' + Number(item.biaya).toLocaleString('id-ID')"></span>
                   </div>
                 </div>
               </template>
             </div>
+            <template x-if="wisataLibrary.length === 0">
+              <div class="mt-3.5 rounded-xl border border-grey-1 bg-white p-6 text-center text-xs text-grey-2">
+                Belum ada riwayat paket wisata yang tersimpan di database.
+              </div>
+            </template>
           </div>
 
           {{-- Pertanyaan & Deskripsi --}}
           <div class="mt-5 space-y-4">
             <div>
-              <label class="{{ $label }}">Pertanyaan Kategori</label>
+              <label class="{{ $label }}">Pertanyaan</label>
               <input type="text" x-model="form.wisata.question" class="{{ $input }}"
-                     placeholder="Tuliskan pertanyaan (contoh: Pilih destinasi wisata kegiatan yang paling Anda minati:)">
+                     placeholder="Tuliskan pertanyaan...">
             </div>
 
             <div>
-              <label class="{{ $label }}">Deskripsi & Panduan Pemilihan Wisata <span class="text-grey-2 font-normal">(opsional)</span></label>
+              <label class="{{ $label }}">Deskripsi dan Info Tambahan <span class="text-grey-2 font-normal">(opsional)</span></label>
               <textarea x-model="form.wisata.description" rows="3" class="{{ $input }} resize-none"
                         placeholder="Informasi tambahan mengenai destinasi, fasilitas, atau ketentuan perjalanan..."></textarea>
             </div>
@@ -802,7 +872,7 @@
                   <div>
                     <label class="{{ $label }}">Nama Destinasi Wisata</label>
                     <input type="text" x-model="o.name" class="{{ $input }}"
-                           placeholder="Nama tempat (contoh: Pantai Kartini / Karimunjawa)">
+                           placeholder="Nama tempat">
                   </div>
 
                   <div>
@@ -847,7 +917,7 @@
                   <div>
                     <label class="{{ $label }}">Alamat</label>
                     <input type="text" x-model="o.lokasi" class="{{ $input }}"
-                           placeholder="Lokasi (contoh: Jepara, Jawa Tengah)">
+                           placeholder="Alamat Tempat Wisata">
                   </div>
                   <div>
                     <label class="{{ $label }}">Provinsi</label>
@@ -878,24 +948,24 @@
                 {{--Info Jarak, Durasi & Cashback--}}
                 <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div>
-                    <label class="{{ $label }}">Jarak dari Kampus (Km)</label>
+                    <label class="{{ $label }}">Jarak(Km)</label>
                     <input type="number" min="0" x-model="o.jarak" class="{{ $input }}" placeholder="Contoh: 120">
                   </div>
                   <div>
-                    <label class="{{ $label }}">Estimasi Durasi Perjalanan</label>
+                    <label class="{{ $label }}">Durasi Perjalanan</label>
                     <input type="text" x-model="o.lama" class="{{ $input }}" placeholder="Contoh: 2 Hari / 1 Hari">
                   </div>
                   <div>
-                    <label class="{{ $label }}">Estimasi Cashback Peserta (Rp)</label>
+                    <label class="{{ $label }}">Cashback (Rp)</label>
                     <input type="number" min="0" x-model="o.biaya" class="{{ $input }}" placeholder="Contoh: 500000">
                   </div>
                 </div>
 
-                {{-- Benefit / Fasilitas Paket --}}
+                {{-- Fasilitas Paket --}}
                 <div class="mt-3">
                   <div class="flex items-center justify-between mb-1.5">
-                    <label class="{{ $label }} mb-0">Fasilitas & Benefit Peserta</label>
-                    <span class="text-xs text-grey-deep">Bebas diisi (misal: Makan Siang, Kolam Renang, Bawa +2 Orang)</span>
+                    <label class="{{ $label }} mb-0">Fasilitas yang diberikan kepada Peserta</label>
+                    <span class="text-xs text-grey-deep">Bebas diisi (misal: Makan Siang, Kolam Renang, +2 Orang)</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-1.5 rounded-xl border border-grey-1 bg-white p-2">
                     <template x-for="(b, bi) in o.benefits" :key="bi">
@@ -913,11 +983,10 @@
                   </div>
                 </div>
 
-                {{-- UPLOAD FOTO TEMPAT WISATA (MAKSIMAL 3 FOTO) --}}
+                {{-- UPLOAD FOTO  (MAKSIMAL 3 FOTO) --}}
                 <div class="mt-4 pt-3 border-t border-grey-1">
                   <div class="flex items-center justify-between mb-2">
-                    <label class="{{ $label }} mb-0">Foto Destinasi Wisata <span class="text-grey-2 font-normal">(Maksimal 3 Foto, JPG/PNG maks 3MB)</span></label>
-                    <span class="text-xs text-grey-deep">Akan ditampilkan di card pilihan wisata user</span>
+                    <label class="{{ $label }} mb-0">Foto Destinasi Wisata <span class="text-grey-2 font-normal">(JPG/PNG maks 3MB)</span></label>
                   </div>
 
                   <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -968,7 +1037,7 @@
           <div class="border-b border-grey-1 pb-3">
             <span class="text-xs font-bold text-primary-1 uppercase tracking-wider">Kategori 3</span>
             <h2 class="text-base font-bold text-black mt-0.5">Desain Kaos & Panduan Ukuran</h2>
-            <p class="text-xs text-grey-2 mt-0.5">Pilihan desain baju seragam kegiatan beserta size chart.</p>
+            <p class="text-xs text-grey-2 mt-0.5">Pilihan desain baju seragam kegiatan.</p>
           </div>
 
           {{-- Pertanyaan & Deskripsi --}}
@@ -976,11 +1045,11 @@
             <div>
               <label class="{{ $label }}">Pertanyaan Kategori</label>
               <input type="text" x-model="form.kaos.question" class="{{ $input }}"
-                     placeholder="Tuliskan pertanyaan (contoh: Tentukan pilihan desain kaos seragam kegiatan:)">
+                     placeholder="Tuliskan pertanyaan...">
             </div>
 
             <div>
-              <label class="{{ $label }}">Deskripsi & Ketentuan Ukuran Kaos <span class="text-grey-2 font-normal">(opsional)</span></label>
+              <label class="{{ $label }}">Deskripsi dan Info Tambahan <span class="text-grey-2 font-normal">(opsional)</span></label>
               <textarea x-model="form.kaos.description" rows="3" class="{{ $input }} resize-none"
                         placeholder="Informasi jenis bahan kain kaos, ketentuan pembagian ukuran, atau catatan ukuran keluarga..."></textarea>
             </div>
@@ -1106,7 +1175,7 @@
                   </div>
 
                   <div class="mt-3">
-                    <label class="{{ $label }}">Nama / Tema Desain</label>
+                    <label class="{{ $label }}">Nama Desain</label>
                     <input type="text" x-model="o.name" class="{{ $input }}"
                            placeholder="Nama desain (contoh: Polo Navy Gathering)">
                   </div>
@@ -1114,8 +1183,7 @@
                   {{-- UPLOAD FOTO DESAIN KAOS (MAKSIMAL 3 FOTO) --}}
                   <div class="mt-3 pt-2">
                     <div class="flex items-center justify-between mb-1.5">
-                      <label class="{{ $label }} mb-0">Foto Mockup Desain <span class="text-grey-2 font-normal">(Maksimal 3 Foto)</span></label>
-                      <span class="text-xs text-grey-deep">Tampak Depan, Belakang, Detail</span>
+                      <label class="{{ $label }} mb-0">Foto Desain <span class="text-grey-2 font-normal">(Maksimal 3 Foto)</span></label>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2">
@@ -1305,6 +1373,26 @@
           <div class="mt-5 flex justify-center gap-2">
             <button type="button" class="btn-secondary h-9 px-4 text-xs font-semibold" x-on:click="modal = null">Periksa Lagi</button>
             <button type="button" class="btn-primary h-9 px-5 text-xs font-semibold" x-on:click="submit('publish')">Ya, Publikasikan</button>
+          </div>
+        </div>
+      </template>
+
+      {{-- Modal: Hapus Riwayat Paket Wisata --}}
+      <template x-if="modal === 'delete_library_wisata'">
+        <div>
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 border border-danger/20">
+            <x-solar-trash-bin-trash-linear class="h-6 w-6 text-danger" />
+          </div>
+          <h3 class="text-center text-sm font-bold text-black">Hapus Riwayat Paket Wisata?</h3>
+          <p class="mt-2 text-center text-xs text-grey-deep leading-relaxed">
+            Destinasi <strong class="text-black" x-text="deleteTargetLibrary?.name || ''"></strong> akan dihapus dari daftar riwayat paket wisata di database.
+          </p>
+          <div x-show="deleteLibraryError" x-cloak class="mt-3 rounded-xl bg-rose-50 border border-danger/20 px-3 py-2 text-center text-xs text-danger" x-text="deleteLibraryError"></div>
+          <div class="mt-5 flex justify-center gap-2">
+            <button type="button" class="btn-secondary h-9 px-4 text-xs font-semibold" x-on:click="modal = null">Batal</button>
+            <button type="button" class="btn-danger h-9 px-5 text-xs font-semibold" :disabled="deletingLibrary" x-on:click="confirmDeleteLibraryItem()">
+              <span x-text="deletingLibrary ? 'Menghapus...' : 'Ya, Hapus'"></span>
+            </button>
           </div>
         </div>
       </template>

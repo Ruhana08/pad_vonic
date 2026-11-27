@@ -20,13 +20,14 @@
          }
          this.loading = true;
          try {
-           const res = await fetch('/api/notifikasi', {
+           const res = await fetch('/api/notifikasi?per_page=100', {
              headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
            });
            if (res.ok) {
              const json = await res.json();
              if (json?.success) {
-               this.notifications = Array.isArray(json.data) ? json.data : [];
+               const raw = json.data;
+               this.notifications = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
                this.unreadCount = Number(json.unread_count ?? this.notifications.filter(n => !n.read).length);
              }
            }
@@ -85,27 +86,30 @@
      class="space-y-5">
 
   {{-- Top Bar: Kembali + Judul + Aksi --}}
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div class="flex items-center gap-3">
-      <a href="{{ $backUrl }}" class="btn-secondary h-10 px-4 text-xs font-semibold">
+  <div class="space-y-3">
+    <div>
+      <a href="{{ $backUrl }}" class="btn-secondary inline-flex h-10 px-4 text-xs font-semibold">
         <x-solar-alt-arrow-left-linear class="h-4 w-4" />
         <span>Kembali</span>
       </a>
+    </div>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-black">Semua Notifikasi</h1>
         <p class="text-xs text-grey-deep mt-0.5"
            x-text="unreadCount > 0 ? unreadCount + ' notifikasi belum dibaca' : 'Semua notifikasi sudah dibaca'"></p>
       </div>
-    </div>
 
-    <div class="flex items-center gap-2">
-      <button type="button"
-              @click="markAllAsRead()"
-              :disabled="unreadCount === 0"
-              class="btn-secondary h-10 px-4 text-xs font-semibold disabled:opacity-40">
-        <x-solar-check-circle-linear class="h-4 w-4" />
-        <span>Tandai semua dibaca</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button type="button"
+                @click="markAllAsRead()"
+                :disabled="unreadCount === 0"
+                class="btn-secondary h-10 px-4 text-xs font-semibold disabled:opacity-40">
+          <x-solar-check-circle-linear class="h-4 w-4" />
+          <span>Tandai semua dibaca</span>
+        </button>
+      </div>
     </div>
   </div>
 

@@ -24,19 +24,29 @@ class DashboardController extends Controller
             ]);
         }
 
-        $endDate = \Carbon\Carbon::parse($periodeAktif->tanggal_selesai . ' 23:59:59');
-        $diff = now()->diff($endDate);
-        $countdown = [
-            'days'    => max(0, $diff->days),
-            'hours'   => max(0, $diff->h),
-            'minutes' => max(0, $diff->i),
-        ];
+        $cfg = is_array($periodeAktif->config) ? $periodeAktif->config : [];
+        $endTime = $cfg['end_time'] ?? '23:59';
+        $endDate = \Carbon\Carbon::parse($periodeAktif->tanggal_selesai . ' ' . $endTime);
+        if (strlen((string) $endTime) === 5) {
+            $endDate->endOfMinute();
+        }
+
+        if (now()->gte($endDate)) {
+            $countdown = ['days' => 0, 'hours' => 0, 'minutes' => 0];
+        } else {
+            $diff = now()->diff($endDate);
+            $countdown = [
+                'days'    => max(0, $diff->days),
+                'hours'   => max(0, $diff->h),
+                'minutes' => max(0, $diff->i),
+            ];
+        }
 
         $deadline = $endDate->translatedFormat('l, d M Y, H.i') . ' WIB';
 
         $partisipasi = $periodeAktif->partisipasi->filter(fn($pt) => $pt->user !== null)->values();
         $totalReceived = $partisipasi->count();
-        $totalSivitas = max($totalReceived, \App\Models\User::where('role', '!=', 'admin')->count());
+        $totalSivitas = max($totalReceived, \App\Models\User::where('role', 'user')->count());
         $percent = $totalSivitas > 0 ? round(($totalReceived / $totalSivitas) * 100) : 0;
         $totalVote = [
             'percent'  => $percent,
@@ -71,25 +81,37 @@ class DashboardController extends Controller
             ];
         });
 
-        $pesertaDipisah = $partisipasi->where('pilihan_kelompok', 'dipisah')->count();
-        $pesertaOptions = [
-            [
-                'name'    => 'Dosen dan Tenaga Didik dipisah',
-                'percent' => $wisataTotal > 0 ? round(($pesertaDipisah / $wisataTotal) * 100) : 50,
-            ],
-            [
-                'name'    => 'Dosen dan Tenaga Didik digabung',
-                'percent' => $wisataTotal > 0 ? (100 - round(($pesertaDipisah / $wisataTotal) * 100)) : 50,
-            ],
-        ];
+        $pesertaLabels = collect($cfg['peserta']['options'] ?? [])
+            ->map(fn ($o) => is_string($o) ? trim($o) : trim((string) ($o['label'] ?? '')))
+            ->filter()
+            ->values();
 
-        $categories = [
+        if ($pesertaLabels->isEmpty()) {
+            $pesertaLabels = collect(['Dosen dan tendik dipisah', 'Dosen dan tendik digabung']);
+        }
+
+        $pesertaOptions = $pesertaLabels->map(function ($label) use ($partisipasi, $wisataTotal) {
+            $cnt = $partisipasi->filter(function ($pt) use ($label) {
+                $val = (string) ($pt->pilihan_kelompok ?? '');
+                if ($val === $label) return true;
+                if ($val === 'dipisah' && str_contains(strtolower($label), 'pisah')) return true;
+                if ($val === 'digabung' && str_contains(strtolower($label), 'gabung')) return true;
+                return false;
+            })->count();
+            return [
+                'name'    => $label,
+                'percent' => $wisataTotal > 0 ? round(($cnt / $wisataTotal) * 100) : 0,
+            ];
+        })->toArray();
+
+        $categories = $wisataTotal > 0 ? [
             ['title' => 'Pembagian Peserta', 'options' => $pesertaOptions],
             ['title' => 'Paket Wisata', 'options' => $wisataOptions->toArray()],
             ['title' => 'Kaos', 'options' => $kaosOptions->toArray()],
-        ];
+        ] : [];
 
         return view('admin.dashboard', [
+            'hasActivePolling' => true,
             'countdown'  => $countdown,
             'deadline'   => $deadline,
             'totalVote'  => $totalVote,

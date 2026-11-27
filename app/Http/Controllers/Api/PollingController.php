@@ -77,7 +77,25 @@ class PollingController extends Controller
             ], 404);
         }
 
-        $ukuranKaos = \App\Models\UkuranKaos::orderBy('id_ukuran')->get();
+        $config = is_array($periode->config) ? $periode->config : [];
+        if (!empty($config['kaos']['chart_image'])) {
+            $img = $config['kaos']['chart_image'];
+            $config['kaos']['chart_image_url'] = (str_starts_with($img, 'http://') || str_starts_with($img, 'https://') || str_starts_with($img, '/'))
+                ? $img
+                : url('storage/' . $img);
+        }
+        $periode->setAttribute('config', $config);
+
+        $configuredSizes = $config['kaos']['sizes'] ?? [];
+        if (is_array($configuredSizes) && count($configuredSizes) > 0) {
+            $ukuranKaos = collect($configuredSizes)
+                ->map(fn ($kode) => trim((string) $kode))
+                ->filter()
+                ->map(fn ($kode) => \App\Models\UkuranKaos::firstOrCreate(['kode_ukuran' => $kode]))
+                ->values();
+        } else {
+            $ukuranKaos = \App\Models\UkuranKaos::orderBy('id_ukuran')->get();
+        }
 
         // Cek status voting user jika terautentikasi
         $user = auth('sanctum')->user() ?? $request->user();
@@ -128,9 +146,32 @@ class PollingController extends Controller
             'id_paket' => 'required|exists:paket_wisata,id_paket',
             'id_kaos' => 'required|exists:desain_kaos,id_kaos',
             'ukuran' => 'required|array|min:1',
-            'ukuran.*.id_ukuran' => 'required|exists:ukuran_kaos,id_ukuran',
             'ukuran.*.jumlah' => 'required|integer|min:1',
         ]);
+
+        // Resolve ukuran (mendukung ukuran kustom baru dengan kode_ukuran)
+        $resolvedUkuran = [];
+        foreach ($request->ukuran as $item) {
+            $ukuranModel = null;
+            if (!empty($item['id_ukuran']) && is_numeric($item['id_ukuran'])) {
+                $ukuranModel = \App\Models\UkuranKaos::find($item['id_ukuran']);
+            }
+            if (!$ukuranModel && !empty($item['kode_ukuran'])) {
+                $ukuranModel = \App\Models\UkuranKaos::firstOrCreate([
+                    'kode_ukuran' => strtoupper(trim((string) $item['kode_ukuran'])),
+                ]);
+            }
+            if (!$ukuranModel) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ukuran kaos yang dipilih tidak valid.',
+                ], 422);
+            }
+            $resolvedUkuran[] = [
+                'id_ukuran' => $ukuranModel->id_ukuran,
+                'jumlah'    => (int) $item['jumlah'],
+            ];
+        }
 
         $periode = PeriodePolling::find($id);
 
@@ -150,9 +191,16 @@ class PollingController extends Controller
             ], 422);
         }
 
-        $hariIni = now()->toDateString();
+        $cfg = is_array($periode->config) ? $periode->config : [];
+        $startTime = $cfg['start_time'] ?? '00:00';
+        $endTime   = $cfg['end_time'] ?? '23:59';
+        $startAt   = \Carbon\Carbon::parse($periode->tanggal_mulai . ' ' . $startTime);
+        $endAt     = \Carbon\Carbon::parse($periode->tanggal_selesai . ' ' . $endTime);
+        if (strlen((string) $endTime) === 5) {
+            $endAt->endOfMinute();
+        }
 
-        if ($hariIni < $periode->tanggal_mulai) {
+        if (now()->lt($startAt)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Polling belum dimulai.',
@@ -160,7 +208,7 @@ class PollingController extends Controller
             ], 422);
         }
 
-        if ($hariIni > $periode->tanggal_selesai) {
+        if (now()->gt($endAt)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Polling sudah berakhir.',
@@ -185,12 +233,12 @@ class PollingController extends Controller
             'id_periode'       => $id,
             'id_paket'         => $request->id_paket,
             'id_kaos'          => $request->id_kaos,
-            'id_ukuran'        => $request->ukuran[0]['id_ukuran'],
-            'pilihan_kelompok' => $request->input('pilihan_kelompok', 'dipisah'),
+            'id_ukuran'        => $resolvedUkuran[0]['id_ukuran'],
+            'pilihan_kelompok' => $request->input('pilihan_kelompok') ?: null,
             'waktu_submit'     => now(),
         ]);
 
-        foreach ($request->ukuran as $item) {
+        foreach ($resolvedUkuran as $item) {
             $partisipasi->detailUkuran()->create([
                 'id_ukuran' => $item['id_ukuran'],
                 'jumlah' => $item['jumlah'],
@@ -206,7 +254,7 @@ class PollingController extends Controller
         );
 
         // Notif ke semua admin: ada suara baru masuk
-        $admins = \App\Models\User::where('role', 'admin')->get();
+        $admins = \App\Models\User::whereIn('role', ['admin', 'master_admin'])->get();
         foreach ($admins as $admin) {
             Notifikasi::kirim(
                 $admin->id_user,

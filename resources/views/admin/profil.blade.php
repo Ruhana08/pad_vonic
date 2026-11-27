@@ -27,6 +27,14 @@
   showCurrentPw: false,
   showNewPw: false,
   showConfirmPw: false,
+  photoFailed: false,
+  removeFoto: false,
+  getInitials(name) {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return 'A';
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  },
   deleteLogTarget: null,
   hiddenLogs: [],
   confirmDeleteLog() {
@@ -97,13 +105,13 @@
 
           {{-- Foto Profil Lingkaran (Konsisten dengan Profil User) --}}
           <div class="mt-5 flex justify-center">
-            <div class="h-24 w-24 overflow-hidden rounded-full border-4 border-primary-1/20 bg-gray-100 shadow-sm">
-              <template x-if="currentProfile.photo">
-                <img :src="currentProfile.photo" alt="Foto Profil" class="h-full w-full object-cover">
+            <div class="h-24 w-24 overflow-hidden rounded-full border-4 border-primary-1/20 bg-primary-1 shadow-sm flex items-center justify-center">
+              <template x-if="currentProfile.photo && !photoFailed">
+                <img :src="currentProfile.photo" alt="Foto Profil" x-on:error="photoFailed = true" class="h-full w-full object-cover">
               </template>
-              <template x-if="!currentProfile.photo">
-                <div class="flex h-full w-full items-center justify-center bg-primary-3">
-                  <x-solar-user-bold class="h-10 w-10 text-primary-1" />
+              <template x-if="!currentProfile.photo || photoFailed">
+                <div class="flex h-full w-full items-center justify-center bg-primary-1 text-white text-2xl font-bold tracking-wide select-none">
+                  <span x-text="getInitials(currentProfile.name)"></span>
                 </div>
               </template>
             </div>
@@ -274,13 +282,13 @@
 
         <div class="mt-6 flex flex-col items-center">
           <div class="relative">
-            <div class="h-24 w-24 overflow-hidden rounded-full border-4 border-primary-1/20 bg-gray-100 shadow-sm">
-              <template x-if="editForm.photo_preview || currentProfile.photo">
-                <img :src="editForm.photo_preview || currentProfile.photo" alt="Foto Profil" class="h-full w-full object-cover">
+            <div class="h-24 w-24 overflow-hidden rounded-full border-4 border-primary-1/20 bg-primary-1 shadow-sm flex items-center justify-center">
+              <template x-if="!removeFoto && !photoFailed && (editForm.photo_preview || currentProfile.photo)">
+                <img :src="editForm.photo_preview || currentProfile.photo" alt="Foto Profil" x-on:error="photoFailed = true" class="h-full w-full object-cover">
               </template>
-              <template x-if="!editForm.photo_preview && !currentProfile.photo">
-                <div class="flex h-full w-full items-center justify-center bg-primary-3">
-                  <x-solar-user-bold class="h-10 w-10 text-primary-1" />
+              <template x-if="removeFoto || photoFailed || (!editForm.photo_preview && !currentProfile.photo)">
+                <div class="flex h-full w-full items-center justify-center bg-primary-1 text-white text-2xl font-bold tracking-wide select-none">
+                  <span x-text="getInitials(editForm.name || currentProfile.name)"></span>
                 </div>
               </template>
             </div>
@@ -289,10 +297,17 @@
             <label class="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-primary-1 text-white shadow-sm transition-colors hover:bg-primary-4"
                    title="Ubah Foto Profil">
               <x-solar-camera-linear class="h-4 w-4" />
-              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="handlePhotoUpload($event)">
+              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="removeFoto = false; photoFailed = false; handlePhotoUpload($event)">
             </label>
           </div>
           <p class="mt-2.5 text-center text-[11px] text-grey-2">Format JPG/PNG, maksimal 2 MB.</p>
+          <button type="button"
+                  x-show="!removeFoto && !photoFailed && (editForm.photo_preview || currentProfile.photo)"
+                  @click="removeFoto = true; editForm.photo_preview = ''"
+                  class="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-danger hover:underline cursor-pointer">
+            <x-solar-trash-bin-trash-linear class="h-3.5 w-3.5" />
+            <span>Hapus Foto Profil</span>
+          </button>
         </div>
 
         <div class="mt-6 border-t border-gray-100 pt-4">
@@ -304,6 +319,8 @@
       {{-- Sisi Kanan: Form Informasi Pribadi & Password Card --}}
       <form action="{{ route('admin.profil.update') }}" method="POST" class="rounded-2xl border border-transparent bg-white p-7 shadow-sm">
         @csrf
+        <input type="hidden" name="foto_base64" :value="editForm.photo_preview || ''">
+        <input type="hidden" name="remove_foto" :value="removeFoto ? '1' : '0'">
         
         {{-- Section 1: Informasi Pribadi --}}
         <div class="flex items-start justify-between">

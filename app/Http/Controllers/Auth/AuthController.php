@@ -4,34 +4,38 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\EmailLoginOtp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function showLogin(Request $request)
+    public function showLogin()
     {
-        $step = $request->query('step', 'login');
-        return view('auth.login', compact('step'));
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+        return view('auth.login');
     }
 
     public function login(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email',
+            'email'    => 'required|email|ends_with:@mail.ugm.ac.id',
             'password' => 'required|string|min:6',
         ], [
-            'email.required'    => 'Username atau email institusi wajib diisi.',
+            'email.required'    => 'Email institusi wajib diisi.',
             'email.email'       => 'Format email tidak valid.',
+            'email.ends_with'   => 'Email admin wajib menggunakan domain @mail.ugm.ac.id.',
             'password.required' => 'Kata sandi wajib diisi.',
             'password.min'      => 'Kata sandi minimal berjumlah 6 karakter.',
         ]);
 
-        $user = User::where('email', $request->email)
-            ->where('role', 'admin')
+        $email = strtolower(trim($request->email));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])
+            ->whereIn('role', ['admin', 'master_admin'])
             ->first();
 
         if (!$user) {
@@ -41,268 +45,137 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Email admin tidak terdaftar di sistem.'])->withInput();
         }
 
-        // Jika user memiliki password di database, periksa kecocokannya
-        if ($user->password && !Hash::check($request->password, $user->password)) {
+        if (!$user->password || !Hash::check($request->password, $user->password)) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Kata sandi yang Anda masukkan salah.'], 401);
             }
             return back()->withErrors(['password' => 'Kata sandi yang Anda masukkan salah.'])->withInput();
         }
 
-        // Generate OTP 6 digit
-        $otp = (string) random_int(100000, 999999);
-
-        EmailLoginOtp::updateOrCreate(
-            ['email' => $user->email],
-            [
-                'otp_hash'   => Hash::make($otp),
-                'attempts'   => 0,
-                'expires_at' => now()->addMinutes(5),
-            ]
-        );
-
-        // Kirim email OTP
-        try {
-            Mail::raw(
-                "Halo {$user->nama},\n\nKode OTP login VONIC kamu adalah: {$otp}\n\nKode ini berlaku selama 5 menit. Jangan bagikan kode ini kepada siapa pun.",
-                function ($message) use ($user) {
-                    $message->to($user->email)
-                        ->subject('Kode OTP Login VONIC Admin');
-                }
-            );
-        } catch (\Throwable $e) {
-            \Log::warning('Gagal mengirim email OTP login: ' . $e->getMessage());
-        }
-
-        session([
-            'auth_email' => $user->email,
-            'auth_mode'  => 'login',
-        ]);
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Kode OTP 6 digit telah dikirimkan ke email Anda.',
-                'email'   => $user->email,
+                'success'  => true,
+                'message'  => 'Login berhasil! Mengalihkan ke Dashboard...',
+                'redirect' => route('admin.dashboard'),
             ]);
         }
 
-        return redirect()->route('login.page', ['step' => 'otp'])
-            ->with('info', 'Kode OTP 6 digit telah dikirimkan ke email Anda.');
+        return redirect()->intended(route('admin.dashboard'))
+            ->with('success', 'Selamat datang kembali di Panel Admin Vonic.');
     }
 
-    public function showRegister(Request $request)
+    public function showForgotPassword()
     {
-        $step = $request->query('step', 'register');
-        return view('auth.register', compact('step'));
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+        return view('auth.forgot-password');
     }
 
-    public function register(Request $request)
+    public function sendResetLink(Request $request)
     {
         $request->validate([
-            'name'                  => 'required|string|max:100',
-            'email'                 => 'required|email|ends_with:@ugm.ac.id,@mail.ugm.ac.id|max:150',
-            'password'              => [
-                'required',
-                'string',
-                'min:8',
-                'regex:/[A-Z]/',
-                'regex:/[a-z]/',
-                'regex:/[0-9]/',
-                'regex:/[^A-Za-z0-9]/',
-                'same:password_confirmation',
-            ],
-            'password_confirmation' => 'required|string',
+            'email' => 'required|email|ends_with:@mail.ugm.ac.id',
         ], [
-            'name.required'                  => 'Nama lengkap wajib diisi.',
-            'email.required'                 => 'Email institusi wajib diisi.',
-            'email.ends_with'                => 'Email harus menggunakan domain resmi UGM (@ugm.ac.id atau @mail.ugm.ac.id).',
-            'password.required'              => 'Kata sandi wajib diisi.',
-            'password.min'                   => 'Kata sandi minimal berjumlah 8 karakter.',
-            'password.regex'                 => 'Kata sandi harus mengandung huruf besar, huruf kecil, angka, dan karakter spesial.',
-            'password.same'                  => 'Konfirmasi kata sandi tidak cocok dengan kata sandi.',
-            'password_confirmation.required' => 'Ulangi kata sandi wajib diisi.',
+            'email.required'  => 'Email institusi wajib diisi.',
+            'email.email'     => 'Format email tidak valid.',
+            'email.ends_with' => 'Email admin wajib menggunakan domain @mail.ugm.ac.id.',
         ]);
 
-        // Cek jika email sudah terdaftar
-        $existing = User::where('email', $request->email)->first();
-        if ($existing && $existing->role === 'admin' && $existing->password) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Email admin ini sudah aktif dan terdaftar. Silakan login.'], 422);
-            }
-            return back()->withErrors(['email' => 'Email admin ini sudah aktif dan terdaftar. Silakan login.'])->withInput();
+        $email = strtolower(trim($request->email));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])
+            ->whereIn('role', ['admin', 'master_admin'])
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email admin tidak ditemukan di sistem.',
+            ], 404);
         }
 
-        // Generate OTP 6 digit
-        $otp = (string) random_int(100000, 999999);
+        $status = Password::broker()->sendResetLink(['email' => $user->email]);
 
-        EmailLoginOtp::updateOrCreate(
-            ['email' => $request->email],
-            [
-                'otp_hash'   => Hash::make($otp),
-                'attempts'   => 0,
-                'expires_at' => now()->addMinutes(5),
-            ]
-        );
-
-        // Simpan data calon admin di session sementara
-        session([
-            'reg_admin_name'     => $request->name,
-            'reg_admin_email'    => $request->email,
-            'reg_admin_password' => Hash::make($request->password),
-            'auth_email'         => $request->email,
-            'auth_mode'          => 'register',
-        ]);
-
-        // Kirim email OTP
-        try {
-            Mail::raw(
-                "Halo {$request->name},\n\nKode OTP registrasi Akun Admin VONIC kamu adalah: {$otp}\n\nKode ini berlaku selama 5 menit. Jangan bagikan kode ini kepada siapa pun.",
-                function ($message) use ($request) {
-                    $message->to($request->email)
-                        ->subject('Kode OTP Registrasi Admin VONIC');
-                }
-            );
-        } catch (\Throwable $e) {
-            \Log::warning('Gagal mengirim email OTP registrasi: ' . $e->getMessage());
-        }
-
-        if ($request->expectsJson() || $request->ajax()) {
+        if ($status === Password::RESET_LINK_SENT) {
             return response()->json([
                 'success' => true,
-                'message' => 'Pendaftaran berhasil. Silakan masukkan kode OTP yang dikirimkan ke email.',
-                'email'   => $request->email,
+                'message' => 'Tautan reset kata sandi telah dikirim ke email Anda.',
             ]);
-        }
-
-        return redirect()->route('register', ['step' => 'otp'])
-            ->with('info', 'Pendaftaran berhasil. Silakan masukkan kode OTP yang dikirimkan ke email.');
-    }
-
-    public function resendOtp(Request $request)
-    {
-        $email = $request->email ?: session('auth_email') ?: session('reg_admin_email');
-
-        if (!$email) {
-            return response()->json(['success' => false, 'message' => 'Sesi email tidak ditemukan. Silakan isi form kembali.'], 400);
-        }
-
-        $otp = (string) random_int(100000, 999999);
-
-        EmailLoginOtp::updateOrCreate(
-            ['email' => $email],
-            [
-                'otp_hash'   => Hash::make($otp),
-                'attempts'   => 0,
-                'expires_at' => now()->addMinutes(5),
-            ]
-        );
-
-        try {
-            Mail::raw(
-                "Halo,\n\nKode OTP baru kamu adalah: {$otp}\n\nKode ini berlaku selama 5 menit. Jangan bagikan kode ini kepada siapa pun.",
-                function ($message) use ($email) {
-                    $message->to($email)
-                        ->subject('Kode OTP Baru VONIC');
-                }
-            );
-        } catch (\Throwable $e) {
-            \Log::warning('Gagal mengirim kirim ulang OTP: ' . $e->getMessage());
         }
 
         return response()->json([
-            'success' => true,
-            'message' => 'Kode OTP baru berhasil dikirimkan ke email Anda.',
+            'success' => false,
+            'message' => __($status) ?: 'Gagal mengirim tautan reset kata sandi. Periksa konfigurasi email.',
+        ], 500);
+    }
+
+    public function showResetPassword(Request $request, string $token)
+    {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->query('email', ''),
         ]);
     }
 
-    public function verifyOtp(Request $request)
+    public function resetPassword(Request $request)
     {
-        $inputOtp = is_array($request->otp) ? implode('', $request->otp) : $request->otp;
-        $email = $request->email ?: session('auth_email') ?: session('reg_admin_email');
+        $request->validate([
+            'token'    => 'required|string',
+            'email'    => 'required|email|ends_with:@mail.ugm.ac.id',
+            'password' => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[a-z]/', 'regex:/[0-9]/', 'regex:/[^A-Za-z0-9]/', 'confirmed'],
+        ], [
+            'email.required'     => 'Email institusi wajib diisi.',
+            'email.email'        => 'Format email tidak valid.',
+            'email.ends_with'    => 'Email admin wajib menggunakan domain @mail.ugm.ac.id.',
+            'password.required'  => 'Kata sandi baru wajib diisi.',
+            'password.min'       => 'Kata sandi minimal 8 karakter.',
+            'password.regex'     => 'Kata sandi harus mengandung huruf besar, huruf kecil, angka, dan karakter spesial.',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
+        ]);
 
-        if (!$email) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Sesi telah kedaluwarsa. Silakan ulangi pendaftaran/login.'], 400);
+        $email = strtolower(trim($request->email));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])
+            ->whereIn('role', ['admin', 'master_admin'])
+            ->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'Email admin tidak terdaftar di sistem.'])->withInput();
+        }
+
+        $status = Password::broker()->reset(
+            [
+                'email'                 => $user->email,
+                'password'              => $request->password,
+                'password_confirmation' => $request->password_confirmation,
+                'token'                 => $request->token,
+            ],
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password'       => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
             }
-            return redirect()->route('login.page')->withErrors(['email' => 'Sesi telah kedaluwarsa. Silakan ulangi login.']);
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()->route('admin.login')
+                ->with('success', 'Kata sandi berhasil diperbarui. Silakan masuk dengan kata sandi baru Anda.');
         }
 
-        $otpRecord = EmailLoginOtp::where('email', $email)->first();
-
-        if (!$otpRecord) {
-            $msg = 'Kode OTP tidak ditemukan atau sudah digunakan.';
-            if ($request->expectsJson() || $request->ajax()) return response()->json(['success' => false, 'message' => $msg], 400);
-            return back()->withErrors(['otp' => $msg]);
-        }
-
-        if ($otpRecord->expires_at->isPast()) {
-            $otpRecord->delete();
-            $msg = 'Kode OTP sudah kedaluwarsa (lebih dari 5 menit). Silakan klik kirim ulang OTP.';
-            if ($request->expectsJson() || $request->ajax()) return response()->json(['success' => false, 'message' => $msg], 400);
-            return back()->withErrors(['otp' => $msg]);
-        }
-
-        if ($otpRecord->attempts >= 5) {
-            $otpRecord->delete();
-            $msg = 'Batas percobaan OTP tercapai (5x). Silakan kirim ulang kode baru.';
-            if ($request->expectsJson() || $request->ajax()) return response()->json(['success' => false, 'message' => $msg], 429);
-            return back()->withErrors(['otp' => $msg]);
-        }
-
-        if (!Hash::check($inputOtp, $otpRecord->otp_hash)) {
-            $otpRecord->increment('attempts');
-            $sisa = 5 - $otpRecord->attempts;
-            $msg = "Kode OTP tidak cocok. Sisa kesempatan: {$sisa} kali.";
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => $msg, 'remaining' => $sisa], 400);
-            }
-            return back()->withErrors(['otp' => $msg]);
-        }
-
-        // Hapus record OTP karena sukses
-        $otpRecord->delete();
-
-        // Cek apakah flow registrasi baru
-        if (session('auth_mode') === 'register' && session('reg_admin_email')) {
-            $admin = User::updateOrCreate(
-                ['email' => session('reg_admin_email')],
-                [
-                    'nama'       => session('reg_admin_name'),
-                    'password'   => session('reg_admin_password'),
-                    'role'       => 'admin',
-                    'unit_kerja' => 'DTEDI SV UGM',
-                    'pekerjaan'  => 'Administrator',
-                ]
-            );
-            Auth::login($admin);
-        } else {
-            $admin = User::where('email', $email)->where('role', 'admin')->first();
-            if ($admin) {
-                Auth::login($admin);
-            }
-        }
-
-        session()->forget(['auth_email', 'auth_mode', 'reg_admin_name', 'reg_admin_email', 'reg_admin_password']);
-
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Autentikasi berhasil! Mengalihkan ke Dashboard...',
-                'redirect' => route('admin.dashboard')
-            ]);
-        }
-
-        return redirect()->route('admin.dashboard')
-            ->with('success', 'Autentikasi berhasil! Selamat datang di Panel Admin Vonic.');
+        return back()->withErrors(['email' => __($status)])->withInput();
     }
 
     public function logout(Request $request)
     {
+        $isAdmin = Auth::check() && Auth::user()->isAdmin();
         Auth::logout();
-        session()->flush();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-        return redirect()->route('login.page')
+        return redirect()->route($isAdmin ? 'admin.login' : 'user.login')
             ->with('success', 'Anda telah berhasil keluar dari sistem (Log Out).');
     }
 }

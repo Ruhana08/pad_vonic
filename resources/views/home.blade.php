@@ -19,20 +19,44 @@ function berandaApp(initialPollingAktif, initialRiwayatList) {
 
         lihatHasil(poll) {
             const votes = Array.isArray(poll.partisipasi) ? poll.partisipasi : [];
+            const formatShortDate = (d) => {
+                if (!d) return '—';
+                const dt = new Date(d);
+                if (isNaN(dt.getTime())) return d;
+                const dd = String(dt.getDate()).padStart(2, '0');
+                const mm = String(dt.getMonth() + 1).padStart(2, '0');
+                const yy = String(dt.getFullYear()).slice(-2);
+                return `${dd}/${mm}/${yy}`;
+            };
+
+            if (votes.length === 0) {
+                this.activeHistoryItem = {
+                    title: poll.nama_periode,
+                    start: formatShortDate(poll.tanggal_mulai),
+                    end: formatShortDate(poll.tanggal_selesai),
+                    participants: 0,
+                    peserta_type: 'Hasil voting kosong',
+                    kaos: null,
+                    wisata: null,
+                };
+                this.showResultModal = true;
+                return;
+            }
+
             const countBy = (key) => votes.reduce((acc, v) => {
                 if (v[key]) acc[v[key]] = (acc[v[key]] || 0) + 1;
                 return acc;
             }, {});
 
-            // 1. Pemenang Kategori 1 (Peserta)
+            // 1. Pemenang Kategori 1 (Peserta) - Dinamis sesuai input form
             const kelompokCounts = countBy('pilihan_kelompok');
-            const dipisahCount = kelompokCounts['dipisah'] || 0;
-            const digabungCount = kelompokCounts['digabung'] || 0;
+            const topKelompokEntry = Object.entries(kelompokCounts).sort((a, b) => b[1] - a[1])[0];
             let pesertaLabel = 'Belum ada suara';
-            if (dipisahCount + digabungCount > 0) {
-                pesertaLabel = dipisahCount >= digabungCount ? 'Dosen dan tendik dipisah' : 'Dosen dan tendik digabung';
-            } else if (poll.mode_kelompok) {
-                pesertaLabel = poll.mode_kelompok === 'dipisah' ? 'Dosen dan tendik dipisah' : 'Dosen dan tendik digabung';
+            if (topKelompokEntry) {
+                const rawKey = topKelompokEntry[0];
+                if (rawKey === 'dipisah') pesertaLabel = 'Dosen dan tendik dipisah';
+                else if (rawKey === 'digabung') pesertaLabel = 'Dosen dan tendik digabung';
+                else pesertaLabel = rawKey;
             }
 
             // 2. Pemenang Paket Wisata
@@ -50,16 +74,6 @@ function berandaApp(initialPollingAktif, initialRiwayatList) {
             const benefitList = wisataUtama && wisataUtama.benefit
                 ? String(wisataUtama.benefit).split(',').map(b => b.trim()).filter(Boolean)
                 : [];
-
-            const formatShortDate = (d) => {
-                if (!d) return '—';
-                const dt = new Date(d);
-                if (isNaN(dt.getTime())) return d;
-                const dd = String(dt.getDate()).padStart(2, '0');
-                const mm = String(dt.getMonth() + 1).padStart(2, '0');
-                const yy = String(dt.getFullYear()).slice(-2);
-                return `${dd}/${mm}/${yy}`;
-            };
 
             const rawDurasi = wisataUtama && wisataUtama.durasi_perjalanan ? String(wisataUtama.durasi_perjalanan) : '';
             const durasiFormatted = rawDurasi
@@ -81,7 +95,6 @@ function berandaApp(initialPollingAktif, initialRiwayatList) {
                     title: wisataUtama ? wisataUtama.nama_destinasi : '—',
                     kategori: wisataUtama && wisataUtama.kategori ? wisataUtama.kategori : 'Wisata',
                     provinsi: wisataUtama && wisataUtama.provinsi ? wisataUtama.provinsi : null,
-                    rating: wisataUtama && wisataUtama.rating ? wisataUtama.rating : '—',
                     image: wisataUtama ? (wisataUtama.foto_url || wisataUtama.foto_destinasi || '') : '',
                     gallery: wisataGaleri,
                     lokasi: wisataUtama ? (wisataUtama.lokasi || wisataUtama.provinsi || '—') : '—',
@@ -98,7 +111,7 @@ function berandaApp(initialPollingAktif, initialRiwayatList) {
         async init() {
             // Langsung jalankan countdown secara instan dari SSR data jika ada (tanpa menunggu axios)
             if (this.pollingAktif && this.pollingAktif.tanggal_selesai) {
-                this.startCountdown(this.pollingAktif.tanggal_selesai);
+                this.startCountdown(this.pollingAktif.tanggal_selesai, this.pollingAktif.config?.end_time);
             }
 
             const token = localStorage.getItem('vonic_token');
@@ -115,14 +128,11 @@ function berandaApp(initialPollingAktif, initialRiwayatList) {
                     const latestAktif = semua.find(p => p.status === 'aktif') ?? null;
                     if (latestAktif) {
                         this.pollingAktif = latestAktif;
-                        if (!this.countdownInterval) {
-                            this.startCountdown(this.pollingAktif.tanggal_selesai);
-                        }
+                        if (this.countdownInterval) clearInterval(this.countdownInterval);
+                        this.startCountdown(this.pollingAktif.tanggal_selesai, this.pollingAktif.config?.end_time);
                     }
-                    const latestRiwayat = semua.filter(p => p.status === 'selesai').slice(0, 3);
-                    if (latestRiwayat.length > 0) {
-                        this.riwayatList = latestRiwayat;
-                    }
+                    const latestRiwayat = semua.filter(p => p.status === 'selesai' && Boolean(p.is_public ?? true)).slice(0, 3);
+                    this.riwayatList = latestRiwayat;
                 }
 
                 // Cek apakah sudah vote (hanya kalau ada token)
@@ -144,10 +154,12 @@ function berandaApp(initialPollingAktif, initialRiwayatList) {
             }
         },
 
-        startCountdown(tanggalSelesai) {
+        startCountdown(tanggalSelesai, endTime = '23:59') {
+            const safeTime = (endTime && /^\d{2}:\d{2}/.test(endTime)) ? endTime.slice(0, 5) : '23:59';
+            const target = new Date(tanggalSelesai + 'T' + safeTime + ':00');
             const update = () => {
-                const diff = new Date(tanggalSelesai + 'T23:59:59') - new Date();
-                if (diff <= 0) {
+                const diff = target - new Date();
+                if (isNaN(diff) || diff <= 0) {
                     this.countdown = 'Selesai';
                     clearInterval(this.countdownInterval);
                     return;
@@ -411,9 +423,9 @@ function berandaApp(initialPollingAktif, initialRiwayatList) {
 
             <!-- Empty state -->
             <template x-if="!loadingRiwayat && riwayatList.length === 0">
-                <x-card variant="empty" class="col-span-3 p-12">
+                <x-card variant="empty" class="col-span-3 p-12 flex flex-col items-center justify-center text-center">
                     <x-solar-folder-with-files-linear class="mx-auto mb-3 h-10 w-10 text-grey-2" />
-                    <p class="text-sm text-grey-dark">Belum ada riwayat polling</p>
+                    <p class="text-sm text-grey-dark text-center">Belum ada riwayat polling</p>
                 </x-card>
             </template>
         </div>

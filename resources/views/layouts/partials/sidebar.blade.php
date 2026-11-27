@@ -17,6 +17,15 @@
     ],
   ];
 
+  if (auth()->user()?->isMasterAdmin()) {
+    $links[] = [
+      'label'  => 'Kelola Akun Admin',
+      'route'  => 'admin.kelola-admin.index',
+      'active' => request()->routeIs('admin.kelola-admin.*'),
+      'icon'   => 'solar-shield-user-linear',
+    ];
+  }
+
   // Submenu Polling
   $pollingMenu = [
     ['label' => 'Polling Aktif',   'route' => 'admin.polling.aktif', 'tag' => 'Aktif'],

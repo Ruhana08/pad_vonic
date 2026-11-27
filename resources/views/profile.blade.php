@@ -73,14 +73,15 @@
                 <div class="mb-6 flex flex-col items-center">
                     <div class="relative">
                         <div
-                            class="h-24 w-24 overflow-hidden rounded-full border-4 border-primary-1/20 bg-gray-100 shadow-sm">
-                            <template x-if="form.fotoPreview || profile.foto">
-                                <img :src="form.fotoPreview || profile.foto" alt="Foto profil"
+                            class="h-24 w-24 overflow-hidden rounded-full border-4 border-primary-1/20 bg-primary-1 shadow-sm flex items-center justify-center">
+                            <template x-if="!removeFoto && !photoFailed && (form.fotoPreview || profile.foto_url || profile.foto)">
+                                <img :src="form.fotoPreview || profile.foto_url || profile.foto" alt="Foto profil"
+                                    x-on:error="photoFailed = true"
                                     class="h-full w-full object-cover" />
                             </template>
-                            <template x-if="!form.fotoPreview && !profile.foto">
-                                <div class="flex h-full w-full items-center justify-center bg-primary-3">
-                                    <x-solar-user-bold class="h-10 w-10 text-primary-1" />
+                            <template x-if="removeFoto || photoFailed || (!form.fotoPreview && !profile.foto_url && !profile.foto)">
+                                <div class="flex h-full w-full items-center justify-center bg-primary-1 text-white text-2xl font-bold tracking-wide select-none">
+                                    <span x-text="getInitials(form.nama || profile.nama)"></span>
                                 </div>
                             </template>
                         </div>
@@ -96,7 +97,16 @@
                         </template>
                     </div>
                     <template x-if="editMode">
-                        <p class="mt-2 text-[11px] text-grey-2">Format JPG/PNG, maksimal 2 MB</p>
+                        <div class="mt-2 flex flex-col items-center gap-1.5">
+                            <p class="text-[11px] text-grey-2">Format JPG/PNG, maksimal 2 MB</p>
+                            <button type="button"
+                                    x-show="!removeFoto && !photoFailed && (form.fotoPreview || profile.foto_url || profile.foto)"
+                                    @click="removeFoto = true; form.fotoPreview = null; form.fotoFile = null;"
+                                    class="inline-flex items-center gap-1 text-[11px] font-semibold text-danger hover:underline cursor-pointer">
+                                <x-solar-trash-bin-trash-linear class="h-3.5 w-3.5" />
+                                <span>Hapus Foto Profil</span>
+                            </button>
+                        </div>
                     </template>
                 </div>
 
@@ -397,11 +407,20 @@
             loadingRiwayat: true,
             editMode: false,
             saving: false,
+            photoFailed: false,
+            removeFoto: false,
             successMsg: '',
             errorMsg: '',
-            profile: @json(Auth:: user() ?? (object)[]),
-            form: @json(Auth:: user() ?? (object)[]),
+            profile: @json(Auth::user() ?? (object)[]),
+            form: @json(Auth::user() ?? (object)[]),
             riwayatList: [],
+
+            getInitials(name) {
+                const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+                if (!parts.length) return 'U';
+                if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+                return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+            },
 
             // Modal Popup Detail Pilihan Polling
             modalRiwayatOpen: false,
@@ -469,6 +488,8 @@
             cancelEdit() {
                 this.form = { ...this.profile, fotoPreview: null, fotoFile: null };
                 this.editMode = false;
+                this.removeFoto = false;
+                this.photoFailed = false;
                 this.errorMsg = '';
             },
 
@@ -484,6 +505,8 @@
                     return;
                 }
                 this.errorMsg = '';
+                this.removeFoto = false;
+                this.photoFailed = false;
                 this.form.fotoFile = file;
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -508,7 +531,11 @@
                     fd.append('pekerjaan', this.form.pekerjaan || '');
                     fd.append('unit_kerja', this.form.unit_kerja || '');
                     fd.append('no_telp', this.form.no_telp || '');
-                    if (this.form.fotoFile) fd.append('foto', this.form.fotoFile);
+                    if (this.removeFoto) {
+                        fd.append('remove_foto', '1');
+                    } else if (this.form.fotoFile) {
+                        fd.append('foto', this.form.fotoFile);
+                    }
 
                     const res = await fetch('/api/profile', { method: 'POST', headers, body: fd });
                     const json = await res.json().catch(() => ({}));
@@ -520,14 +547,19 @@
                     }
 
                     const d = json.data || {};
-                    this.profile = { ...this.profile, ...d, foto: d.foto_url || d.foto || this.profile.foto || null };
+                    const newFoto = this.removeFoto ? null : (d.foto_url || d.foto || null);
+                    this.profile = { ...this.profile, ...d, foto: newFoto, foto_url: newFoto };
                     this.form = { ...this.profile, fotoPreview: null, fotoFile: null };
+                    this.removeFoto = false;
+                    this.photoFailed = false;
 
                     try {
                         const u = JSON.parse(localStorage.getItem('vonic_user') || '{}');
-                        u.nama = d.nama || this.form.nama;
+                        u.nama = d.nama || this.profile.nama;
+                        u.foto = this.profile.foto || null;
                         localStorage.setItem('vonic_user', JSON.stringify(u));
                     } catch (e) { }
+                    window.dispatchEvent(new CustomEvent('vonic-profile-updated', { detail: this.profile }));
 
                     this.editMode = false;
                     this.successMsg = 'Data terbaru Anda berhasil diperbarui.';

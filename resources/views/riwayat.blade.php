@@ -121,8 +121,8 @@ function riwayatPageApp() {
                 if (res.ok) {
                     const json = await res.json();
                     const semua = json.data ?? [];
-                    // Tampilkan semua polling selesai atau polling terdahulu
-                    this.riwayatList = semua.filter(p => p.status === 'selesai');
+                    // Tampilkan semua polling selesai yang berstatus publik
+                    this.riwayatList = semua.filter(p => p.status === 'selesai' && Boolean(p.is_public ?? true));
                 }
             } catch(e) {
                 console.error('Gagal mengambil riwayat:', e);
@@ -145,19 +145,43 @@ function riwayatPageApp() {
 
         lihatHasil(poll) {
             const votes = Array.isArray(poll.partisipasi) ? poll.partisipasi : [];
+            const formatShortDate = (d) => {
+                if (!d) return '—';
+                const dt = new Date(d);
+                if (isNaN(dt.getTime())) return d;
+                const dd = String(dt.getDate()).padStart(2, '0');
+                const mm = String(dt.getMonth() + 1).padStart(2, '0');
+                const yy = String(dt.getFullYear()).slice(-2);
+                return `${dd}/${mm}/${yy}`;
+            };
+
+            if (votes.length === 0) {
+                this.activeHistoryItem = {
+                    title: poll.nama_periode,
+                    start: formatShortDate(poll.tanggal_mulai),
+                    end: formatShortDate(poll.tanggal_selesai),
+                    participants: 0,
+                    peserta_type: 'Hasil voting kosong',
+                    kaos: null,
+                    wisata: null,
+                };
+                this.showResultModal = true;
+                return;
+            }
+
             const countBy = (key) => votes.reduce((acc, v) => {
                 if (v[key]) acc[v[key]] = (acc[v[key]] || 0) + 1;
                 return acc;
             }, {});
 
             const kelompokCounts = countBy('pilihan_kelompok');
-            const dipisahCount = kelompokCounts['dipisah'] || 0;
-            const digabungCount = kelompokCounts['digabung'] || 0;
+            const topKelompokEntry = Object.entries(kelompokCounts).sort((a, b) => b[1] - a[1])[0];
             let pesertaLabel = 'Belum ada suara';
-            if (dipisahCount + digabungCount > 0) {
-                pesertaLabel = dipisahCount >= digabungCount ? 'Dosen dan tendik dipisah' : 'Dosen dan tendik digabung';
-            } else if (poll.mode_kelompok) {
-                pesertaLabel = poll.mode_kelompok === 'dipisah' ? 'Dosen dan tendik dipisah' : 'Dosen dan tendik digabung';
+            if (topKelompokEntry) {
+                const rawKey = topKelompokEntry[0];
+                if (rawKey === 'dipisah') pesertaLabel = 'Dosen dan tendik dipisah';
+                else if (rawKey === 'digabung') pesertaLabel = 'Dosen dan tendik digabung';
+                else pesertaLabel = rawKey;
             }
 
             const wisataCounts = countBy('id_paket');
@@ -173,16 +197,6 @@ function riwayatPageApp() {
             const benefitList = wisataUtama && wisataUtama.benefit
                 ? String(wisataUtama.benefit).split(',').map(b => b.trim()).filter(Boolean)
                 : [];
-
-            const formatShortDate = (d) => {
-                if (!d) return '—';
-                const dt = new Date(d);
-                if (isNaN(dt.getTime())) return d;
-                const dd = String(dt.getDate()).padStart(2, '0');
-                const mm = String(dt.getMonth() + 1).padStart(2, '0');
-                const yy = String(dt.getFullYear()).slice(-2);
-                return `${dd}/${mm}/${yy}`;
-            };
 
             const rawDurasi = wisataUtama && wisataUtama.durasi_perjalanan ? String(wisataUtama.durasi_perjalanan) : '';
             const durasiFormatted = rawDurasi
@@ -204,7 +218,6 @@ function riwayatPageApp() {
                     title: wisataUtama ? wisataUtama.nama_destinasi : '—',
                     kategori: wisataUtama && wisataUtama.kategori ? wisataUtama.kategori : 'Wisata',
                     provinsi: wisataUtama && wisataUtama.provinsi ? wisataUtama.provinsi : null,
-                    rating: wisataUtama && wisataUtama.rating ? wisataUtama.rating : '—',
                     image: wisataUtama ? (wisataUtama.foto_url || wisataUtama.foto_destinasi || '') : '',
                     gallery: wisataGaleri,
                     lokasi: wisataUtama ? (wisataUtama.lokasi || wisataUtama.provinsi || '—') : '—',

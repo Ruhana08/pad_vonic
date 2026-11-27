@@ -26,22 +26,39 @@
     <!-- ============================================================ -->
     <!-- NAVBAR USER (Komponen identik Admin, isi diganti nav pills)  -->
     <!-- ============================================================ -->
+    @php
+      $uNav = Auth::user();
+      $uNavName = $uNav?->nama ?? 'Sivitas';
+      $uNavFoto = $uNav?->foto_url ?? '';
+    @endphp
     <header id="user-navbar"
             x-data="{
                 scrolled: false,
-                userName: 'Sivitas',
+                userName: @js($uNavName),
+                userPhoto: @js($uNavFoto),
+                photoErr: false,
+                getInitials(name) {
+                    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+                    if (!parts.length) return 'S';
+                    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+                    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+                },
                 init() {
                     this.scrolled = (window.scrollY > 16);
                     window.addEventListener('scroll', () => { this.scrolled = (window.scrollY > 16) }, { passive: true });
-                    // Baca nama user dari localStorage
+                    // Baca nama & foto user dari localStorage jika tersedia
                     try {
                         const u = JSON.parse(localStorage.getItem('vonic_user') || '{}');
-                        if (u.nama) this.userName = u.nama;
+                        if (u.nama && this.userName === 'Sivitas') this.userName = u.nama;
+                        if (u.foto && !this.userPhoto) this.userPhoto = u.foto;
                     } catch(e) {}
-                    // Guard dinonaktifkan sementara untuk preview tampilan
-                    // if (!localStorage.getItem('vonic_token')) {
-                    //     window.location.href = '{{ route('login') }}';
-                    // }
+                    window.addEventListener('vonic-profile-updated', (e) => {
+                        if (e.detail?.nama) this.userName = e.detail.nama;
+                        if (e.detail?.foto !== undefined) {
+                            this.userPhoto = e.detail.foto || '';
+                            this.photoErr = false;
+                        }
+                    });
                 }
             }"
             :class="scrolled
@@ -231,9 +248,13 @@
                   @click="open = !open"
                   :aria-expanded="open"
                   class="btn-secondary flex h-11 items-center gap-2.5 px-3">
-            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-1 text-white">
-              <x-solar-user-bold class="h-3.5 w-3.5" />
-            </span>
+            <template x-if="userPhoto && !photoErr">
+              <img :src="userPhoto" :alt="userName" x-on:error="photoErr = true" class="h-6 w-6 shrink-0 rounded-full object-cover border border-primary-1/30" />
+            </template>
+            <template x-if="!userPhoto || photoErr">
+              <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-1 text-[10px] font-bold text-white select-none" x-text="getInitials(userName)">
+              </span>
+            </template>
             <span class="hidden sm:inline whitespace-nowrap text-xs font-semibold text-black"
                   x-text="userName">
             </span>
